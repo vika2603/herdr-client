@@ -26,11 +26,11 @@ func layoutKey(l PaneLayoutSnapshot) string { return l.TabID }
 
 func newSessionCache(snapshot SessionSnapshot) *sessionCache {
 	cache := &sessionCache{version: snapshot.Version, protocol: snapshot.Protocol}
-	cache.workspaces.reset(snapshot.Workspaces, workspaceKey, cloneWorkspace)
-	cache.tabs.reset(snapshot.Tabs, tabKey, cloneTab)
-	cache.panes.reset(snapshot.Panes, paneKey, clonePane)
-	cache.agents.reset(snapshot.Agents, agentKey, cloneAgent)
-	cache.layouts.reset(snapshot.Layouts, layoutKey, cloneLayout)
+	cache.workspaces.reset(snapshot.Workspaces, workspaceKey, WorkspaceInfo.Clone)
+	cache.tabs.reset(snapshot.Tabs, tabKey, TabInfo.Clone)
+	cache.panes.reset(snapshot.Panes, paneKey, PaneInfo.Clone)
+	cache.agents.reset(snapshot.Agents, agentKey, AgentInfo.Clone)
+	cache.layouts.reset(snapshot.Layouts, layoutKey, PaneLayoutSnapshot.Clone)
 	return cache
 }
 
@@ -40,34 +40,34 @@ func newSessionCache(snapshot SessionSnapshot) *sessionCache {
 func (c *sessionCache) apply(event Event) {
 	switch e := event.(type) {
 	case *WorkspaceCreatedEvent:
-		c.workspaces.set(e.Workspace.WorkspaceID, cloneWorkspace(e.Workspace))
+		c.workspaces.set(e.Workspace.WorkspaceID, e.Workspace.Clone())
 	case *WorkspaceUpdatedEvent:
-		c.workspaces.set(e.Workspace.WorkspaceID, cloneWorkspace(e.Workspace))
+		c.workspaces.set(e.Workspace.WorkspaceID, e.Workspace.Clone())
 	case *WorkspaceMetadataUpdatedEvent:
-		c.workspaces.set(e.Workspace.WorkspaceID, cloneWorkspace(e.Workspace))
+		c.workspaces.set(e.Workspace.WorkspaceID, e.Workspace.Clone())
 	case *WorkspaceRenamedEvent:
 		if workspace, ok := c.workspaces.get(e.WorkspaceID); ok {
 			workspace.Label = e.Label
 			c.workspaces.set(e.WorkspaceID, workspace)
 		}
 	case *WorkspaceMovedEvent:
-		c.workspaces.reset(e.Workspaces, workspaceKey, cloneWorkspace)
+		c.workspaces.reset(e.Workspaces, workspaceKey, WorkspaceInfo.Clone)
 	case *WorkspaceReorderedEvent:
-		c.workspaces.reset(e.Workspaces, workspaceKey, cloneWorkspace)
+		c.workspaces.reset(e.Workspaces, workspaceKey, WorkspaceInfo.Clone)
 	case *WorkspaceFocusedEvent:
 		c.focusWorkspace(e.WorkspaceID)
 	case *WorkspaceClosedEvent:
 		c.closeWorkspace(e.WorkspaceID)
 	case *WorktreeCreatedEvent:
-		c.workspaces.set(e.Workspace.WorkspaceID, cloneWorkspace(e.Workspace))
+		c.workspaces.set(e.Workspace.WorkspaceID, e.Workspace.Clone())
 	case *WorktreeOpenedEvent:
-		c.workspaces.set(e.Workspace.WorkspaceID, cloneWorkspace(e.Workspace))
+		c.workspaces.set(e.Workspace.WorkspaceID, e.Workspace.Clone())
 	case *WorktreeRemovedEvent:
 		if e.Workspace != nil {
-			c.workspaces.set(e.Workspace.WorkspaceID, cloneWorkspace(*e.Workspace))
+			c.workspaces.set(e.Workspace.WorkspaceID, e.Workspace.Clone())
 		}
 	case *TabCreatedEvent:
-		c.tabs.set(e.Tab.TabID, cloneTab(e.Tab))
+		c.tabs.set(e.Tab.TabID, e.Tab.Clone())
 	case *TabRenamedEvent:
 		if tab, ok := c.tabs.get(e.TabID); ok {
 			tab.Label = e.Label
@@ -105,7 +105,7 @@ func (c *sessionCache) apply(event Event) {
 	case *PaneAgentStatusChangedEvent:
 		c.applyAgentStatus(e)
 	case *LayoutUpdatedEvent:
-		c.layouts.set(e.Layout.TabID, cloneLayout(e.Layout))
+		c.layouts.set(e.Layout.TabID, e.Layout.Clone())
 	}
 	// pane.exited leaves the pane in place: the process ended, and a pane
 	// that goes away with it is reported by pane.closed. pane.output_matched
@@ -115,7 +115,7 @@ func (c *sessionCache) apply(event Event) {
 // setPane installs a pane and refreshes the agent entry that pane carries,
 // which repeats the fields AgentInfo shares with PaneInfo.
 func (c *sessionCache) setPane(pane PaneInfo) {
-	pane = clonePane(pane)
+	pane = pane.Clone()
 	c.panes.set(pane.PaneID, pane)
 	if agent, ok := c.agents.get(pane.PaneID); ok {
 		c.agents.set(pane.PaneID, mergeAgent(agent, pane))
@@ -131,14 +131,14 @@ func (c *sessionCache) closePane(paneID string) {
 // move, so the entry is rekeyed rather than updated.
 func (c *sessionCache) movePane(e *PaneMovedEvent) {
 	if e.CreatedWorkspace != nil {
-		c.workspaces.set(e.CreatedWorkspace.WorkspaceID, cloneWorkspace(*e.CreatedWorkspace))
+		c.workspaces.set(e.CreatedWorkspace.WorkspaceID, e.CreatedWorkspace.Clone())
 	}
 	if e.CreatedTab != nil {
-		c.tabs.set(e.CreatedTab.TabID, cloneTab(*e.CreatedTab))
+		c.tabs.set(e.CreatedTab.TabID, e.CreatedTab.Clone())
 	}
 	agent, hadAgent := c.agents.get(e.PreviousPaneID)
 	c.closePane(e.PreviousPaneID)
-	pane := clonePane(e.Pane)
+	pane := e.Pane.Clone()
 	c.panes.set(pane.PaneID, pane)
 	if hadAgent {
 		c.agents.set(pane.PaneID, mergeAgent(agent, pane))
@@ -175,7 +175,7 @@ func (c *sessionCache) closeWorkspace(workspaceID string) {
 // event carries, keeping the tabs of the other workspaces where they were.
 func (c *sessionCache) reorderTabs(workspaceID string, tabs []TabInfo) {
 	at := c.tabs.deleteWhere(func(tab TabInfo) bool { return tab.WorkspaceID == workspaceID })
-	c.tabs.insertAt(at, tabs, tabKey, cloneTab)
+	c.tabs.insertAt(at, tabs, tabKey, TabInfo.Clone)
 }
 
 // applyAgentDetected is the authority on which agent a pane runs: a detection

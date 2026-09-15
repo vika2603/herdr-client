@@ -96,14 +96,14 @@ func (f *Field) tag() string {
 }
 
 // emitType writes one named type with the methods that belong to it.
-func emitType(c *code, t *Type) {
+func emitType(c *code, t *Type, clones *cloneEmitter) {
 	switch t.Kind {
 	case KindEnum:
 		emitEnum(c, t)
 	case KindUnion:
-		emitUnion(c, t)
+		emitUnion(c, t, clones)
 	default:
-		emitStruct(c, t)
+		emitStruct(c, t, clones)
 	}
 }
 
@@ -121,7 +121,7 @@ func emitEnum(c *code, t *Type) {
 	c.line(")")
 }
 
-func emitUnion(c *code, t *Type) {
+func emitUnion(c *code, t *Type, clones *cloneEmitter) {
 	c.doc(fmt.Sprintf("%s is a union of the types below, selected by the %q field.",
 		t.Name, t.Discriminator),
 		"",
@@ -134,6 +134,7 @@ func emitUnion(c *code, t *Type) {
 	c.printf("type %s interface {\n", t.Name)
 	c.printf("\tis%s()\n", t.Name)
 	c.line("}")
+	clones.emitUnion(c, t)
 	c.blank()
 	emitUnionDecoder(c, t)
 }
@@ -160,7 +161,7 @@ func emitUnionDecoder(c *code, t *Type) {
 	c.line("}")
 }
 
-func emitStruct(c *code, t *Type) {
+func emitStruct(c *code, t *Type, clones *cloneEmitter) {
 	switch {
 	case t.ResultTag != "":
 		c.doc(fmt.Sprintf("%s is the %q result.", t.Name, t.ResultTag))
@@ -196,6 +197,10 @@ func emitStruct(c *code, t *Type) {
 			c.printf("\t%s %s %s\n", f.Name, f.Type, f.tag())
 		}
 		c.line("}")
+	}
+	if clones.seen[t.Name] {
+		c.blank()
+		clones.emitMethod(c, t)
 	}
 	if t.UnionName != "" {
 		c.blank()

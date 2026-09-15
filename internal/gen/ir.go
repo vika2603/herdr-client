@@ -122,6 +122,11 @@ type Package struct {
 	// no discriminator of their own.
 	Subscriptions []EventRef
 	Methods       []*Method
+	// ManualTypes are implemented in unions_manual.go and supply their own Clone.
+	ManualTypes []string
+	// AuxiliaryTypes describe symbols owned by dedicated emitters rather than
+	// the ordinary type loop, so generic field operations can still inspect them.
+	AuxiliaryTypes []*Type
 }
 
 // TypesIn returns the types of one output file, sorted by name.
@@ -207,6 +212,19 @@ func Build(doc *Document, table *MethodTable, pkgName string) (*Package, error) 
 	}
 	pkg.Methods = methods
 	pkg.Types = b.order
+	for _, name := range sortedKeys(manualDefs) {
+		if _, exists := b.defs[name]; exists {
+			pkg.ManualTypes = append(pkg.ManualTypes, name)
+		}
+	}
+	pkg.AuxiliaryTypes = []*Type{
+		{Name: "EventKind", Kind: KindEnum},
+		{Name: "Event", Kind: KindUnion, Variants: pkg.TypesIn(fileEvents)},
+		{Name: "Result", Kind: KindUnion, Variants: pkg.TypesIn(fileResults)},
+		{Name: "EventEnvelope", Kind: KindStruct, Doc: "EventEnvelope is one event line pushed on a subscription connection.", Fields: []*Field{
+			{Name: "Event", Type: "EventKind", JSON: "event"}, {Name: "Data", Type: "Event", JSON: "data"},
+		}},
+	}
 	sort.Slice(pkg.Types, func(i, j int) bool { return pkg.Types[i].Name < pkg.Types[j].Name })
 	return pkg, nil
 }

@@ -23,3 +23,12 @@ func Value[T any](p *T) T {
 	}
 	return *p
 }
+
+// clonePtr detaches scalar pointers for handwritten protocol adapters.
+func clonePtr[T any](value *T) *T {
+	if value == nil {
+		return nil
+	}
+	cloned := *value
+	return &cloned
+}

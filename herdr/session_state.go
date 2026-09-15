@@ -27,14 +27,14 @@ func (s *sessionState) apply(event Event) {
 func (s *Session) Workspaces() []WorkspaceInfo {
 	s.state.mu.RLock()
 	defer s.state.mu.RUnlock()
-	return cloneEach(s.state.cache.workspaces.values(), cloneWorkspace)
+	return cloneEach(s.state.cache.workspaces.values(), WorkspaceInfo.Clone)
 }
 
 // Tabs returns the mirrored tabs in the order the server reports them.
 func (s *Session) Tabs() []TabInfo {
 	s.state.mu.RLock()
 	defer s.state.mu.RUnlock()
-	return cloneEach(s.state.cache.tabs.values(), cloneTab)
+	return cloneEach(s.state.cache.tabs.values(), TabInfo.Clone)
 }
 
 // Pane returns the mirrored pane with the given id.
@@ -45,14 +45,14 @@ func (s *Session) Pane(paneID string) (PaneInfo, bool) {
 	if !ok {
 		return PaneInfo{}, false
 	}
-	return clonePane(pane), true
+	return pane.Clone(), true
 }
 
 // Agents returns the mirrored agents in the order the server reports them.
 func (s *Session) Agents() []AgentInfo {
 	s.state.mu.RLock()
 	defer s.state.mu.RUnlock()
-	return cloneEach(s.state.cache.agents.values(), cloneAgent)
+	return cloneEach(s.state.cache.agents.values(), AgentInfo.Clone)
 }
 
 // Layout returns the mirrored layout of the given tab.
@@ -63,7 +63,7 @@ func (s *Session) Layout(tabID string) (PaneLayoutSnapshot, bool) {
 	if !ok {
 		return PaneLayoutSnapshot{}, false
 	}
-	return cloneLayout(layout), true
+	return layout.Clone(), true
 }
 
 // Snapshot returns the whole mirror as one SessionSnapshot, read under a
@@ -80,17 +80,17 @@ func (s *Session) Snapshot() SessionSnapshot {
 	s.state.mu.RLock()
 	defer s.state.mu.RUnlock()
 
-	workspaces := cloneEach(s.state.cache.workspaces.values(), cloneWorkspace)
-	tabs := cloneEach(s.state.cache.tabs.values(), cloneTab)
-	panes := cloneEach(s.state.cache.panes.values(), clonePane)
+	workspaces := cloneEach(s.state.cache.workspaces.values(), WorkspaceInfo.Clone)
+	tabs := cloneEach(s.state.cache.tabs.values(), TabInfo.Clone)
+	panes := cloneEach(s.state.cache.panes.values(), PaneInfo.Clone)
 	return SessionSnapshot{
 		Version:            s.state.cache.version,
 		Protocol:           s.state.cache.protocol,
 		Workspaces:         workspaces,
 		Tabs:               tabs,
 		Panes:              panes,
-		Agents:             cloneEach(s.state.cache.agents.values(), cloneAgent),
-		Layouts:            cloneEach(s.state.cache.layouts.values(), cloneLayout),
+		Agents:             cloneEach(s.state.cache.agents.values(), AgentInfo.Clone),
+		Layouts:            cloneEach(s.state.cache.layouts.values(), PaneLayoutSnapshot.Clone),
 		FocusedWorkspaceID: focusedID(workspaces, func(w WorkspaceInfo) (string, bool) { return w.WorkspaceID, w.Focused }),
 		FocusedTabID:       focusedID(tabs, func(t TabInfo) (string, bool) { return t.TabID, t.Focused }),
 		FocusedPaneID:      focusedID(panes, func(p PaneInfo) (string, bool) { return p.PaneID, p.Focused }),

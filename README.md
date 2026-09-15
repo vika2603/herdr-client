@@ -4,7 +4,7 @@ Go client for [Herdr](https://herdr.dev), generated against herdr 0.9.0,
 protocol 22: the full socket API, a live mirror of the session, and the
 pieces a Herdr plugin written in Go needs.
 
-The wire types, the result and event decoders, and a typed wrapper for every
+The wire types, copy methods, result and event decoders, and a typed wrapper for every
 one of the 102 API methods are generated from the schema the herdr binary
 prints, so the client tracks the server rather than a hand-written guess of
 it. The transport, the session mirror, the graphics frame stream, the plugin
@@ -277,6 +277,36 @@ for a caller that wants one consistent frame rather than a field at a time.
 learns the ids `layout.apply` assigned. A server restart, which happens on live handoff,
 is handled by reconnecting and taking a fresh snapshot; the gap is reported as
 one resync event so a caller can drop anything it derived from the old state.
+
+### Copying API data independently
+
+Generated protocol structs have adjacent `Clone()` methods. They are also
+useful outside a live mirror, for example
+when a plugin keeps an API result as a baseline while editing another copy:
+
+```go
+detached := snapshot.Clone()
+paneCopy := pane.Clone()
+```
+
+These methods deeply copy pointers, slices and maps without JSON encoding or
+reflection. They preserve nil, nonnil empty collections and optional zero
+values exactly; only the live mirror's top-level list projection normalizes
+empty lists as described above. Source data must not be modified concurrently
+with a clone operation. The methods copy acyclic, wire-shaped data, not arbitrary
+object graphs with cycles.
+
+The generator applies the same field rules to every protocol struct; it has no
+named root or list of types selected for copying. Value-only structs return a
+value copy, and new reference fields are included on regeneration. Unsupported
+field shapes fail generation with a type/field diagnostic. The existing
+handwritten protocol adapters provide their own adjacent copy methods.
+
+Union helpers copy schema-defined variants and retain value/pointer/typed-nil
+representations. `EventEnvelope.Clone` follows the same rule for its event
+payload. Custom implementations outside the schema are rejected with a panic;
+copying opaque application objects is outside this wire-data contract. The
+Session cache and its accessors use these same copies.
 
 ## Writing a plugin
 

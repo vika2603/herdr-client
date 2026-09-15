@@ -514,17 +514,17 @@ func mutateOwnedLayout(layout *PaneLayoutSnapshot) {
 }
 
 func cacheSnapshot(cache *sessionCache) SessionSnapshot {
-	workspaces := cloneEach(cache.workspaces.values(), cloneWorkspace)
-	tabs := cloneEach(cache.tabs.values(), cloneTab)
-	panes := cloneEach(cache.panes.values(), clonePane)
+	workspaces := cloneEach(cache.workspaces.values(), WorkspaceInfo.Clone)
+	tabs := cloneEach(cache.tabs.values(), TabInfo.Clone)
+	panes := cloneEach(cache.panes.values(), PaneInfo.Clone)
 	return SessionSnapshot{
 		Version:            cache.version,
 		Protocol:           cache.protocol,
 		Workspaces:         workspaces,
 		Tabs:               tabs,
 		Panes:              panes,
-		Agents:             cloneEach(cache.agents.values(), cloneAgent),
-		Layouts:            cloneEach(cache.layouts.values(), cloneLayout),
+		Agents:             cloneEach(cache.agents.values(), AgentInfo.Clone),
+		Layouts:            cloneEach(cache.layouts.values(), PaneLayoutSnapshot.Clone),
 		FocusedWorkspaceID: focusedID(workspaces, func(workspace WorkspaceInfo) (string, bool) { return workspace.WorkspaceID, workspace.Focused }),
 		FocusedTabID:       focusedID(tabs, func(tab TabInfo) (string, bool) { return tab.TabID, tab.Focused }),
 		FocusedPaneID:      focusedID(panes, func(pane PaneInfo) (string, bool) { return pane.PaneID, pane.Focused }),

@@ -22,6 +22,11 @@ type PopupSize struct {
 	Percent uint8
 }
 
+// Clone returns an independent copy of s.
+func (s PopupSize) Clone() PopupSize {
+	return s
+}
+
 // IsPercent reports whether the size is a percentage of the terminal area.
 func (s PopupSize) IsPercent() bool { return s.Percent != 0 }
 
@@ -85,6 +90,15 @@ type AgentViewValue struct {
 	Bool    *bool
 	Uint    *uint64
 	Context *AgentViewContext
+}
+
+// Clone returns an independent copy of v.
+func (v AgentViewValue) Clone() AgentViewValue {
+	v.Text = clonePtr(v.Text)
+	v.Bool = clonePtr(v.Bool)
+	v.Uint = clonePtr(v.Uint)
+	v.Context = clonePtr(v.Context)
+	return v
 }
 
 // AgentViewText returns a string value.
@@ -177,6 +191,11 @@ type AgentViewField struct {
 	Token string
 }
 
+// Clone returns an independent copy of f.
+func (f AgentViewField) Clone() AgentViewField {
+	return f
+}
+
 // AgentViewFieldOf returns a filter field for a built-in field.
 func AgentViewFieldOf(field AgentViewBuiltinField) AgentViewField {
 	return AgentViewField{Builtin: field}
@@ -216,6 +235,11 @@ type AgentViewSortField struct {
 	Builtin AgentViewBuiltinSortField
 	// Token is the name of a metadata token.
 	Token string
+}
+
+// Clone returns an independent copy of f.
+func (f AgentViewSortField) Clone() AgentViewSortField {
+	return f
 }
 
 // AgentViewSortFieldOf returns a sort field for a built-in sort field.

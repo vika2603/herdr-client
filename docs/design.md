@@ -62,7 +62,7 @@ that carry no discriminator.
 | `herdr/client.go` `stream.go` `dial.go` `dial_*.go` `socketpath.go` `errors.go` `ptr.go` | Transport, error codes, pointer helpers | hand |
 | `herdr/subscribe.go` `session.go` `session_bootstrap.go` | Typed event stream and session connection lifecycle | hand |
 | `herdr/session_state.go` `session_cache.go` `ordered_collection.go` | Synchronized state access and pure ordered event reduction | hand |
-| `herdr/session_clone.go` | Snapshot record ownership and deep copies | hand |
+| `herdr/session_clone.go` | Collection projection and scalar event-copy helpers | hand |
 | `herdr/graphics.go` | The `pane.graphics.stream` frame stream | hand |
 | `herdr/layout.go` | Walking an applied layout to its panes | hand |
 | `herdr/unions_manual.go` | The four unions without a discriminator | hand |
@@ -320,6 +320,33 @@ configuration and references the handwritten names: `PopupSize` (integer or a
   captured from a live server under `herdr/testdata/`.
 - No third-party dependencies.
 
+## Generated copies
+
+Each protocol struct gets a `Clone` method immediately after its declaration in
+the original generated file. The emitter handles all IR types without a named
+root or clone-selection list. Scalars and enums copy by value; pointers, slices,
+string-keyed maps, named structs and raw JSON bytes are copied recursively.
+Nil, nonnil empty collections and optional zero values remain distinct. Runtime
+copies use typed code without reflection or a JSON round trip.
+
+The IR also describes symbols emitted by dedicated protocol emitters, including
+EventEnvelope and the Event/Result interfaces. Their copy rules use the same
+metadata. Existing manual schema adapters are identified by the builder's
+manual-type metadata and supply Clone alongside their handwritten definitions.
+A missing adapter method fails compilation; unknown field types fail generation.
+
+Union helpers are generated beside their interface from its variants. They
+preserve value, pointer and typed-nil representations and reject unknown dynamic
+implementations with a panic rather than retaining an opaque reference. This
+also applies to custom Event payloads in EventEnvelope; Clone is for schema-
+defined wire data. Generation handles recursive type graphs, while runtime
+copies require acyclic values and external synchronization of source mutations.
+
+The existing Session ownership tests cover the cached data boundaries. A compact
+synthetic fixture without any Herdr-specific root type checks placement and
+nested copy rules; focused protocol tests cover union/manual adapters. Golden
+and determinism checks verify the generated output against the current schema.
+
 ## Graphics streaming
 
 `pane.graphics.stream` keeps its connection open and sends binary frames, so
@@ -395,9 +422,9 @@ also cloned at ingestion, so an event returned by `Next` cannot mutate cached
 state. Nested nil pointers/maps/slices remain nil and nonnil empty collections
 remain nonnil. Top-level mirror lists continue to normalize absent entries to
 nonnil empty slices. Cache records may share internal references with each other, but no
-such reference crosses the ownership boundary. `session_clone.go` spells out
-the reference fields of the current snapshot records without reflection or a
-JSON round trip.
+such reference crosses the ownership boundary. Generated `Clone` methods own
+the record-copy rules; `session_clone.go` retains only the collection projection
+and scalar event-pointer helpers.
 
 `BenchmarkSessionSnapshot` exercises populated snapshots at 1, 15 and 100 panes.
 Deep copying necessarily adds allocations compared with borrowing pointers;

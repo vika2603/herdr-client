@@ -55,10 +55,250 @@ type Event interface {
 	EventName() string
 }
 
+func cloneEvent(value Event) Event {
+	switch v := value.(type) {
+	case nil:
+		return nil
+	case LayoutUpdatedEvent:
+		return v.Clone()
+	case *LayoutUpdatedEvent:
+		if v == nil {
+			return v
+		}
+		cloned := v.Clone()
+		return &cloned
+	case PaneAgentDetectedEvent:
+		return v.Clone()
+	case *PaneAgentDetectedEvent:
+		if v == nil {
+			return v
+		}
+		cloned := v.Clone()
+		return &cloned
+	case PaneAgentStatusChangedEvent:
+		return v.Clone()
+	case *PaneAgentStatusChangedEvent:
+		if v == nil {
+			return v
+		}
+		cloned := v.Clone()
+		return &cloned
+	case PaneClosedEvent:
+		return v.Clone()
+	case *PaneClosedEvent:
+		if v == nil {
+			return v
+		}
+		cloned := v.Clone()
+		return &cloned
+	case PaneCreatedEvent:
+		return v.Clone()
+	case *PaneCreatedEvent:
+		if v == nil {
+			return v
+		}
+		cloned := v.Clone()
+		return &cloned
+	case PaneExitedEvent:
+		return v.Clone()
+	case *PaneExitedEvent:
+		if v == nil {
+			return v
+		}
+		cloned := v.Clone()
+		return &cloned
+	case PaneFocusedEvent:
+		return v.Clone()
+	case *PaneFocusedEvent:
+		if v == nil {
+			return v
+		}
+		cloned := v.Clone()
+		return &cloned
+	case PaneMovedEvent:
+		return v.Clone()
+	case *PaneMovedEvent:
+		if v == nil {
+			return v
+		}
+		cloned := v.Clone()
+		return &cloned
+	case PaneOutputChangedEvent:
+		return v.Clone()
+	case *PaneOutputChangedEvent:
+		if v == nil {
+			return v
+		}
+		cloned := v.Clone()
+		return &cloned
+	case PaneOutputMatchedEvent:
+		return v.Clone()
+	case *PaneOutputMatchedEvent:
+		if v == nil {
+			return v
+		}
+		cloned := v.Clone()
+		return &cloned
+	case PaneScrollChangedEvent:
+		return v.Clone()
+	case *PaneScrollChangedEvent:
+		if v == nil {
+			return v
+		}
+		cloned := v.Clone()
+		return &cloned
+	case PaneUpdatedEvent:
+		return v.Clone()
+	case *PaneUpdatedEvent:
+		if v == nil {
+			return v
+		}
+		cloned := v.Clone()
+		return &cloned
+	case TabClosedEvent:
+		return v.Clone()
+	case *TabClosedEvent:
+		if v == nil {
+			return v
+		}
+		cloned := v.Clone()
+		return &cloned
+	case TabCreatedEvent:
+		return v.Clone()
+	case *TabCreatedEvent:
+		if v == nil {
+			return v
+		}
+		cloned := v.Clone()
+		return &cloned
+	case TabFocusedEvent:
+		return v.Clone()
+	case *TabFocusedEvent:
+		if v == nil {
+			return v
+		}
+		cloned := v.Clone()
+		return &cloned
+	case TabMovedEvent:
+		return v.Clone()
+	case *TabMovedEvent:
+		if v == nil {
+			return v
+		}
+		cloned := v.Clone()
+		return &cloned
+	case TabRenamedEvent:
+		return v.Clone()
+	case *TabRenamedEvent:
+		if v == nil {
+			return v
+		}
+		cloned := v.Clone()
+		return &cloned
+	case WorkspaceClosedEvent:
+		return v.Clone()
+	case *WorkspaceClosedEvent:
+		if v == nil {
+			return v
+		}
+		cloned := v.Clone()
+		return &cloned
+	case WorkspaceCreatedEvent:
+		return v.Clone()
+	case *WorkspaceCreatedEvent:
+		if v == nil {
+			return v
+		}
+		cloned := v.Clone()
+		return &cloned
+	case WorkspaceFocusedEvent:
+		return v.Clone()
+	case *WorkspaceFocusedEvent:
+		if v == nil {
+			return v
+		}
+		cloned := v.Clone()
+		return &cloned
+	case WorkspaceMetadataUpdatedEvent:
+		return v.Clone()
+	case *WorkspaceMetadataUpdatedEvent:
+		if v == nil {
+			return v
+		}
+		cloned := v.Clone()
+		return &cloned
+	case WorkspaceMovedEvent:
+		return v.Clone()
+	case *WorkspaceMovedEvent:
+		if v == nil {
+			return v
+		}
+		cloned := v.Clone()
+		return &cloned
+	case WorkspaceRenamedEvent:
+		return v.Clone()
+	case *WorkspaceRenamedEvent:
+		if v == nil {
+			return v
+		}
+		cloned := v.Clone()
+		return &cloned
+	case WorkspaceReorderedEvent:
+		return v.Clone()
+	case *WorkspaceReorderedEvent:
+		if v == nil {
+			return v
+		}
+		cloned := v.Clone()
+		return &cloned
+	case WorkspaceUpdatedEvent:
+		return v.Clone()
+	case *WorkspaceUpdatedEvent:
+		if v == nil {
+			return v
+		}
+		cloned := v.Clone()
+		return &cloned
+	case WorktreeCreatedEvent:
+		return v.Clone()
+	case *WorktreeCreatedEvent:
+		if v == nil {
+			return v
+		}
+		cloned := v.Clone()
+		return &cloned
+	case WorktreeOpenedEvent:
+		return v.Clone()
+	case *WorktreeOpenedEvent:
+		if v == nil {
+			return v
+		}
+		cloned := v.Clone()
+		return &cloned
+	case WorktreeRemovedEvent:
+		return v.Clone()
+	case *WorktreeRemovedEvent:
+		if v == nil {
+			return v
+		}
+		cloned := v.Clone()
+		return &cloned
+	default:
+		panic(fmt.Sprintf("herdr: cannot clone unsupported Event implementation %T", value))
+	}
+}
+
 // EventEnvelope is one event line pushed on a subscription connection.
 type EventEnvelope struct {
 	Event EventKind `json:"event"`
 	Data  Event     `json:"data"`
+}
+
+// Clone returns a deep copy of v.
+func (v EventEnvelope) Clone() EventEnvelope {
+	out := v
+	out.Data = cloneEvent(v.Data)
+	return out
 }
 
 // UnmarshalJSON decodes the payload according to the event name.
@@ -306,6 +546,13 @@ type LayoutUpdatedEvent struct {
 	Layout PaneLayoutSnapshot `json:"layout"`
 }
 
+// Clone returns a deep copy of v.
+func (v LayoutUpdatedEvent) Clone() LayoutUpdatedEvent {
+	out := v
+	out.Layout = v.Layout.Clone()
+	return out
+}
+
 // EventName returns "layout.updated".
 func (LayoutUpdatedEvent) EventName() string { return "layout.updated" }
 
@@ -325,6 +572,24 @@ type PaneAgentDetectedEvent struct {
 	PaneID      string       `json:"pane_id"`
 	Released    *bool        `json:"released,omitempty"`
 	WorkspaceID string       `json:"workspace_id"`
+}
+
+// Clone returns a deep copy of v.
+func (v PaneAgentDetectedEvent) Clone() PaneAgentDetectedEvent {
+	out := v
+	if v.Agent != nil {
+		out.Agent = new(string)
+		(*out.Agent) = (*v.Agent)
+	}
+	if v.FinalStatus != nil {
+		out.FinalStatus = new(AgentStatus)
+		(*out.FinalStatus) = (*v.FinalStatus)
+	}
+	if v.Released != nil {
+		out.Released = new(bool)
+		(*out.Released) = (*v.Released)
+	}
+	return out
 }
 
 // EventName returns "pane.agent_detected".
@@ -351,6 +616,30 @@ type PaneAgentStatusChangedEvent struct {
 	WorkspaceID  string            `json:"workspace_id"`
 }
 
+// Clone returns a deep copy of v.
+func (v PaneAgentStatusChangedEvent) Clone() PaneAgentStatusChangedEvent {
+	out := v
+	if v.Agent != nil {
+		out.Agent = new(string)
+		(*out.Agent) = (*v.Agent)
+	}
+	if v.DisplayAgent != nil {
+		out.DisplayAgent = new(string)
+		(*out.DisplayAgent) = (*v.DisplayAgent)
+	}
+	if v.StateLabels != nil {
+		out.StateLabels = make(map[string]string, len(v.StateLabels))
+		for key1, value2 := range v.StateLabels {
+			out.StateLabels[key1] = value2
+		}
+	}
+	if v.Title != nil {
+		out.Title = new(string)
+		(*out.Title) = (*v.Title)
+	}
+	return out
+}
+
 // EventName returns "pane.agent_status_changed".
 func (PaneAgentStatusChangedEvent) EventName() string { return "pane.agent_status_changed" }
 
@@ -369,6 +658,12 @@ type PaneClosedEvent struct {
 	WorkspaceID string `json:"workspace_id"`
 }
 
+// Clone returns a deep copy of v.
+func (v PaneClosedEvent) Clone() PaneClosedEvent {
+	out := v
+	return out
+}
+
 // EventName returns "pane.closed".
 func (PaneClosedEvent) EventName() string { return "pane.closed" }
 
@@ -384,6 +679,13 @@ func (v PaneClosedEvent) MarshalJSON() ([]byte, error) {
 // PaneCreatedEvent is the "pane.created" event payload.
 type PaneCreatedEvent struct {
 	Pane PaneInfo `json:"pane"`
+}
+
+// Clone returns a deep copy of v.
+func (v PaneCreatedEvent) Clone() PaneCreatedEvent {
+	out := v
+	out.Pane = v.Pane.Clone()
+	return out
 }
 
 // EventName returns "pane.created".
@@ -404,6 +706,12 @@ type PaneExitedEvent struct {
 	WorkspaceID string `json:"workspace_id"`
 }
 
+// Clone returns a deep copy of v.
+func (v PaneExitedEvent) Clone() PaneExitedEvent {
+	out := v
+	return out
+}
+
 // EventName returns "pane.exited".
 func (PaneExitedEvent) EventName() string { return "pane.exited" }
 
@@ -420,6 +728,12 @@ func (v PaneExitedEvent) MarshalJSON() ([]byte, error) {
 type PaneFocusedEvent struct {
 	PaneID      string `json:"pane_id"`
 	WorkspaceID string `json:"workspace_id"`
+}
+
+// Clone returns a deep copy of v.
+func (v PaneFocusedEvent) Clone() PaneFocusedEvent {
+	out := v
+	return out
 }
 
 // EventName returns "pane.focused".
@@ -446,6 +760,29 @@ type PaneMovedEvent struct {
 	PreviousWorkspaceID string         `json:"previous_workspace_id"`
 }
 
+// Clone returns a deep copy of v.
+func (v PaneMovedEvent) Clone() PaneMovedEvent {
+	out := v
+	if v.ClosedTabID != nil {
+		out.ClosedTabID = new(string)
+		(*out.ClosedTabID) = (*v.ClosedTabID)
+	}
+	if v.ClosedWorkspaceID != nil {
+		out.ClosedWorkspaceID = new(string)
+		(*out.ClosedWorkspaceID) = (*v.ClosedWorkspaceID)
+	}
+	if v.CreatedTab != nil {
+		out.CreatedTab = new(TabInfo)
+		(*out.CreatedTab) = (*v.CreatedTab).Clone()
+	}
+	if v.CreatedWorkspace != nil {
+		out.CreatedWorkspace = new(WorkspaceInfo)
+		(*out.CreatedWorkspace) = (*v.CreatedWorkspace).Clone()
+	}
+	out.Pane = v.Pane.Clone()
+	return out
+}
+
 // EventName returns "pane.moved".
 func (PaneMovedEvent) EventName() string { return "pane.moved" }
 
@@ -463,6 +800,12 @@ type PaneOutputChangedEvent struct {
 	PaneID      string `json:"pane_id"`
 	Revision    uint64 `json:"revision"`
 	WorkspaceID string `json:"workspace_id"`
+}
+
+// Clone returns a deep copy of v.
+func (v PaneOutputChangedEvent) Clone() PaneOutputChangedEvent {
+	out := v
+	return out
 }
 
 // EventName returns "pane.output_changed".
@@ -484,6 +827,13 @@ type PaneOutputMatchedEvent struct {
 	Read        PaneReadResult `json:"read"`
 }
 
+// Clone returns a deep copy of v.
+func (v PaneOutputMatchedEvent) Clone() PaneOutputMatchedEvent {
+	out := v
+	out.Read = v.Read.Clone()
+	return out
+}
+
 // EventName returns "pane.output_matched".
 func (PaneOutputMatchedEvent) EventName() string { return "pane.output_matched" }
 
@@ -494,12 +844,26 @@ type PaneScrollChangedEvent struct {
 	WorkspaceID string         `json:"workspace_id"`
 }
 
+// Clone returns a deep copy of v.
+func (v PaneScrollChangedEvent) Clone() PaneScrollChangedEvent {
+	out := v
+	out.Scroll = v.Scroll.Clone()
+	return out
+}
+
 // EventName returns "pane.scroll_changed".
 func (PaneScrollChangedEvent) EventName() string { return "pane.scroll_changed" }
 
 // PaneUpdatedEvent is the "pane.updated" event payload.
 type PaneUpdatedEvent struct {
 	Pane PaneInfo `json:"pane"`
+}
+
+// Clone returns a deep copy of v.
+func (v PaneUpdatedEvent) Clone() PaneUpdatedEvent {
+	out := v
+	out.Pane = v.Pane.Clone()
+	return out
 }
 
 // EventName returns "pane.updated".
@@ -520,6 +884,12 @@ type TabClosedEvent struct {
 	WorkspaceID string `json:"workspace_id"`
 }
 
+// Clone returns a deep copy of v.
+func (v TabClosedEvent) Clone() TabClosedEvent {
+	out := v
+	return out
+}
+
 // EventName returns "tab.closed".
 func (TabClosedEvent) EventName() string { return "tab.closed" }
 
@@ -535,6 +905,13 @@ func (v TabClosedEvent) MarshalJSON() ([]byte, error) {
 // TabCreatedEvent is the "tab.created" event payload.
 type TabCreatedEvent struct {
 	Tab TabInfo `json:"tab"`
+}
+
+// Clone returns a deep copy of v.
+func (v TabCreatedEvent) Clone() TabCreatedEvent {
+	out := v
+	out.Tab = v.Tab.Clone()
+	return out
 }
 
 // EventName returns "tab.created".
@@ -553,6 +930,12 @@ func (v TabCreatedEvent) MarshalJSON() ([]byte, error) {
 type TabFocusedEvent struct {
 	TabID       string `json:"tab_id"`
 	WorkspaceID string `json:"workspace_id"`
+}
+
+// Clone returns a deep copy of v.
+func (v TabFocusedEvent) Clone() TabFocusedEvent {
+	out := v
+	return out
 }
 
 // EventName returns "tab.focused".
@@ -575,6 +958,18 @@ type TabMovedEvent struct {
 	WorkspaceID string    `json:"workspace_id"`
 }
 
+// Clone returns a deep copy of v.
+func (v TabMovedEvent) Clone() TabMovedEvent {
+	out := v
+	if v.Tabs != nil {
+		out.Tabs = make([]TabInfo, len(v.Tabs))
+		for i1 := range v.Tabs {
+			out.Tabs[i1] = v.Tabs[i1].Clone()
+		}
+	}
+	return out
+}
+
 // EventName returns "tab.moved".
 func (TabMovedEvent) EventName() string { return "tab.moved" }
 
@@ -592,6 +987,12 @@ type TabRenamedEvent struct {
 	Label       string `json:"label"`
 	TabID       string `json:"tab_id"`
 	WorkspaceID string `json:"workspace_id"`
+}
+
+// Clone returns a deep copy of v.
+func (v TabRenamedEvent) Clone() TabRenamedEvent {
+	out := v
+	return out
 }
 
 // EventName returns "tab.renamed".
@@ -612,6 +1013,16 @@ type WorkspaceClosedEvent struct {
 	WorkspaceID string         `json:"workspace_id"`
 }
 
+// Clone returns a deep copy of v.
+func (v WorkspaceClosedEvent) Clone() WorkspaceClosedEvent {
+	out := v
+	if v.Workspace != nil {
+		out.Workspace = new(WorkspaceInfo)
+		(*out.Workspace) = (*v.Workspace).Clone()
+	}
+	return out
+}
+
 // EventName returns "workspace.closed".
 func (WorkspaceClosedEvent) EventName() string { return "workspace.closed" }
 
@@ -627,6 +1038,13 @@ func (v WorkspaceClosedEvent) MarshalJSON() ([]byte, error) {
 // WorkspaceCreatedEvent is the "workspace.created" event payload.
 type WorkspaceCreatedEvent struct {
 	Workspace WorkspaceInfo `json:"workspace"`
+}
+
+// Clone returns a deep copy of v.
+func (v WorkspaceCreatedEvent) Clone() WorkspaceCreatedEvent {
+	out := v
+	out.Workspace = v.Workspace.Clone()
+	return out
 }
 
 // EventName returns "workspace.created".
@@ -646,6 +1064,12 @@ type WorkspaceFocusedEvent struct {
 	WorkspaceID string `json:"workspace_id"`
 }
 
+// Clone returns a deep copy of v.
+func (v WorkspaceFocusedEvent) Clone() WorkspaceFocusedEvent {
+	out := v
+	return out
+}
+
 // EventName returns "workspace.focused".
 func (WorkspaceFocusedEvent) EventName() string { return "workspace.focused" }
 
@@ -662,6 +1086,13 @@ func (v WorkspaceFocusedEvent) MarshalJSON() ([]byte, error) {
 // payload.
 type WorkspaceMetadataUpdatedEvent struct {
 	Workspace WorkspaceInfo `json:"workspace"`
+}
+
+// Clone returns a deep copy of v.
+func (v WorkspaceMetadataUpdatedEvent) Clone() WorkspaceMetadataUpdatedEvent {
+	out := v
+	out.Workspace = v.Workspace.Clone()
+	return out
 }
 
 // EventName returns "workspace.metadata_updated".
@@ -683,6 +1114,18 @@ type WorkspaceMovedEvent struct {
 	Workspaces  []WorkspaceInfo `json:"workspaces"`
 }
 
+// Clone returns a deep copy of v.
+func (v WorkspaceMovedEvent) Clone() WorkspaceMovedEvent {
+	out := v
+	if v.Workspaces != nil {
+		out.Workspaces = make([]WorkspaceInfo, len(v.Workspaces))
+		for i1 := range v.Workspaces {
+			out.Workspaces[i1] = v.Workspaces[i1].Clone()
+		}
+	}
+	return out
+}
+
 // EventName returns "workspace.moved".
 func (WorkspaceMovedEvent) EventName() string { return "workspace.moved" }
 
@@ -699,6 +1142,12 @@ func (v WorkspaceMovedEvent) MarshalJSON() ([]byte, error) {
 type WorkspaceRenamedEvent struct {
 	Label       string `json:"label"`
 	WorkspaceID string `json:"workspace_id"`
+}
+
+// Clone returns a deep copy of v.
+func (v WorkspaceRenamedEvent) Clone() WorkspaceRenamedEvent {
+	out := v
+	return out
 }
 
 // EventName returns "workspace.renamed".
@@ -720,6 +1169,26 @@ type WorkspaceReorderedEvent struct {
 	Workspaces        []WorkspaceInfo `json:"workspaces"`
 }
 
+// Clone returns a deep copy of v.
+func (v WorkspaceReorderedEvent) Clone() WorkspaceReorderedEvent {
+	out := v
+	if v.BeforeWorkspaceID != nil {
+		out.BeforeWorkspaceID = new(string)
+		(*out.BeforeWorkspaceID) = (*v.BeforeWorkspaceID)
+	}
+	if v.WorkspaceIds != nil {
+		out.WorkspaceIds = make([]string, len(v.WorkspaceIds))
+		copy(out.WorkspaceIds, v.WorkspaceIds)
+	}
+	if v.Workspaces != nil {
+		out.Workspaces = make([]WorkspaceInfo, len(v.Workspaces))
+		for i1 := range v.Workspaces {
+			out.Workspaces[i1] = v.Workspaces[i1].Clone()
+		}
+	}
+	return out
+}
+
 // EventName returns "workspace.reordered".
 func (WorkspaceReorderedEvent) EventName() string { return "workspace.reordered" }
 
@@ -735,6 +1204,13 @@ func (v WorkspaceReorderedEvent) MarshalJSON() ([]byte, error) {
 // WorkspaceUpdatedEvent is the "workspace.updated" event payload.
 type WorkspaceUpdatedEvent struct {
 	Workspace WorkspaceInfo `json:"workspace"`
+}
+
+// Clone returns a deep copy of v.
+func (v WorkspaceUpdatedEvent) Clone() WorkspaceUpdatedEvent {
+	out := v
+	out.Workspace = v.Workspace.Clone()
+	return out
 }
 
 // EventName returns "workspace.updated".
@@ -753,6 +1229,14 @@ func (v WorkspaceUpdatedEvent) MarshalJSON() ([]byte, error) {
 type WorktreeCreatedEvent struct {
 	Workspace WorkspaceInfo `json:"workspace"`
 	Worktree  WorktreeInfo  `json:"worktree"`
+}
+
+// Clone returns a deep copy of v.
+func (v WorktreeCreatedEvent) Clone() WorktreeCreatedEvent {
+	out := v
+	out.Workspace = v.Workspace.Clone()
+	out.Worktree = v.Worktree.Clone()
+	return out
 }
 
 // EventName returns "worktree.created".
@@ -774,6 +1258,14 @@ type WorktreeOpenedEvent struct {
 	Worktree    WorktreeInfo  `json:"worktree"`
 }
 
+// Clone returns a deep copy of v.
+func (v WorktreeOpenedEvent) Clone() WorktreeOpenedEvent {
+	out := v
+	out.Workspace = v.Workspace.Clone()
+	out.Worktree = v.Worktree.Clone()
+	return out
+}
+
 // EventName returns "worktree.opened".
 func (WorktreeOpenedEvent) EventName() string { return "worktree.opened" }
 
@@ -792,6 +1284,17 @@ type WorktreeRemovedEvent struct {
 	Workspace   *WorkspaceInfo `json:"workspace,omitempty"`
 	WorkspaceID string         `json:"workspace_id"`
 	Worktree    WorktreeInfo   `json:"worktree"`
+}
+
+// Clone returns a deep copy of v.
+func (v WorktreeRemovedEvent) Clone() WorktreeRemovedEvent {
+	out := v
+	if v.Workspace != nil {
+		out.Workspace = new(WorkspaceInfo)
+		(*out.Workspace) = (*v.Workspace).Clone()
+	}
+	out.Worktree = v.Worktree.Clone()
+	return out
 }
 
 // EventName returns "worktree.removed".

@@ -442,6 +442,16 @@ type AgentExplainResponse struct {
 	Explain json.RawMessage `json:"explain"`
 }
 
+// Clone returns a deep copy of v.
+func (v AgentExplainResponse) Clone() AgentExplainResponse {
+	out := v
+	if v.Explain != nil {
+		out.Explain = make(json.RawMessage, len(v.Explain))
+		copy(out.Explain, v.Explain)
+	}
+	return out
+}
+
 // ResultType returns "agent_explain".
 func (AgentExplainResponse) ResultType() string { return "agent_explain" }
 
@@ -457,6 +467,13 @@ func (v AgentExplainResponse) MarshalJSON() ([]byte, error) {
 // AgentInfoResponse is the "agent_info" result.
 type AgentInfoResponse struct {
 	Agent AgentInfo `json:"agent"`
+}
+
+// Clone returns a deep copy of v.
+func (v AgentInfoResponse) Clone() AgentInfoResponse {
+	out := v
+	out.Agent = v.Agent.Clone()
+	return out
 }
 
 // ResultType returns "agent_info".
@@ -476,6 +493,18 @@ type AgentListResponse struct {
 	Agents []AgentInfo `json:"agents"`
 }
 
+// Clone returns a deep copy of v.
+func (v AgentListResponse) Clone() AgentListResponse {
+	out := v
+	if v.Agents != nil {
+		out.Agents = make([]AgentInfo, len(v.Agents))
+		for i1 := range v.Agents {
+			out.Agents[i1] = v.Agents[i1].Clone()
+		}
+	}
+	return out
+}
+
 // ResultType returns "agent_list".
 func (AgentListResponse) ResultType() string { return "agent_list" }
 
@@ -491,6 +520,18 @@ func (v AgentListResponse) MarshalJSON() ([]byte, error) {
 // AgentManifestReloadResponse is the "agent_manifest_reload" result.
 type AgentManifestReloadResponse struct {
 	Manifests []AgentManifestInfo `json:"manifests"`
+}
+
+// Clone returns a deep copy of v.
+func (v AgentManifestReloadResponse) Clone() AgentManifestReloadResponse {
+	out := v
+	if v.Manifests != nil {
+		out.Manifests = make([]AgentManifestInfo, len(v.Manifests))
+		for i1 := range v.Manifests {
+			out.Manifests[i1] = v.Manifests[i1].Clone()
+		}
+	}
+	return out
 }
 
 // ResultType returns "agent_manifest_reload".
@@ -512,6 +553,26 @@ type AgentManifestStatusResponse struct {
 	Manifests     []AgentManifestInfo `json:"manifests"`
 }
 
+// Clone returns a deep copy of v.
+func (v AgentManifestStatusResponse) Clone() AgentManifestStatusResponse {
+	out := v
+	if v.LastCheckUnix != nil {
+		out.LastCheckUnix = new(uint64)
+		(*out.LastCheckUnix) = (*v.LastCheckUnix)
+	}
+	if v.LastResult != nil {
+		out.LastResult = new(string)
+		(*out.LastResult) = (*v.LastResult)
+	}
+	if v.Manifests != nil {
+		out.Manifests = make([]AgentManifestInfo, len(v.Manifests))
+		for i1 := range v.Manifests {
+			out.Manifests[i1] = v.Manifests[i1].Clone()
+		}
+	}
+	return out
+}
+
 // ResultType returns "agent_manifest_status".
 func (AgentManifestStatusResponse) ResultType() string { return "agent_manifest_status" }
 
@@ -527,6 +588,13 @@ func (v AgentManifestStatusResponse) MarshalJSON() ([]byte, error) {
 // AgentPromptedResponse is the "agent_prompted" result.
 type AgentPromptedResponse struct {
 	Agent AgentInfo `json:"agent"`
+}
+
+// Clone returns a deep copy of v.
+func (v AgentPromptedResponse) Clone() AgentPromptedResponse {
+	out := v
+	out.Agent = v.Agent.Clone()
+	return out
 }
 
 // ResultType returns "agent_prompted".
@@ -547,6 +615,17 @@ type AgentStartedResponse struct {
 	Argv  []string  `json:"argv"`
 }
 
+// Clone returns a deep copy of v.
+func (v AgentStartedResponse) Clone() AgentStartedResponse {
+	out := v
+	out.Agent = v.Agent.Clone()
+	if v.Argv != nil {
+		out.Argv = make([]string, len(v.Argv))
+		copy(out.Argv, v.Argv)
+	}
+	return out
+}
+
 // ResultType returns "agent_started".
 func (AgentStartedResponse) ResultType() string { return "agent_started" }
 
@@ -564,6 +643,20 @@ type AgentViewResponse struct {
 	Active bool    `json:"active"`
 	Label  *string `json:"label,omitempty"`
 	Source *string `json:"source,omitempty"`
+}
+
+// Clone returns a deep copy of v.
+func (v AgentViewResponse) Clone() AgentViewResponse {
+	out := v
+	if v.Label != nil {
+		out.Label = new(string)
+		(*out.Label) = (*v.Label)
+	}
+	if v.Source != nil {
+		out.Source = new(string)
+		(*out.Source) = (*v.Source)
+	}
+	return out
 }
 
 // ResultType returns "agent_view".
@@ -588,6 +681,12 @@ type ClientShellSurfaceSetResponse struct {
 	ProjectionRevision uint64 `json:"projection_revision"`
 }
 
+// Clone returns a deep copy of v.
+func (v ClientShellSurfaceSetResponse) Clone() ClientShellSurfaceSetResponse {
+	out := v
+	return out
+}
+
 // ResultType returns "client_shell_surface_set".
 func (ClientShellSurfaceSetResponse) ResultType() string { return "client_shell_surface_set" }
 
@@ -604,6 +703,12 @@ func (v ClientShellSurfaceSetResponse) MarshalJSON() ([]byte, error) {
 type ClientWindowTitleResponse struct {
 	Changed bool                    `json:"changed"`
 	Reason  ClientWindowTitleReason `json:"reason"`
+}
+
+// Clone returns a deep copy of v.
+func (v ClientWindowTitleResponse) Clone() ClientWindowTitleResponse {
+	out := v
+	return out
 }
 
 // ResultType returns "client_window_title".
@@ -624,6 +729,16 @@ type ConfigReloadResponse struct {
 	Status      ConfigReloadStatus `json:"status"`
 }
 
+// Clone returns a deep copy of v.
+func (v ConfigReloadResponse) Clone() ConfigReloadResponse {
+	out := v
+	if v.Diagnostics != nil {
+		out.Diagnostics = make([]string, len(v.Diagnostics))
+		copy(out.Diagnostics, v.Diagnostics)
+	}
+	return out
+}
+
 // ResultType returns "config_reload".
 func (ConfigReloadResponse) ResultType() string { return "config_reload" }
 
@@ -642,6 +757,13 @@ type IntegrationInstallResponse struct {
 	Target  IntegrationTarget        `json:"target"`
 }
 
+// Clone returns a deep copy of v.
+func (v IntegrationInstallResponse) Clone() IntegrationInstallResponse {
+	out := v
+	out.Details = v.Details.Clone()
+	return out
+}
+
 // ResultType returns "integration_install".
 func (IntegrationInstallResponse) ResultType() string { return "integration_install" }
 
@@ -657,6 +779,18 @@ func (v IntegrationInstallResponse) MarshalJSON() ([]byte, error) {
 // IntegrationListResponse is the "integration_list" result.
 type IntegrationListResponse struct {
 	Integrations []IntegrationInfo `json:"integrations"`
+}
+
+// Clone returns a deep copy of v.
+func (v IntegrationListResponse) Clone() IntegrationListResponse {
+	out := v
+	if v.Integrations != nil {
+		out.Integrations = make([]IntegrationInfo, len(v.Integrations))
+		for i1 := range v.Integrations {
+			out.Integrations[i1] = v.Integrations[i1].Clone()
+		}
+	}
+	return out
 }
 
 // ResultType returns "integration_list".
@@ -677,6 +811,13 @@ type IntegrationUninstallResponse struct {
 	Target  IntegrationTarget          `json:"target"`
 }
 
+// Clone returns a deep copy of v.
+func (v IntegrationUninstallResponse) Clone() IntegrationUninstallResponse {
+	out := v
+	out.Details = v.Details.Clone()
+	return out
+}
+
 // ResultType returns "integration_uninstall".
 func (IntegrationUninstallResponse) ResultType() string { return "integration_uninstall" }
 
@@ -692,6 +833,13 @@ func (v IntegrationUninstallResponse) MarshalJSON() ([]byte, error) {
 // LayoutApplyResponse is the "layout_apply" result.
 type LayoutApplyResponse struct {
 	Layout LayoutDescription `json:"layout"`
+}
+
+// Clone returns a deep copy of v.
+func (v LayoutApplyResponse) Clone() LayoutApplyResponse {
+	out := v
+	out.Layout = v.Layout.Clone()
+	return out
 }
 
 // ResultType returns "layout_apply".
@@ -711,6 +859,13 @@ type LayoutExportResponse struct {
 	Layout LayoutDescription `json:"layout"`
 }
 
+// Clone returns a deep copy of v.
+func (v LayoutExportResponse) Clone() LayoutExportResponse {
+	out := v
+	out.Layout = v.Layout.Clone()
+	return out
+}
+
 // ResultType returns "layout_export".
 func (LayoutExportResponse) ResultType() string { return "layout_export" }
 
@@ -726,6 +881,13 @@ func (v LayoutExportResponse) MarshalJSON() ([]byte, error) {
 // LayoutSplitRatioSetResponse is the "layout_split_ratio_set" result.
 type LayoutSplitRatioSetResponse struct {
 	Layout LayoutDescription `json:"layout"`
+}
+
+// Clone returns a deep copy of v.
+func (v LayoutSplitRatioSetResponse) Clone() LayoutSplitRatioSetResponse {
+	out := v
+	out.Layout = v.Layout.Clone()
+	return out
 }
 
 // ResultType returns "layout_split_ratio_set".
@@ -746,6 +908,12 @@ type NotificationShowResponse struct {
 	Shown  bool                   `json:"shown"`
 }
 
+// Clone returns a deep copy of v.
+func (v NotificationShowResponse) Clone() NotificationShowResponse {
+	out := v
+	return out
+}
+
 // ResultType returns "notification_show".
 func (NotificationShowResponse) ResultType() string { return "notification_show" }
 
@@ -760,6 +928,12 @@ func (v NotificationShowResponse) MarshalJSON() ([]byte, error) {
 
 // OKResponse is the "ok" result.
 type OKResponse struct{}
+
+// Clone returns a deep copy of v.
+func (v OKResponse) Clone() OKResponse {
+	out := v
+	return out
+}
 
 // ResultType returns "ok".
 func (OKResponse) ResultType() string { return "ok" }
@@ -781,6 +955,17 @@ type OutputMatchedResponse struct {
 	Revision    uint64         `json:"revision"`
 }
 
+// Clone returns a deep copy of v.
+func (v OutputMatchedResponse) Clone() OutputMatchedResponse {
+	out := v
+	if v.MatchedLine != nil {
+		out.MatchedLine = new(string)
+		(*out.MatchedLine) = (*v.MatchedLine)
+	}
+	out.Read = v.Read.Clone()
+	return out
+}
+
 // ResultType returns "output_matched".
 func (OutputMatchedResponse) ResultType() string { return "output_matched" }
 
@@ -798,6 +983,13 @@ type PaneCopyMotionResponse struct {
 	ContentRevision uint64        `json:"content_revision"`
 	Cursor          PaneTextPoint `json:"cursor"`
 	PaneID          string        `json:"pane_id"`
+}
+
+// Clone returns a deep copy of v.
+func (v PaneCopyMotionResponse) Clone() PaneCopyMotionResponse {
+	out := v
+	out.Cursor = v.Cursor.Clone()
+	return out
 }
 
 // ResultType returns "pane_copy_motion".
@@ -822,6 +1014,26 @@ type PaneCopySearchResponse struct {
 	Total           uint64          `json:"total"`
 }
 
+// Clone returns a deep copy of v.
+func (v PaneCopySearchResponse) Clone() PaneCopySearchResponse {
+	out := v
+	if v.Current != nil {
+		out.Current = new(uint32)
+		(*out.Current) = (*v.Current)
+	}
+	if v.CurrentGlobal != nil {
+		out.CurrentGlobal = new(uint64)
+		(*out.CurrentGlobal) = (*v.CurrentGlobal)
+	}
+	if v.Matches != nil {
+		out.Matches = make([]PaneTextRange, len(v.Matches))
+		for i1 := range v.Matches {
+			out.Matches[i1] = v.Matches[i1].Clone()
+		}
+	}
+	return out
+}
+
 // ResultType returns "pane_copy_search".
 func (PaneCopySearchResponse) ResultType() string { return "pane_copy_search" }
 
@@ -837,6 +1049,13 @@ func (v PaneCopySearchResponse) MarshalJSON() ([]byte, error) {
 // PaneCurrentResponse is the "pane_current" result.
 type PaneCurrentResponse struct {
 	Pane PaneInfo `json:"pane"`
+}
+
+// Clone returns a deep copy of v.
+func (v PaneCurrentResponse) Clone() PaneCurrentResponse {
+	out := v
+	out.Pane = v.Pane.Clone()
+	return out
 }
 
 // ResultType returns "pane_current".
@@ -856,6 +1075,13 @@ type PaneEdgesResponse struct {
 	Edges PaneEdgesResult `json:"edges"`
 }
 
+// Clone returns a deep copy of v.
+func (v PaneEdgesResponse) Clone() PaneEdgesResponse {
+	out := v
+	out.Edges = v.Edges.Clone()
+	return out
+}
+
 // ResultType returns "pane_edges".
 func (PaneEdgesResponse) ResultType() string { return "pane_edges" }
 
@@ -871,6 +1097,13 @@ func (v PaneEdgesResponse) MarshalJSON() ([]byte, error) {
 // PaneFocusDirectionResponse is the "pane_focus_direction" result.
 type PaneFocusDirectionResponse struct {
 	Focus PaneFocusDirectionResult `json:"focus"`
+}
+
+// Clone returns a deep copy of v.
+func (v PaneFocusDirectionResponse) Clone() PaneFocusDirectionResponse {
+	out := v
+	out.Focus = v.Focus.Clone()
+	return out
 }
 
 // ResultType returns "pane_focus_direction".
@@ -889,6 +1122,12 @@ func (v PaneFocusDirectionResponse) MarshalJSON() ([]byte, error) {
 type PaneGraphicsFrameAckResponse struct {
 	Revision uint64 `json:"revision"`
 	Sequence uint64 `json:"sequence"`
+}
+
+// Clone returns a deep copy of v.
+func (v PaneGraphicsFrameAckResponse) Clone() PaneGraphicsFrameAckResponse {
+	out := v
+	return out
 }
 
 // ResultType returns "pane_graphics_frame_ack".
@@ -924,6 +1163,44 @@ type PaneGraphicsInfoResponse struct {
 	PixelMouse  *bool `json:"pixel_mouse,omitempty"`
 }
 
+// Clone returns a deep copy of v.
+func (v PaneGraphicsInfoResponse) Clone() PaneGraphicsInfoResponse {
+	out := v
+	if v.FileFrameDamage != nil {
+		out.FileFrameDamage = new(bool)
+		(*out.FileFrameDamage) = (*v.FileFrameDamage)
+	}
+	if v.FileFrameDirectMaxBytes != nil {
+		out.FileFrameDirectMaxBytes = new(uint64)
+		(*out.FileFrameDirectMaxBytes) = (*v.FileFrameDirectMaxBytes)
+	}
+	if v.FileFrameDirectory != nil {
+		out.FileFrameDirectory = new(string)
+		(*out.FileFrameDirectory) = (*v.FileFrameDirectory)
+	}
+	if v.FileFrameFormats != nil {
+		out.FileFrameFormats = make([]string, len(v.FileFrameFormats))
+		copy(out.FileFrameFormats, v.FileFrameFormats)
+	}
+	if v.FileFrameMaxBytes != nil {
+		out.FileFrameMaxBytes = new(uint64)
+		(*out.FileFrameMaxBytes) = (*v.FileFrameMaxBytes)
+	}
+	if v.FileFrameTransport != nil {
+		out.FileFrameTransport = new(string)
+		(*out.FileFrameTransport) = (*v.FileFrameTransport)
+	}
+	if v.MaxLayersPerPane != nil {
+		out.MaxLayersPerPane = new(uint64)
+		(*out.MaxLayersPerPane) = (*v.MaxLayersPerPane)
+	}
+	if v.PixelMouse != nil {
+		out.PixelMouse = new(bool)
+		(*out.PixelMouse) = (*v.PixelMouse)
+	}
+	return out
+}
+
 // ResultType returns "pane_graphics_info".
 func (PaneGraphicsInfoResponse) ResultType() string { return "pane_graphics_info" }
 
@@ -941,6 +1218,13 @@ type PaneInfoResponse struct {
 	Pane PaneInfo `json:"pane"`
 }
 
+// Clone returns a deep copy of v.
+func (v PaneInfoResponse) Clone() PaneInfoResponse {
+	out := v
+	out.Pane = v.Pane.Clone()
+	return out
+}
+
 // ResultType returns "pane_info".
 func (PaneInfoResponse) ResultType() string { return "pane_info" }
 
@@ -956,6 +1240,13 @@ func (v PaneInfoResponse) MarshalJSON() ([]byte, error) {
 // PaneLayoutResponse is the "pane_layout" result.
 type PaneLayoutResponse struct {
 	Layout PaneLayoutSnapshot `json:"layout"`
+}
+
+// Clone returns a deep copy of v.
+func (v PaneLayoutResponse) Clone() PaneLayoutResponse {
+	out := v
+	out.Layout = v.Layout.Clone()
+	return out
 }
 
 // ResultType returns "pane_layout".
@@ -976,6 +1267,16 @@ type PaneLinkActivatedResponse struct {
 	URL     *string `json:"url,omitempty"`
 }
 
+// Clone returns a deep copy of v.
+func (v PaneLinkActivatedResponse) Clone() PaneLinkActivatedResponse {
+	out := v
+	if v.URL != nil {
+		out.URL = new(string)
+		(*out.URL) = (*v.URL)
+	}
+	return out
+}
+
 // ResultType returns "pane_link_activated".
 func (PaneLinkActivatedResponse) ResultType() string { return "pane_link_activated" }
 
@@ -991,6 +1292,18 @@ func (v PaneLinkActivatedResponse) MarshalJSON() ([]byte, error) {
 // PaneListResponse is the "pane_list" result.
 type PaneListResponse struct {
 	Panes []PaneInfo `json:"panes"`
+}
+
+// Clone returns a deep copy of v.
+func (v PaneListResponse) Clone() PaneListResponse {
+	out := v
+	if v.Panes != nil {
+		out.Panes = make([]PaneInfo, len(v.Panes))
+		for i1 := range v.Panes {
+			out.Panes[i1] = v.Panes[i1].Clone()
+		}
+	}
+	return out
 }
 
 // ResultType returns "pane_list".
@@ -1010,6 +1323,13 @@ type PaneMoveResponse struct {
 	MoveResult PaneMoveResult `json:"move_result"`
 }
 
+// Clone returns a deep copy of v.
+func (v PaneMoveResponse) Clone() PaneMoveResponse {
+	out := v
+	out.MoveResult = v.MoveResult.Clone()
+	return out
+}
+
 // ResultType returns "pane_move".
 func (PaneMoveResponse) ResultType() string { return "pane_move" }
 
@@ -1025,6 +1345,13 @@ func (v PaneMoveResponse) MarshalJSON() ([]byte, error) {
 // PaneNeighborResponse is the "pane_neighbor" result.
 type PaneNeighborResponse struct {
 	Neighbor PaneNeighborResult `json:"neighbor"`
+}
+
+// Clone returns a deep copy of v.
+func (v PaneNeighborResponse) Clone() PaneNeighborResponse {
+	out := v
+	out.Neighbor = v.Neighbor.Clone()
+	return out
 }
 
 // ResultType returns "pane_neighbor".
@@ -1044,6 +1371,13 @@ type PaneProcessInfoResponse struct {
 	ProcessInfo PaneProcessInfo `json:"process_info"`
 }
 
+// Clone returns a deep copy of v.
+func (v PaneProcessInfoResponse) Clone() PaneProcessInfoResponse {
+	out := v
+	out.ProcessInfo = v.ProcessInfo.Clone()
+	return out
+}
+
 // ResultType returns "pane_process_info".
 func (PaneProcessInfoResponse) ResultType() string { return "pane_process_info" }
 
@@ -1061,6 +1395,13 @@ type PaneReadResponse struct {
 	Read PaneReadResult `json:"read"`
 }
 
+// Clone returns a deep copy of v.
+func (v PaneReadResponse) Clone() PaneReadResponse {
+	out := v
+	out.Read = v.Read.Clone()
+	return out
+}
+
 // ResultType returns "pane_read".
 func (PaneReadResponse) ResultType() string { return "pane_read" }
 
@@ -1076,6 +1417,13 @@ func (v PaneReadResponse) MarshalJSON() ([]byte, error) {
 // PaneResizeResponse is the "pane_resize" result.
 type PaneResizeResponse struct {
 	Resize PaneResizeResult `json:"resize"`
+}
+
+// Clone returns a deep copy of v.
+func (v PaneResizeResponse) Clone() PaneResizeResponse {
+	out := v
+	out.Resize = v.Resize.Clone()
+	return out
 }
 
 // ResultType returns "pane_resize".
@@ -1096,6 +1444,12 @@ type PaneSelectionResponse struct {
 	Text   string `json:"text"`
 }
 
+// Clone returns a deep copy of v.
+func (v PaneSelectionResponse) Clone() PaneSelectionResponse {
+	out := v
+	return out
+}
+
 // ResultType returns "pane_selection".
 func (PaneSelectionResponse) ResultType() string { return "pane_selection" }
 
@@ -1113,6 +1467,13 @@ type PaneSwapResponse struct {
 	Swap PaneSwapResult `json:"swap"`
 }
 
+// Clone returns a deep copy of v.
+func (v PaneSwapResponse) Clone() PaneSwapResponse {
+	out := v
+	out.Swap = v.Swap.Clone()
+	return out
+}
+
 // ResultType returns "pane_swap".
 func (PaneSwapResponse) ResultType() string { return "pane_swap" }
 
@@ -1128,6 +1489,13 @@ func (v PaneSwapResponse) MarshalJSON() ([]byte, error) {
 // PaneZoomResponse is the "pane_zoom" result.
 type PaneZoomResponse struct {
 	Zoom PaneZoomResult `json:"zoom"`
+}
+
+// Clone returns a deep copy of v.
+func (v PaneZoomResponse) Clone() PaneZoomResponse {
+	out := v
+	out.Zoom = v.Zoom.Clone()
+	return out
 }
 
 // ResultType returns "pane_zoom".
@@ -1149,6 +1517,15 @@ type PluginActionInvokedResponse struct {
 	Log     PluginCommandLogInfo    `json:"log"`
 }
 
+// Clone returns a deep copy of v.
+func (v PluginActionInvokedResponse) Clone() PluginActionInvokedResponse {
+	out := v
+	out.Action = v.Action.Clone()
+	out.Context = v.Context.Clone()
+	out.Log = v.Log.Clone()
+	return out
+}
+
 // ResultType returns "plugin_action_invoked".
 func (PluginActionInvokedResponse) ResultType() string { return "plugin_action_invoked" }
 
@@ -1164,6 +1541,18 @@ func (v PluginActionInvokedResponse) MarshalJSON() ([]byte, error) {
 // PluginActionListResponse is the "plugin_action_list" result.
 type PluginActionListResponse struct {
 	Actions []PluginActionInfo `json:"actions"`
+}
+
+// Clone returns a deep copy of v.
+func (v PluginActionListResponse) Clone() PluginActionListResponse {
+	out := v
+	if v.Actions != nil {
+		out.Actions = make([]PluginActionInfo, len(v.Actions))
+		for i1 := range v.Actions {
+			out.Actions[i1] = v.Actions[i1].Clone()
+		}
+	}
+	return out
 }
 
 // ResultType returns "plugin_action_list".
@@ -1183,6 +1572,13 @@ type PluginDisabledResponse struct {
 	Plugin InstalledPluginInfo `json:"plugin"`
 }
 
+// Clone returns a deep copy of v.
+func (v PluginDisabledResponse) Clone() PluginDisabledResponse {
+	out := v
+	out.Plugin = v.Plugin.Clone()
+	return out
+}
+
 // ResultType returns "plugin_disabled".
 func (PluginDisabledResponse) ResultType() string { return "plugin_disabled" }
 
@@ -1198,6 +1594,13 @@ func (v PluginDisabledResponse) MarshalJSON() ([]byte, error) {
 // PluginEnabledResponse is the "plugin_enabled" result.
 type PluginEnabledResponse struct {
 	Plugin InstalledPluginInfo `json:"plugin"`
+}
+
+// Clone returns a deep copy of v.
+func (v PluginEnabledResponse) Clone() PluginEnabledResponse {
+	out := v
+	out.Plugin = v.Plugin.Clone()
+	return out
 }
 
 // ResultType returns "plugin_enabled".
@@ -1217,6 +1620,13 @@ type PluginLinkedResponse struct {
 	Plugin InstalledPluginInfo `json:"plugin"`
 }
 
+// Clone returns a deep copy of v.
+func (v PluginLinkedResponse) Clone() PluginLinkedResponse {
+	out := v
+	out.Plugin = v.Plugin.Clone()
+	return out
+}
+
 // ResultType returns "plugin_linked".
 func (PluginLinkedResponse) ResultType() string { return "plugin_linked" }
 
@@ -1232,6 +1642,18 @@ func (v PluginLinkedResponse) MarshalJSON() ([]byte, error) {
 // PluginListResponse is the "plugin_list" result.
 type PluginListResponse struct {
 	Plugins []InstalledPluginInfo `json:"plugins"`
+}
+
+// Clone returns a deep copy of v.
+func (v PluginListResponse) Clone() PluginListResponse {
+	out := v
+	if v.Plugins != nil {
+		out.Plugins = make([]InstalledPluginInfo, len(v.Plugins))
+		for i1 := range v.Plugins {
+			out.Plugins[i1] = v.Plugins[i1].Clone()
+		}
+	}
+	return out
 }
 
 // ResultType returns "plugin_list".
@@ -1251,6 +1673,18 @@ type PluginLogListResponse struct {
 	Logs []PluginCommandLogInfo `json:"logs"`
 }
 
+// Clone returns a deep copy of v.
+func (v PluginLogListResponse) Clone() PluginLogListResponse {
+	out := v
+	if v.Logs != nil {
+		out.Logs = make([]PluginCommandLogInfo, len(v.Logs))
+		for i1 := range v.Logs {
+			out.Logs[i1] = v.Logs[i1].Clone()
+		}
+	}
+	return out
+}
+
 // ResultType returns "plugin_log_list".
 func (PluginLogListResponse) ResultType() string { return "plugin_log_list" }
 
@@ -1266,6 +1700,12 @@ func (v PluginLogListResponse) MarshalJSON() ([]byte, error) {
 // PluginPaneClosedResponse is the "plugin_pane_closed" result.
 type PluginPaneClosedResponse struct {
 	PaneID string `json:"pane_id"`
+}
+
+// Clone returns a deep copy of v.
+func (v PluginPaneClosedResponse) Clone() PluginPaneClosedResponse {
+	out := v
+	return out
 }
 
 // ResultType returns "plugin_pane_closed".
@@ -1285,6 +1725,13 @@ type PluginPaneFocusedResponse struct {
 	PluginPane PluginPaneInfo `json:"plugin_pane"`
 }
 
+// Clone returns a deep copy of v.
+func (v PluginPaneFocusedResponse) Clone() PluginPaneFocusedResponse {
+	out := v
+	out.PluginPane = v.PluginPane.Clone()
+	return out
+}
+
 // ResultType returns "plugin_pane_focused".
 func (PluginPaneFocusedResponse) ResultType() string { return "plugin_pane_focused" }
 
@@ -1300,6 +1747,13 @@ func (v PluginPaneFocusedResponse) MarshalJSON() ([]byte, error) {
 // PluginPaneOpenedResponse is the "plugin_pane_opened" result.
 type PluginPaneOpenedResponse struct {
 	PluginPane PluginPaneInfo `json:"plugin_pane"`
+}
+
+// Clone returns a deep copy of v.
+func (v PluginPaneOpenedResponse) Clone() PluginPaneOpenedResponse {
+	out := v
+	out.PluginPane = v.PluginPane.Clone()
+	return out
 }
 
 // ResultType returns "plugin_pane_opened".
@@ -1318,6 +1772,12 @@ func (v PluginPaneOpenedResponse) MarshalJSON() ([]byte, error) {
 type PluginUnlinkedResponse struct {
 	PluginID string `json:"plugin_id"`
 	Removed  bool   `json:"removed"`
+}
+
+// Clone returns a deep copy of v.
+func (v PluginUnlinkedResponse) Clone() PluginUnlinkedResponse {
+	out := v
+	return out
 }
 
 // ResultType returns "plugin_unlinked".
@@ -1339,6 +1799,16 @@ type PongResponse struct {
 	Version      string              `json:"version"`
 }
 
+// Clone returns a deep copy of v.
+func (v PongResponse) Clone() PongResponse {
+	out := v
+	if v.Capabilities != nil {
+		out.Capabilities = new(ServerCapabilities)
+		(*out.Capabilities) = (*v.Capabilities).Clone()
+	}
+	return out
+}
+
 // ResultType returns "pong".
 func (PongResponse) ResultType() string { return "pong" }
 
@@ -1356,6 +1826,13 @@ type SessionSnapshotResponse struct {
 	Snapshot SessionSnapshot `json:"snapshot"`
 }
 
+// Clone returns a deep copy of v.
+func (v SessionSnapshotResponse) Clone() SessionSnapshotResponse {
+	out := v
+	out.Snapshot = v.Snapshot.Clone()
+	return out
+}
+
 // ResultType returns "session_snapshot".
 func (SessionSnapshotResponse) ResultType() string { return "session_snapshot" }
 
@@ -1370,6 +1847,12 @@ func (v SessionSnapshotResponse) MarshalJSON() ([]byte, error) {
 
 // SubscriptionStartedResponse is the "subscription_started" result.
 type SubscriptionStartedResponse struct{}
+
+// Clone returns a deep copy of v.
+func (v SubscriptionStartedResponse) Clone() SubscriptionStartedResponse {
+	out := v
+	return out
+}
 
 // ResultType returns "subscription_started".
 func (SubscriptionStartedResponse) ResultType() string { return "subscription_started" }
@@ -1389,6 +1872,14 @@ type TabCreatedResponse struct {
 	Tab      TabInfo  `json:"tab"`
 }
 
+// Clone returns a deep copy of v.
+func (v TabCreatedResponse) Clone() TabCreatedResponse {
+	out := v
+	out.RootPane = v.RootPane.Clone()
+	out.Tab = v.Tab.Clone()
+	return out
+}
+
 // ResultType returns "tab_created".
 func (TabCreatedResponse) ResultType() string { return "tab_created" }
 
@@ -1404,6 +1895,13 @@ func (v TabCreatedResponse) MarshalJSON() ([]byte, error) {
 // TabInfoResponse is the "tab_info" result.
 type TabInfoResponse struct {
 	Tab TabInfo `json:"tab"`
+}
+
+// Clone returns a deep copy of v.
+func (v TabInfoResponse) Clone() TabInfoResponse {
+	out := v
+	out.Tab = v.Tab.Clone()
+	return out
 }
 
 // ResultType returns "tab_info".
@@ -1423,6 +1921,18 @@ type TabListResponse struct {
 	Tabs []TabInfo `json:"tabs"`
 }
 
+// Clone returns a deep copy of v.
+func (v TabListResponse) Clone() TabListResponse {
+	out := v
+	if v.Tabs != nil {
+		out.Tabs = make([]TabInfo, len(v.Tabs))
+		for i1 := range v.Tabs {
+			out.Tabs[i1] = v.Tabs[i1].Clone()
+		}
+	}
+	return out
+}
+
 // ResultType returns "tab_list".
 func (TabListResponse) ResultType() string { return "tab_list" }
 
@@ -1438,6 +1948,13 @@ func (v TabListResponse) MarshalJSON() ([]byte, error) {
 // WaitMatchedResponse is the "wait_matched" result.
 type WaitMatchedResponse struct {
 	Event EventEnvelope `json:"event"`
+}
+
+// Clone returns a deep copy of v.
+func (v WaitMatchedResponse) Clone() WaitMatchedResponse {
+	out := v
+	out.Event = v.Event.Clone()
+	return out
 }
 
 // ResultType returns "wait_matched".
@@ -1459,6 +1976,15 @@ type WorkspaceCreatedResponse struct {
 	Workspace WorkspaceInfo `json:"workspace"`
 }
 
+// Clone returns a deep copy of v.
+func (v WorkspaceCreatedResponse) Clone() WorkspaceCreatedResponse {
+	out := v
+	out.RootPane = v.RootPane.Clone()
+	out.Tab = v.Tab.Clone()
+	out.Workspace = v.Workspace.Clone()
+	return out
+}
+
 // ResultType returns "workspace_created".
 func (WorkspaceCreatedResponse) ResultType() string { return "workspace_created" }
 
@@ -1476,6 +2002,13 @@ type WorkspaceInfoResponse struct {
 	Workspace WorkspaceInfo `json:"workspace"`
 }
 
+// Clone returns a deep copy of v.
+func (v WorkspaceInfoResponse) Clone() WorkspaceInfoResponse {
+	out := v
+	out.Workspace = v.Workspace.Clone()
+	return out
+}
+
 // ResultType returns "workspace_info".
 func (WorkspaceInfoResponse) ResultType() string { return "workspace_info" }
 
@@ -1491,6 +2024,18 @@ func (v WorkspaceInfoResponse) MarshalJSON() ([]byte, error) {
 // WorkspaceListResponse is the "workspace_list" result.
 type WorkspaceListResponse struct {
 	Workspaces []WorkspaceInfo `json:"workspaces"`
+}
+
+// Clone returns a deep copy of v.
+func (v WorkspaceListResponse) Clone() WorkspaceListResponse {
+	out := v
+	if v.Workspaces != nil {
+		out.Workspaces = make([]WorkspaceInfo, len(v.Workspaces))
+		for i1 := range v.Workspaces {
+			out.Workspaces[i1] = v.Workspaces[i1].Clone()
+		}
+	}
+	return out
 }
 
 // ResultType returns "workspace_list".
@@ -1513,6 +2058,16 @@ type WorktreeCreatedResponse struct {
 	Worktree  WorktreeInfo  `json:"worktree"`
 }
 
+// Clone returns a deep copy of v.
+func (v WorktreeCreatedResponse) Clone() WorktreeCreatedResponse {
+	out := v
+	out.RootPane = v.RootPane.Clone()
+	out.Tab = v.Tab.Clone()
+	out.Workspace = v.Workspace.Clone()
+	out.Worktree = v.Worktree.Clone()
+	return out
+}
+
 // ResultType returns "worktree_created".
 func (WorktreeCreatedResponse) ResultType() string { return "worktree_created" }
 
@@ -1529,6 +2084,19 @@ func (v WorktreeCreatedResponse) MarshalJSON() ([]byte, error) {
 type WorktreeListResponse struct {
 	Source    WorktreeSourceInfo `json:"source"`
 	Worktrees []WorktreeInfo     `json:"worktrees"`
+}
+
+// Clone returns a deep copy of v.
+func (v WorktreeListResponse) Clone() WorktreeListResponse {
+	out := v
+	out.Source = v.Source.Clone()
+	if v.Worktrees != nil {
+		out.Worktrees = make([]WorktreeInfo, len(v.Worktrees))
+		for i1 := range v.Worktrees {
+			out.Worktrees[i1] = v.Worktrees[i1].Clone()
+		}
+	}
+	return out
 }
 
 // ResultType returns "worktree_list".
@@ -1552,6 +2120,16 @@ type WorktreeOpenedResponse struct {
 	Worktree    WorktreeInfo  `json:"worktree"`
 }
 
+// Clone returns a deep copy of v.
+func (v WorktreeOpenedResponse) Clone() WorktreeOpenedResponse {
+	out := v
+	out.RootPane = v.RootPane.Clone()
+	out.Tab = v.Tab.Clone()
+	out.Workspace = v.Workspace.Clone()
+	out.Worktree = v.Worktree.Clone()
+	return out
+}
+
 // ResultType returns "worktree_opened".
 func (WorktreeOpenedResponse) ResultType() string { return "worktree_opened" }
 
@@ -1569,6 +2147,12 @@ type WorktreeRemovedResponse struct {
 	Forced      bool   `json:"forced"`
 	Path        string `json:"path"`
 	WorkspaceID string `json:"workspace_id"`
+}
+
+// Clone returns a deep copy of v.
+func (v WorktreeRemovedResponse) Clone() WorktreeRemovedResponse {
+	out := v
+	return out
 }
 
 // ResultType returns "worktree_removed".

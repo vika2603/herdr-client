@@ -31,11 +31,15 @@ func Generate(schemaData, methodsData []byte, pkgName string) (map[string][]byte
 	if err != nil {
 		return nil, err
 	}
+	clones, err := newCloneEmitter(pkg)
+	if err != nil {
+		return nil, err
+	}
 	sources := map[string]string{
 		"schema_gen.go":  emitSchemaFile(pkg),
-		"types_gen.go":   emitTypesFile(pkg),
-		"results_gen.go": emitResultsFile(pkg),
-		"events_gen.go":  emitEventsFile(pkg),
+		"types_gen.go":   emitTypesFile(pkg, clones),
+		"results_gen.go": emitResultsFile(pkg, clones),
+		"events_gen.go":  emitEventsFile(pkg, clones),
 		"methods_gen.go": emitMethodsFile(pkg),
 	}
 	out := make(map[string][]byte, len(sources))
@@ -57,7 +61,7 @@ func emitSchemaFile(pkg *Package) string {
 	return c.String()
 }
 
-func emitTypesFile(pkg *Package) string {
+func emitTypesFile(pkg *Package, clones *cloneEmitter) string {
 	types := pkg.TypesIn(fileTypes)
 	needJSON, needFmt := false, false
 	for _, t := range types {
@@ -83,12 +87,12 @@ func emitTypesFile(pkg *Package) string {
 	c := newFile(pkg.Name, imports...)
 	for _, t := range types {
 		c.blank()
-		emitType(c, t)
+		emitType(c, t, clones)
 	}
 	return c.String()
 }
 
-func emitResultsFile(pkg *Package) string {
+func emitResultsFile(pkg *Package, clones *cloneEmitter) string {
 	results := pkg.TypesIn(fileResults)
 	c := newFile(pkg.Name, "encoding/json", "fmt")
 
@@ -99,6 +103,8 @@ func emitResultsFile(pkg *Package) string {
 	c.line("\tResultType() string")
 	c.line("}")
 
+	c.blank()
+	clones.emitUnion(c, clones.types["Result"])
 	c.blank()
 	c.doc("DecodeResult decodes a result object into the type named by its \"type\" field. An unknown type is reported as *UnknownResultError.")
 	c.line("func DecodeResult(raw json.RawMessage) (Result, error) {")
@@ -146,12 +152,12 @@ func emitResultsFile(pkg *Package) string {
 
 	for _, t := range results {
 		c.blank()
-		emitType(c, t)
+		emitType(c, t, clones)
 	}
 	return c.String()
 }
 
-func emitEventsFile(pkg *Package) string {
+func emitEventsFile(pkg *Package, clones *cloneEmitter) string {
 	events := pkg.TypesIn(fileEvents)
 	c := newFile(pkg.Name, "context", "encoding/json", "fmt", "strings")
 
@@ -180,12 +186,9 @@ func emitEventsFile(pkg *Package) string {
 	c.line("}")
 
 	c.blank()
-	c.doc("EventEnvelope is one event line pushed on a subscription connection.")
-	c.line("type EventEnvelope struct {")
-	c.line("\tEvent EventKind `json:\"event\"`")
-	c.line("\tData  Event     `json:\"data\"`")
-	c.line("}")
-
+	clones.emitUnion(c, clones.types["Event"])
+	c.blank()
+	emitStruct(c, clones.types["EventEnvelope"], clones)
 	c.blank()
 	c.doc("UnmarshalJSON decodes the payload according to the event name.")
 	c.line("func (e *EventEnvelope) UnmarshalJSON(data []byte) error {")
@@ -271,7 +274,7 @@ func emitEventsFile(pkg *Package) string {
 
 	for _, t := range events {
 		c.blank()
-		emitType(c, t)
+		emitType(c, t, clones)
 	}
 	return c.String()
 }
