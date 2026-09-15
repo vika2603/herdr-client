@@ -49,10 +49,11 @@ func TestDecodeCapturedResults(t *testing.T) {
 				if pong.Protocol != SchemaProtocol {
 					t.Errorf("protocol = %d, want %d", pong.Protocol, SchemaProtocol)
 				}
-				if pong.Capabilities == nil || !pong.Capabilities.LiveHandoff {
+				capabilities, ok := pong.Capabilities.Get()
+				if !ok || !capabilities.LiveHandoff {
 					t.Errorf("capabilities = %+v, want live_handoff", pong.Capabilities)
 				}
-				if pong.Capabilities.HealthCheck == nil || !*pong.Capabilities.HealthCheck {
+				if !capabilities.HealthCheck.ValueOrZero() {
 					t.Error("health_check was not decoded")
 				}
 			},
@@ -76,10 +77,10 @@ func TestDecodeCapturedResults(t *testing.T) {
 				}
 				var worktrees int
 				for _, workspace := range list.Workspaces {
-					if workspace.Worktree != nil {
+					if worktree, ok := workspace.Worktree.Get(); ok {
 						worktrees++
-						if workspace.Worktree.RepoName != "herdr-client" {
-							t.Errorf("worktree repo = %q", workspace.Worktree.RepoName)
+						if worktree.RepoName != "herdr-client" {
+							t.Errorf("worktree repo = %q", worktree.RepoName)
 						}
 					}
 				}
@@ -102,13 +103,15 @@ func TestDecodeCapturedResults(t *testing.T) {
 				if pane.PaneID != "w6W:p5" || pane.WorkspaceID != "w6W" || pane.TabID != "w6W:t4" {
 					t.Errorf("first pane = %+v", pane)
 				}
-				if pane.Agent == nil || *pane.Agent != "codex" {
+				if pane.Agent.ValueOrZero() != "codex" {
 					t.Errorf("agent = %v, want codex", pane.Agent)
 				}
-				if pane.AgentSession == nil || pane.AgentSession.Kind != AgentSessionRefKindID {
+				agentSession, ok := pane.AgentSession.Get()
+				if !ok || agentSession.Kind != AgentSessionRefKindID {
 					t.Errorf("agent session = %+v", pane.AgentSession)
 				}
-				if pane.Scroll == nil || pane.Scroll.ViewportRows == 0 {
+				scroll, ok := pane.Scroll.Get()
+				if !ok || scroll.ViewportRows == 0 {
 					t.Errorf("scroll = %+v", pane.Scroll)
 				}
 			},
@@ -127,7 +130,7 @@ func TestDecodeCapturedResults(t *testing.T) {
 				if agent.TerminalID == "" || agent.PaneID == "" {
 					t.Errorf("first agent = %+v", agent)
 				}
-				if agent.StateChangeSeq == nil {
+				if !agent.StateChangeSeq.IsSet() {
 					t.Error("state_change_seq was not decoded")
 				}
 			},
@@ -146,13 +149,15 @@ func TestDecodeCapturedResults(t *testing.T) {
 				if plugin.PluginID == "" || plugin.Name == "" {
 					t.Errorf("first plugin = %+v", plugin)
 				}
-				if plugin.Source == nil || plugin.Source.Kind != PluginSourceKindGithub {
+				source, ok := plugin.Source.Get()
+				if !ok || source.Kind.ValueOrZero() != PluginSourceKindGithub {
 					t.Errorf("source = %+v, want a github source", plugin.Source)
 				}
-				if len(plugin.Build) == 0 || len(plugin.Build[0].Command) == 0 {
+				build := plugin.Build.ValueOrZero()
+				if len(build) == 0 || len(build[0].Command) == 0 {
 					t.Errorf("build = %+v", plugin.Build)
 				}
-				if len(plugin.Platforms) != 3 {
+				if len(plugin.Platforms.ValueOrZero()) != 3 {
 					t.Errorf("platforms = %v", plugin.Platforms)
 				}
 			},
@@ -171,7 +176,8 @@ func TestDecodeCapturedResults(t *testing.T) {
 				if action.ActionID != "open" || action.PluginID != "example-tools" {
 					t.Errorf("action = %+v", action)
 				}
-				if len(action.Contexts) != 1 || action.Contexts[0] != PluginActionContextGlobal {
+				contexts := action.Contexts.ValueOrZero()
+				if len(contexts) != 1 || contexts[0] != PluginActionContextGlobal {
 					t.Errorf("contexts = %v", action.Contexts)
 				}
 			},
@@ -191,7 +197,7 @@ func TestDecodeCapturedResults(t *testing.T) {
 					t.Fatalf("snapshot is missing entries: %d workspaces, %d tabs, %d panes",
 						len(session.Workspaces), len(session.Tabs), len(session.Panes))
 				}
-				if session.FocusedWorkspaceID == nil || *session.FocusedWorkspaceID == "" {
+				if session.FocusedWorkspaceID.ValueOrZero() == "" {
 					t.Error("focused_workspace_id was not decoded")
 				}
 				if len(session.Layouts) == 0 {
@@ -213,7 +219,7 @@ func TestDecodeCapturedResults(t *testing.T) {
 				if len(status.Manifests) == 0 {
 					t.Fatal("no manifests decoded")
 				}
-				if status.LastCheckUnix == nil || *status.LastCheckUnix == 0 {
+				if status.LastCheckUnix.ValueOrZero() == 0 {
 					t.Error("last_check_unix was not decoded")
 				}
 				manifest := status.Manifests[0]

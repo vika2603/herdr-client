@@ -548,22 +548,14 @@ func (v AgentManifestReloadResponse) MarshalJSON() ([]byte, error) {
 
 // AgentManifestStatusResponse is the "agent_manifest_status" result.
 type AgentManifestStatusResponse struct {
-	LastCheckUnix *uint64             `json:"last_check_unix,omitempty"`
-	LastResult    *string             `json:"last_result,omitempty"`
+	LastCheckUnix Optional[uint64]    `json:"last_check_unix,omitzero"`
+	LastResult    Optional[string]    `json:"last_result,omitzero"`
 	Manifests     []AgentManifestInfo `json:"manifests"`
 }
 
 // Clone returns a deep copy of v.
 func (v AgentManifestStatusResponse) Clone() AgentManifestStatusResponse {
 	out := v
-	if v.LastCheckUnix != nil {
-		out.LastCheckUnix = new(uint64)
-		(*out.LastCheckUnix) = (*v.LastCheckUnix)
-	}
-	if v.LastResult != nil {
-		out.LastResult = new(string)
-		(*out.LastResult) = (*v.LastResult)
-	}
 	if v.Manifests != nil {
 		out.Manifests = make([]AgentManifestInfo, len(v.Manifests))
 		for i1 := range v.Manifests {
@@ -640,22 +632,14 @@ func (v AgentStartedResponse) MarshalJSON() ([]byte, error) {
 
 // AgentViewResponse is the "agent_view" result.
 type AgentViewResponse struct {
-	Active bool    `json:"active"`
-	Label  *string `json:"label,omitempty"`
-	Source *string `json:"source,omitempty"`
+	Active bool             `json:"active"`
+	Label  Optional[string] `json:"label,omitzero"`
+	Source Optional[string] `json:"source,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v AgentViewResponse) Clone() AgentViewResponse {
 	out := v
-	if v.Label != nil {
-		out.Label = new(string)
-		(*out.Label) = (*v.Label)
-	}
-	if v.Source != nil {
-		out.Source = new(string)
-		(*out.Source) = (*v.Source)
-	}
 	return out
 }
 
@@ -949,19 +933,15 @@ func (v OKResponse) MarshalJSON() ([]byte, error) {
 
 // OutputMatchedResponse is the "output_matched" result.
 type OutputMatchedResponse struct {
-	MatchedLine *string        `json:"matched_line,omitempty"`
-	PaneID      string         `json:"pane_id"`
-	Read        PaneReadResult `json:"read"`
-	Revision    uint64         `json:"revision"`
+	MatchedLine Optional[string] `json:"matched_line,omitzero"`
+	PaneID      string           `json:"pane_id"`
+	Read        PaneReadResult   `json:"read"`
+	Revision    uint64           `json:"revision"`
 }
 
 // Clone returns a deep copy of v.
 func (v OutputMatchedResponse) Clone() OutputMatchedResponse {
 	out := v
-	if v.MatchedLine != nil {
-		out.MatchedLine = new(string)
-		(*out.MatchedLine) = (*v.MatchedLine)
-	}
 	out.Read = v.Read.Clone()
 	return out
 }
@@ -1006,25 +986,17 @@ func (v PaneCopyMotionResponse) MarshalJSON() ([]byte, error) {
 
 // PaneCopySearchResponse is the "pane_copy_search" result.
 type PaneCopySearchResponse struct {
-	ContentRevision uint64          `json:"content_revision"`
-	Current         *uint32         `json:"current,omitempty"`
-	CurrentGlobal   *uint64         `json:"current_global,omitempty"`
-	Matches         []PaneTextRange `json:"matches"`
-	PaneID          string          `json:"pane_id"`
-	Total           uint64          `json:"total"`
+	ContentRevision uint64           `json:"content_revision"`
+	Current         Optional[uint32] `json:"current,omitzero"`
+	CurrentGlobal   Optional[uint64] `json:"current_global,omitzero"`
+	Matches         []PaneTextRange  `json:"matches"`
+	PaneID          string           `json:"pane_id"`
+	Total           uint64           `json:"total"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneCopySearchResponse) Clone() PaneCopySearchResponse {
 	out := v
-	if v.Current != nil {
-		out.Current = new(uint32)
-		(*out.Current) = (*v.Current)
-	}
-	if v.CurrentGlobal != nil {
-		out.CurrentGlobal = new(uint64)
-		(*out.CurrentGlobal) = (*v.CurrentGlobal)
-	}
 	if v.Matches != nil {
 		out.Matches = make([]PaneTextRange, len(v.Matches))
 		for i1 := range v.Matches {
@@ -1149,54 +1121,30 @@ type PaneGraphicsInfoResponse struct {
 
 	// Accepts damage metadata while still consuming a complete canonical
 	// file.
-	FileFrameDamage         *bool    `json:"file_frame_damage,omitempty"`
-	FileFrameDirectMaxBytes *uint64  `json:"file_frame_direct_max_bytes,omitempty"`
-	FileFrameDirectory      *string  `json:"file_frame_directory,omitempty"`
-	FileFrameFormats        []string `json:"file_frame_formats,omitempty"`
-	FileFrameMaxBytes       *uint64  `json:"file_frame_max_bytes,omitempty"`
-	FileFrameTransport      *string  `json:"file_frame_transport,omitempty"`
-	MaxLayersPerPane        *uint64  `json:"max_layers_per_pane,omitempty"`
+	FileFrameDamage         Optional[bool]     `json:"file_frame_damage,omitzero"`
+	FileFrameDirectMaxBytes Optional[uint64]   `json:"file_frame_direct_max_bytes,omitzero"`
+	FileFrameDirectory      Optional[string]   `json:"file_frame_directory,omitzero"`
+	FileFrameFormats        Optional[[]string] `json:"file_frame_formats,omitzero"`
+	FileFrameMaxBytes       Optional[uint64]   `json:"file_frame_max_bytes,omitzero"`
+	FileFrameTransport      Optional[string]   `json:"file_frame_transport,omitzero"`
+	MaxLayersPerPane        Optional[uint64]   `json:"max_layers_per_pane,omitzero"`
 
 	// True only when this pane is on the currently rendered terminal
 	// surface.
-	PaneVisible bool  `json:"pane_visible"`
-	PixelMouse  *bool `json:"pixel_mouse,omitempty"`
+	PaneVisible bool           `json:"pane_visible"`
+	PixelMouse  Optional[bool] `json:"pixel_mouse,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneGraphicsInfoResponse) Clone() PaneGraphicsInfoResponse {
 	out := v
-	if v.FileFrameDamage != nil {
-		out.FileFrameDamage = new(bool)
-		(*out.FileFrameDamage) = (*v.FileFrameDamage)
-	}
-	if v.FileFrameDirectMaxBytes != nil {
-		out.FileFrameDirectMaxBytes = new(uint64)
-		(*out.FileFrameDirectMaxBytes) = (*v.FileFrameDirectMaxBytes)
-	}
-	if v.FileFrameDirectory != nil {
-		out.FileFrameDirectory = new(string)
-		(*out.FileFrameDirectory) = (*v.FileFrameDirectory)
-	}
-	if v.FileFrameFormats != nil {
-		out.FileFrameFormats = make([]string, len(v.FileFrameFormats))
-		copy(out.FileFrameFormats, v.FileFrameFormats)
-	}
-	if v.FileFrameMaxBytes != nil {
-		out.FileFrameMaxBytes = new(uint64)
-		(*out.FileFrameMaxBytes) = (*v.FileFrameMaxBytes)
-	}
-	if v.FileFrameTransport != nil {
-		out.FileFrameTransport = new(string)
-		(*out.FileFrameTransport) = (*v.FileFrameTransport)
-	}
-	if v.MaxLayersPerPane != nil {
-		out.MaxLayersPerPane = new(uint64)
-		(*out.MaxLayersPerPane) = (*v.MaxLayersPerPane)
-	}
-	if v.PixelMouse != nil {
-		out.PixelMouse = new(bool)
-		(*out.PixelMouse) = (*v.PixelMouse)
+	if value1, ok2 := v.FileFrameFormats.Get(); ok2 {
+		var cloned3 []string
+		if value1 != nil {
+			cloned3 = make([]string, len(value1))
+			copy(cloned3, value1)
+		}
+		out.FileFrameFormats = Some(cloned3)
 	}
 	return out
 }
@@ -1263,17 +1211,13 @@ func (v PaneLayoutResponse) MarshalJSON() ([]byte, error) {
 
 // PaneLinkActivatedResponse is the "pane_link_activated" result.
 type PaneLinkActivatedResponse struct {
-	Handled bool    `json:"handled"`
-	URL     *string `json:"url,omitempty"`
+	Handled bool             `json:"handled"`
+	URL     Optional[string] `json:"url,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneLinkActivatedResponse) Clone() PaneLinkActivatedResponse {
 	out := v
-	if v.URL != nil {
-		out.URL = new(string)
-		(*out.URL) = (*v.URL)
-	}
 	return out
 }
 
@@ -1794,17 +1738,18 @@ func (v PluginUnlinkedResponse) MarshalJSON() ([]byte, error) {
 
 // PongResponse is the "pong" result.
 type PongResponse struct {
-	Capabilities *ServerCapabilities `json:"capabilities,omitempty"`
-	Protocol     uint32              `json:"protocol"`
-	Version      string              `json:"version"`
+	Capabilities Optional[ServerCapabilities] `json:"capabilities,omitzero"`
+	Protocol     uint32                       `json:"protocol"`
+	Version      string                       `json:"version"`
 }
 
 // Clone returns a deep copy of v.
 func (v PongResponse) Clone() PongResponse {
 	out := v
-	if v.Capabilities != nil {
-		out.Capabilities = new(ServerCapabilities)
-		(*out.Capabilities) = (*v.Capabilities).Clone()
+	if value1, ok2 := v.Capabilities.Get(); ok2 {
+		var cloned3 ServerCapabilities
+		cloned3 = value1.Clone()
+		out.Capabilities = Some(cloned3)
 	}
 	return out
 }

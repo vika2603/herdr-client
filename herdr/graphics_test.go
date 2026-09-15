@@ -31,8 +31,8 @@ func TestPaneGraphicsStreamSendsParams(t *testing.T) {
 	server := newGraphicsServer(t, graphicsServerConfig{})
 	openGraphicsStream(t, server, PaneGraphicsStreamParams{
 		PaneID:  "w1:p1",
-		LayerID: Ptr("overlay"),
-		ZIndex:  Ptr(int32(3)),
+		LayerID: Some("overlay"),
+		ZIndex:  Some(int32(3)),
 	})
 
 	req := server.request(0)
@@ -104,7 +104,7 @@ func TestGraphicsStreamSendFrameFraming(t *testing.T) {
 			ImageWidth:  512,
 			ImageHeight: 128,
 			Data:        first,
-			Placement:   &PaneGraphicsPlacementParams{GridCols: Ptr(uint32(80)), GridRows: Ptr(uint32(24))},
+			Placement:   Some(PaneGraphicsPlacementParams{GridCols: Some(uint32(80)), GridRows: Some(uint32(24))}),
 		},
 		{Format: PaneGraphicsFormatPng, ImageWidth: 4, ImageHeight: 4, Data: second},
 	}
@@ -120,11 +120,11 @@ func TestGraphicsStreamSendFrameFraming(t *testing.T) {
 	captured := server.captured()
 	if got := captured[0].header; got.Format != PaneGraphicsFormatRgba ||
 		got.ImageWidth != 512 || got.ImageHeight != 128 ||
-		got.DataLength == nil || *got.DataLength != len(first) {
+		got.DataLength.ValueOrZero() != len(first) {
 		t.Errorf("frame 0 header = %+v", got)
 	}
-	if placement := captured[0].header.Placement; placement == nil ||
-		Value(placement.GridCols) != 80 || Value(placement.GridRows) != 24 {
+	if placement, ok := captured[0].header.Placement.Get(); !ok ||
+		placement.GridCols.ValueOrZero() != 80 || placement.GridRows.ValueOrZero() != 24 {
 		t.Errorf("frame 0 placement = %+v", captured[0].header.Placement)
 	}
 	if !bytes.Equal(captured[0].data, first) {
@@ -133,10 +133,10 @@ func TestGraphicsStreamSendFrameFraming(t *testing.T) {
 	if !bytes.Equal(captured[1].data, second) {
 		t.Errorf("frame 1 data = %q, want %q", captured[1].data, second)
 	}
-	if captured[1].header.Placement != nil {
+	if captured[1].header.Placement.IsSet() {
 		t.Errorf("frame 1 placement = %+v, want none", captured[1].header.Placement)
 	}
-	if captured[1].header.File != nil {
+	if captured[1].header.File.IsSet() {
 		t.Errorf("frame 1 file = %+v, want none", captured[1].header.File)
 	}
 }
@@ -185,11 +185,12 @@ func TestGraphicsStreamSendFileFrameReturnsAck(t *testing.T) {
 		t.Fatalf("server read %d frames, want 1", len(captured))
 	}
 	header := captured[0].header
-	if header.File == nil || header.File.Path != "/tmp/frame.raw" {
+	file, ok := header.File.Get()
+	if !ok || file.Path != "/tmp/frame.raw" {
 		t.Errorf("header file = %+v", header.File)
 	}
-	if header.DataLength != nil {
-		t.Errorf("header data_length = %v, want none", *header.DataLength)
+	if header.DataLength.IsSet() {
+		t.Errorf("header data_length = %v, want none", header.DataLength)
 	}
 	if len(captured[0].data) != 0 {
 		t.Errorf("file frame carried %d body bytes, want 0", len(captured[0].data))

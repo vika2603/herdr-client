@@ -23,12 +23,11 @@ func roundTrip[T any](t *testing.T, value T) (T, string) {
 }
 
 func TestLayoutNodeRoundTrip(t *testing.T) {
-	label := "editor"
 	params := LayoutApplyParams{
 		Root: LayoutNodeSplit{
 			Direction: SplitDirectionRight,
 			Ratio:     0.5,
-			First:     LayoutNodePane{Label: &label, Command: []string{"nvim"}},
+			First:     LayoutNodePane{Label: Some("editor"), Command: Some([]string{"nvim"})},
 			Second: LayoutNodeSplit{
 				Direction: SplitDirectionDown,
 				Ratio:     0.25,
@@ -51,8 +50,8 @@ func TestLayoutNodeRoundTrip(t *testing.T) {
 	if !ok {
 		t.Fatalf("first child is %T, want LayoutNodePane", root.First)
 	}
-	if pane.Label == nil || *pane.Label != label {
-		t.Errorf("label = %v, want %q", pane.Label, label)
+	if pane.Label.ValueOrZero() != "editor" {
+		t.Errorf("label = %v, want editor", pane.Label)
 	}
 	nested, ok := root.Second.(LayoutNodeSplit)
 	if !ok {
@@ -112,10 +111,9 @@ func TestEventMatchAndDestinationRoundTrip(t *testing.T) {
 		t.Errorf("pane id = %q", closed.PaneID)
 	}
 
-	label := "tests"
 	move, encoded := roundTrip(t, PaneMoveParams{
 		PaneID:      "w1:p1",
-		Destination: PaneMoveDestinationNewTab{Label: &label},
+		Destination: PaneMoveDestinationNewTab{Label: Some("tests")},
 	})
 	if !strings.Contains(encoded, `"type":"new_tab"`) {
 		t.Errorf("encoded form %s has no type discriminator", encoded)
@@ -130,26 +128,30 @@ func TestOptionalUnionFieldStaysAbsent(t *testing.T) {
 	if strings.Contains(encoded, "filter") {
 		t.Errorf("encoded form %s should not carry an empty filter", encoded)
 	}
-	if decoded.Filter != nil {
-		t.Errorf("filter = %+v, want nil", decoded.Filter)
+	if decoded.Filter.IsSet() {
+		t.Errorf("filter = %+v, want absent", decoded.Filter)
 	}
 
 	filtered, encoded := roundTrip(t, AgentViewSetParams{
 		Source: "plugin:demo",
-		Filter: AgentViewFilterNot{
+		Filter: Some[AgentViewFilter](AgentViewFilterNot{
 			Filter: AgentViewFilterEq{
 				Field: AgentViewFieldOf(AgentViewBuiltinFieldStatus),
 				Value: AgentViewText(string(AgentStatusWorking)),
 			},
-		},
-		Sort: []AgentViewSort{{Field: AgentViewSortFieldToken("weight"), Order: AgentViewSortOrderDesc}},
+		}),
+		Sort: Some([]AgentViewSort{{Field: AgentViewSortFieldToken("weight"), Order: Some(AgentViewSortOrderDesc)}}),
 	})
 	if !strings.Contains(encoded, `"op":"not"`) || !strings.Contains(encoded, `"op":"eq"`) {
 		t.Errorf("encoded form %s is missing an op discriminator", encoded)
 	}
-	not, ok := filtered.Filter.(AgentViewFilterNot)
+	filter, ok := filtered.Filter.Get()
 	if !ok {
-		t.Fatalf("filter is %T, want AgentViewFilterNot", filtered.Filter)
+		t.Fatal("filter is absent")
+	}
+	not, ok := filter.(AgentViewFilterNot)
+	if !ok {
+		t.Fatalf("filter is %T, want AgentViewFilterNot", filter)
 	}
 	eq, ok := not.Filter.(AgentViewFilterEq)
 	if !ok {
@@ -161,7 +163,8 @@ func TestOptionalUnionFieldStaysAbsent(t *testing.T) {
 	if eq.Value.Text == nil || *eq.Value.Text != "working" {
 		t.Errorf("value = %+v", eq.Value)
 	}
-	if len(filtered.Sort) != 1 || filtered.Sort[0].Field.Token != "weight" {
+	sort := filtered.Sort.ValueOrZero()
+	if len(sort) != 1 || sort[0].Field.Token != "weight" {
 		t.Errorf("sort = %+v", filtered.Sort)
 	}
 }

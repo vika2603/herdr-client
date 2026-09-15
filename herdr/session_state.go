@@ -99,11 +99,11 @@ func (s *Session) Snapshot() SessionSnapshot {
 
 // focusedID returns the id of the one focused value, which the server keeps
 // exclusive across the session.
-func focusedID[T any](values []T, read func(T) (string, bool)) *string {
+func focusedID[T any](values []T, read func(T) (string, bool)) Optional[string] {
 	for _, value := range values {
 		if id, focused := read(value); focused {
-			return &id
+			return Some(id)
 		}
 	}
-	return nil
+	return Optional[string]{}
 }

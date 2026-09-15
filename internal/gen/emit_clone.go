@@ -105,6 +105,11 @@ func (e *cloneEmitter) visitExpr(expr ast.Expr, owner, field string) error {
 			return nil
 		}
 		return fmt.Errorf("generate clone: %s.%s uses unsupported qualified type", owner, field)
+	case *ast.IndexExpr:
+		if !isOptional(expr) {
+			return fmt.Errorf("generate clone: %s.%s uses unsupported generic type %q", owner, field, fieldType(expr))
+		}
+		return e.visitExpr(expr.Index, owner, field)
 	default:
 		return fmt.Errorf("generate clone: %s.%s uses unsupported Go type %q", owner, field, fieldType(expr))
 	}
@@ -138,6 +143,8 @@ func (e *cloneEmitter) needsClone(expr ast.Expr) bool {
 		return true
 	case *ast.SelectorExpr:
 		return isRawMessage(expr)
+	case *ast.IndexExpr:
+		return isOptional(expr) && e.needsClone(expr.Index)
 	default:
 		return false
 	}
@@ -199,6 +206,17 @@ func (e *cloneEmitter) emitAssign(c *code, expr ast.Expr, dst, src string, depth
 			c.printf("%s\tcopy(%s, %s)\n", indent, dst, src)
 			c.printf("%s}\n", indent)
 		}
+	case *ast.IndexExpr:
+		if isOptional(expr) {
+			value := e.variable("value")
+			ok := e.variable("ok")
+			cloned := e.variable("cloned")
+			c.printf("%sif %s, %s := %s.Get(); %s {\n", indent, value, ok, src, ok)
+			c.printf("%s\tvar %s %s\n", indent, cloned, fieldType(expr.Index))
+			e.emitAssign(c, expr.Index, cloned, value, depth+1)
+			c.printf("%s\t%s = Some(%s)\n", indent, dst, cloned)
+			c.printf("%s}\n", indent)
+		}
 	}
 }
 
@@ -222,6 +240,11 @@ func isCloneScalar(name string) bool {
 func isRawMessage(expr *ast.SelectorExpr) bool {
 	pkg, ok := expr.X.(*ast.Ident)
 	return ok && pkg.Name == "json" && expr.Sel.Name == "RawMessage"
+}
+
+func isOptional(expr *ast.IndexExpr) bool {
+	name, ok := expr.X.(*ast.Ident)
+	return ok && name.Name == "Optional"
 }
 
 func kindName(kind TypeKind) string {
@@ -249,6 +272,8 @@ func fieldType(expr ast.Expr) string {
 		return "[]" + fieldType(expr.Elt)
 	case *ast.MapType:
 		return "map[" + fieldType(expr.Key) + "]" + fieldType(expr.Value)
+	case *ast.IndexExpr:
+		return fieldType(expr.X) + "[" + fieldType(expr.Index) + "]"
 	default:
 		return fmt.Sprintf("%T", expr)
 	}

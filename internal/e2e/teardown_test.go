@@ -15,7 +15,7 @@ import (
 func stageTeardown(t *testing.T, h *harness, st *state) {
 	authority, err := h.client.PaneClearAgentAuthority(h.ctx(t), herdr.PaneClearAgentAuthorityParams{
 		PaneID: st.paneID,
-		Source: ptr(reportSource),
+		Source: herdr.Some(reportSource),
 	})
 	h.cover(t, herdr.MethodPaneClearAgentAuthority, authority, err)
 
@@ -28,14 +28,14 @@ func stageTeardown(t *testing.T, h *harness, st *state) {
 
 	moved, err := h.client.PaneMove(h.ctx(t), herdr.PaneMoveParams{
 		PaneID:      st.splitPaneID,
-		Destination: herdr.PaneMoveDestinationNewTab{Label: ptr("e2e-moved")},
-		Focus:       ptr(false),
+		Destination: herdr.PaneMoveDestinationNewTab{Label: herdr.Some("e2e-moved")},
+		Focus:       herdr.Some(false),
 	})
 	if h.cover(t, herdr.MethodPaneMove, moved, err) {
 		if !moved.MoveResult.Changed {
 			t.Errorf("pane.move changed nothing: %+v", moved.MoveResult)
 		}
-		if moved.MoveResult.CreatedTab == nil {
+		if _, ok := moved.MoveResult.CreatedTab.Get(); !ok {
 			t.Errorf("pane.move to a new tab created none: %+v", moved.MoveResult)
 		}
 	}

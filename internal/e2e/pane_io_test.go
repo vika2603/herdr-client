@@ -37,7 +37,7 @@ func stagePaneIO(t *testing.T, h *harness, st *state) {
 
 	input, err := h.client.PaneSendInput(h.ctx(t), herdr.PaneSendInputParams{
 		PaneID: st.paneID,
-		Text:   "echo " + markerSendInput + "\n",
+		Text:   herdr.Some("echo " + markerSendInput + "\n"),
 	})
 	h.cover(t, herdr.MethodPaneSendInput, input, err)
 
@@ -45,18 +45,18 @@ func stagePaneIO(t *testing.T, h *harness, st *state) {
 		PaneID:    st.paneID,
 		Source:    herdr.ReadSourceRecent,
 		Match:     herdr.OutputMatchSubstring{Value: markerSendInput},
-		TimeoutMs: ptr(uint64(15000)),
+		TimeoutMs: herdr.Some(uint64(15000)),
 	})
 	if h.cover(t, herdr.MethodPaneWaitForOutput, matched, err) {
-		if matched.MatchedLine == nil || !strings.Contains(*matched.MatchedLine, markerSendInput) {
-			t.Errorf("pane.wait_for_output matched %v, expected a line holding %s", matched.MatchedLine, markerSendInput)
+		if line, ok := matched.MatchedLine.Get(); !ok || !strings.Contains(line, markerSendInput) {
+			t.Errorf("pane.wait_for_output matched %q, expected a line holding %s", line, markerSendInput)
 		}
 	}
 
 	read, err := h.client.PaneRead(h.ctx(t), herdr.PaneReadParams{
 		PaneID: st.paneID,
 		Source: herdr.ReadSourceVisible,
-		Format: herdr.ReadFormatText,
+		Format: herdr.Some(herdr.ReadFormatText),
 	})
 	if h.cover(t, herdr.MethodPaneRead, read, err) {
 		for _, marker := range []string{markerSendText, markerSendInput} {
@@ -104,14 +104,14 @@ func stagePaneIO(t *testing.T, h *harness, st *state) {
 		Format:      herdr.PaneGraphicsFormatRgba,
 		ImageWidth:  1,
 		ImageHeight: 1,
-		DataBase64:  base64.StdEncoding.EncodeToString([]byte{0, 0, 0, 0}),
-		LayerID:     ptr("e2e"),
+		DataBase64:  herdr.Some(base64.StdEncoding.EncodeToString([]byte{0, 0, 0, 0})),
+		LayerID:     herdr.Some("e2e"),
 	})
 	h.cover(t, herdr.MethodPaneGraphicsSet, graphics, err)
 
 	cleared, err := h.client.PaneGraphicsClear(h.ctx(t), herdr.PaneGraphicsClearParams{
 		PaneID:  st.paneID,
-		LayerID: ptr("e2e"),
+		LayerID: herdr.Some("e2e"),
 	})
 	h.cover(t, herdr.MethodPaneGraphicsClear, cleared, err)
 
@@ -161,7 +161,7 @@ func waitPaneShell(t *testing.T, h *harness, paneID string) {
 			PaneID:    paneID,
 			Source:    herdr.ReadSourceRecent,
 			Match:     herdr.OutputMatchSubstring{Value: markerShell},
-			TimeoutMs: ptr(uint64(1000)),
+			TimeoutMs: herdr.Some(uint64(1000)),
 		})
 		if err == nil {
 			return
@@ -178,7 +178,7 @@ func waitPaneShell(t *testing.T, h *harness, paneID string) {
 
 func describePaneProcess(t *testing.T, h *harness, paneID string) string {
 	t.Helper()
-	info, err := h.client.PaneProcessInfo(h.ctx(t), herdr.PaneProcessInfoParams{PaneID: ptr(paneID)})
+	info, err := h.client.PaneProcessInfo(h.ctx(t), herdr.PaneProcessInfoParams{PaneID: herdr.Some(paneID)})
 	if err != nil {
 		return "pane.process_info: " + err.Error()
 	}
@@ -190,7 +190,7 @@ func describePaneText(t *testing.T, h *harness, paneID string) string {
 	read, err := h.client.PaneRead(h.ctx(t), herdr.PaneReadParams{
 		PaneID: paneID,
 		Source: herdr.ReadSourceVisible,
-		Format: herdr.ReadFormatText,
+		Format: herdr.Some(herdr.ReadFormatText),
 	})
 	if err != nil {
 		return "pane.read: " + err.Error()
@@ -200,7 +200,7 @@ func describePaneText(t *testing.T, h *harness, paneID string) string {
 
 func panesOf(t *testing.T, h *harness, workspaceID string) map[string]bool {
 	t.Helper()
-	list, err := h.client.PaneList(h.ctx(t), herdr.PaneListParams{WorkspaceID: ptr(workspaceID)})
+	list, err := h.client.PaneList(h.ctx(t), herdr.PaneListParams{WorkspaceID: herdr.Some(workspaceID)})
 	if err != nil {
 		t.Fatalf("pane.list: %v", err)
 	}

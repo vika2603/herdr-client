@@ -28,7 +28,7 @@ func stageAgent(t *testing.T, h *harness, st *state) {
 		Source:  reportSource,
 		Agent:   reportedAgent,
 		State:   herdr.PaneAgentStateIdle,
-		Message: ptr("end-to-end verification"),
+		Message: herdr.Some("end-to-end verification"),
 	})
 	if !h.cover(t, herdr.MethodPaneReportAgent, reported, err) {
 		t.Fatal("no agent registration to continue with")
@@ -38,16 +38,16 @@ func stageAgent(t *testing.T, h *harness, st *state) {
 		PaneID:             st.paneID,
 		Source:             reportSource,
 		Agent:              reportedAgent,
-		AgentSessionID:     ptr("e2e-session"),
-		SessionStartSource: ptr(reportSource),
+		AgentSessionID:     herdr.Some("e2e-session"),
+		SessionStartSource: herdr.Some(reportSource),
 	})
 	h.cover(t, herdr.MethodPaneReportAgentSession, session, err)
 
 	metadata, err := h.client.PaneReportMetadata(h.ctx(t), herdr.PaneReportMetadataParams{
 		PaneID: st.paneID,
 		Source: reportSource,
-		Title:  ptr("e2e pane"),
-		Tokens: map[string]*string{"e2e": ptr("1")},
+		Title:  herdr.Some("e2e pane"),
+		Tokens: herdr.Some(map[string]*string{"e2e": herdr.Ptr("1")}),
 	})
 	h.cover(t, herdr.MethodPaneReportMetadata, metadata, err)
 
@@ -67,15 +67,15 @@ func stageAgent(t *testing.T, h *harness, st *state) {
 		if info.Agent.PaneID != st.paneID {
 			t.Errorf("agent.get returned pane %s, asked for %s", info.Agent.PaneID, st.paneID)
 		}
-		if info.Agent.Agent == nil || *info.Agent.Agent != reportedAgent {
-			t.Errorf("agent.get reports agent %v, the pane reported %s", info.Agent.Agent, reportedAgent)
+		if agent, ok := info.Agent.Agent.Get(); !ok || agent != reportedAgent {
+			t.Errorf("agent.get reports agent %q, the pane reported %s", agent, reportedAgent)
 		}
 	}
 
 	read, err := h.client.AgentRead(h.ctx(t), herdr.AgentReadParams{
 		Target: st.paneID,
 		Source: herdr.ReadSourceVisible,
-		Format: herdr.ReadFormatText,
+		Format: herdr.Some(herdr.ReadFormatText),
 	})
 	if h.cover(t, herdr.MethodAgentRead, read, err) && !strings.Contains(read.Read.Text, markerSendInput) {
 		t.Errorf("agent.read did not return %s:\n%s", markerSendInput, read.Read.Text)
@@ -88,11 +88,11 @@ func stageAgent(t *testing.T, h *harness, st *state) {
 
 	renamed, err := h.client.AgentRename(h.ctx(t), herdr.AgentRenameParams{
 		Target: st.paneID,
-		Name:   ptr(agentName),
+		Name:   herdr.Some(agentName),
 	})
 	if h.cover(t, herdr.MethodAgentRename, renamed, err) {
-		if renamed.Agent.Name == nil || *renamed.Agent.Name != agentName {
-			t.Errorf("agent.rename reports name %v", renamed.Agent.Name)
+		if name, ok := renamed.Agent.Name.Get(); !ok || name != agentName {
+			t.Errorf("agent.rename reports name %q", name)
 		}
 	}
 
@@ -105,8 +105,8 @@ func stageAgent(t *testing.T, h *harness, st *state) {
 	// The reported state is idle, so the wait returns without waiting.
 	waited, err := h.client.AgentWait(h.ctx(t), herdr.AgentWaitParams{
 		Target:    st.paneID,
-		Until:     []herdr.AgentStatus{herdr.AgentStatusIdle},
-		TimeoutMs: ptr(uint64(10000)),
+		Until:     herdr.Some([]herdr.AgentStatus{herdr.AgentStatusIdle}),
+		TimeoutMs: herdr.Some(uint64(10000)),
 	})
 	if h.cover(t, herdr.MethodAgentWait, waited, err) && waited.Agent.AgentStatus != herdr.AgentStatusIdle {
 		t.Errorf("agent.wait returned status %q, waited for idle", waited.Agent.AgentStatus)
@@ -114,23 +114,23 @@ func stageAgent(t *testing.T, h *harness, st *state) {
 
 	view, err := h.client.AgentViewSet(h.ctx(t), herdr.AgentViewSetParams{
 		Source: reportSource,
-		Label:  ptr("e2e view"),
-		Filter: herdr.AgentViewFilterAll{Filters: []herdr.AgentViewFilter{
+		Label:  herdr.Some("e2e view"),
+		Filter: herdr.Some[herdr.AgentViewFilter](herdr.AgentViewFilterAll{Filters: []herdr.AgentViewFilter{
 			herdr.AgentViewFilterExists{Field: herdr.AgentViewFieldOf(herdr.AgentViewBuiltinFieldAgent)},
 			herdr.AgentViewFilterEq{
 				Field: herdr.AgentViewFieldOf(herdr.AgentViewBuiltinFieldPaneID),
 				Value: herdr.AgentViewText(st.paneID),
 			},
-		}},
-		Sort: []herdr.AgentViewSort{{
+		}}),
+		Sort: herdr.Some([]herdr.AgentViewSort{{
 			Field: herdr.AgentViewSortFieldOf(herdr.AgentViewBuiltinSortFieldStatus),
-		}},
+		}}),
 	})
 	if h.cover(t, herdr.MethodAgentViewSet, view, err) && !view.Active {
 		t.Errorf("agent.view.set reports no active view")
 	}
 
-	cleared, err := h.client.AgentViewClear(h.ctx(t), herdr.AgentViewClearParams{Source: ptr(reportSource)})
+	cleared, err := h.client.AgentViewClear(h.ctx(t), herdr.AgentViewClearParams{Source: herdr.Some(reportSource)})
 	if h.cover(t, herdr.MethodAgentViewClear, cleared, err) && cleared.Active {
 		t.Errorf("agent.view.clear left a view active")
 	}

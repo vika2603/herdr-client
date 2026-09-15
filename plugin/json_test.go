@@ -21,21 +21,21 @@ func TestEnvContext(t *testing.T) {
 			name: "full context",
 			env:  Env{ContextJSON: []byte(`{"workspace_id":"ws-1","tab_id":"tab-1","focused_pane_status":"working","clicked_url":"https://example.test/issues/1"}`)},
 			want: &herdr.PluginInvocationContext{
-				WorkspaceID:       strptr("ws-1"),
-				TabID:             strptr("tab-1"),
-				FocusedPaneStatus: statusptr(herdr.AgentStatusWorking),
-				ClickedURL:        strptr("https://example.test/issues/1"),
+				WorkspaceID:       herdr.Some("ws-1"),
+				TabID:             herdr.Some("tab-1"),
+				FocusedPaneStatus: herdr.Some(herdr.AgentStatusWorking),
+				ClickedURL:        herdr.Some("https://example.test/issues/1"),
 			},
 		},
 		{
-			name: "empty object leaves every field nil",
+			name: "empty object leaves every field absent",
 			env:  Env{ContextJSON: []byte(`{}`)},
 			want: &herdr.PluginInvocationContext{},
 		},
 		{
 			name: "unknown fields are ignored",
 			env:  Env{ContextJSON: []byte(`{"workspace_id":"ws-1","future_field":42}`)},
-			want: &herdr.PluginInvocationContext{WorkspaceID: strptr("ws-1")},
+			want: &herdr.PluginInvocationContext{WorkspaceID: herdr.Some("ws-1")},
 		},
 		{
 			name: "null decodes into a zero context",
@@ -196,7 +196,3 @@ func TestEnvEventEnvelopeUnknownEventCarriesPayload(t *testing.T) {
 		t.Errorf("Data = %s", got)
 	}
 }
-
-func strptr(s string) *string { return &s }
-
-func statusptr(s herdr.AgentStatus) *herdr.AgentStatus { return &s }

@@ -69,7 +69,7 @@ func TestSubscriptionSendsTypedLifecycleAndScopedEventsInOrder(t *testing.T) {
 		&herdr.PaneAgentStatusChangedEvent{
 			AgentStatus: herdr.AgentStatusWorking,
 			PaneID:      "w1:p1",
-			StateLabels: map[string]string{"phase": "testing"},
+			StateLabels: herdr.Some(map[string]string{"phase": "testing"}),
 			WorkspaceID: "w1",
 		},
 		&herdr.PaneScrollChangedEvent{

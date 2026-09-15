@@ -63,14 +63,17 @@ for _, pane := range panes.Panes {
 Each method takes its own params type and returns its own result type. A
 method whose params carry nothing takes none, as `Ping` does above.
 
-Optional fields that are not strings are pointers, so that leaving one unset
-is distinguishable from sending its zero value. `herdr.Ptr` supplies the
-address inline, and `herdr.Value` reads one back:
+Optional fields use `herdr.Optional[T]` and are tagged `json:",omitzero"`.
+Its zero value leaves the field out, `herdr.Some` sends a value (including
+`false`, `0`, an empty string or an empty collection), and `herdr.Null[T]`
+sends JSON null where the protocol permits it. `Get` distinguishes a value
+from absence or null, while `IsSet` and `IsNull` distinguish all three states.
+`ValueOrZero` is the convenient read when that distinction does not matter:
 
 ```go
 created, err := client.PaneSplit(ctx, herdr.PaneSplitParams{
 	Direction: herdr.SplitDirectionRight,
-	Cwd:       herdr.Ptr("/repo"),
+	Cwd:       herdr.Some("/repo"),
 })
 if err != nil {
 	return err
@@ -78,10 +81,14 @@ if err != nil {
 
 _, err = client.PaneSendInput(ctx, herdr.PaneSendInputParams{
 	PaneID: created.Pane.PaneID,
-	Text:   "go test ./...",
-	Keys:   []string{"enter"},
+	Text:   herdr.Some("go test ./..."),
+	Keys:   herdr.Some([]string{"enter"}),
 })
 ```
+
+Pointers remain where the value of a map entry itself can be null, such as
+`map[string]*string` metadata tokens. `herdr.Ptr` and `herdr.Value` are helpers
+for those map values; they do not represent optional object fields.
 
 The server reads one request per connection and closes it afterwards, so every
 call dials a fresh connection. A `Client` is safe for concurrent use, performs
@@ -257,11 +264,12 @@ for {
 
 The cache is updated before `Next` returns, so reading it afterwards shows the
 state that event produced. Accessors and `Snapshot` return fully independent
-data, including nested pointers, maps and slices. Modifying a returned record,
-an older snapshot, or an event returned by `Next` cannot change the mirror.
-The cache also detaches data it retains from bootstrap snapshots and events.
-Nested copies preserve nil versus empty collections. Top-level mirror lists
-keep their existing behavior of returning nonnil empty slices. Copying adds
+data, including nested optional values, maps and slices. Modifying a returned
+record, an older snapshot, or an event returned by `Next` cannot change the
+mirror. The cache also detaches data it retains from bootstrap snapshots and events.
+Nested copies preserve absent, null and present optional values as well as nil
+versus empty collections. Top-level mirror lists keep their existing behavior
+of returning nonnil empty slices. Copying adds
 allocations in exchange for removing the caller's previous read-only pointer
 restriction.
 
@@ -289,12 +297,13 @@ detached := snapshot.Clone()
 paneCopy := pane.Clone()
 ```
 
-These methods deeply copy pointers, slices and maps without JSON encoding or
-reflection. They preserve nil, nonnil empty collections and optional zero
-values exactly; only the live mirror's top-level list projection normalizes
-empty lists as described above. Source data must not be modified concurrently
-with a clone operation. The methods copy acyclic, wire-shaped data, not arbitrary
-object graphs with cycles.
+These methods copy scalar optional values directly and deeply copy optional
+structs and collections without JSON encoding or reflection. They also detach
+nullable pointers inside maps. They preserve nil, nonnil empty collections and
+optional presence exactly; only the live mirror's top-level list projection
+normalizes empty lists as described above. Source data must not be modified
+concurrently with a clone operation. The methods copy acyclic, wire-shaped
+data, not arbitrary object graphs with cycles.
 
 The generator applies the same field rules to every protocol struct; it has no
 named root or list of types selected for copying. Value-only structs return a
@@ -361,10 +370,11 @@ switch itself.
 closes the pane: closing it delivers SIGHUP and then SIGTERM, and the context
 ends on either.
 
-`Env.Invocation` reads the invocation context with its optional fields
-flattened to values. Durable state belongs under `env.StateDir` and
-user-editable configuration under `env.ConfigDir`; `ReadState`, `WriteState`,
-their JSON forms and `AppendStateJSONL` address a file by name inside the
+`Env.Invocation` flattens optional scalar context fields to values and keeps
+`Worktree` as `herdr.Optional[herdr.WorkspaceWorktreeInfo]`. Durable state
+belongs under `env.StateDir` and user-editable configuration under
+`env.ConfigDir`. `ReadState`, `WriteState`, their JSON forms and
+`AppendStateJSONL` address a file by name inside the
 state directory and write through a temporary file and a rename, so a crash
 mid-write cannot truncate what was there. `ReadConfig` and `ReadConfigJSON`
 do the same for the configuration directory, which has no write counterpart

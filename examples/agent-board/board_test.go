@@ -21,12 +21,12 @@ func session() board {
 			{TabID: "tab-3", WorkspaceID: "ws-2", Number: 1, Label: "diff", AgentStatus: herdr.AgentStatusIdle},
 		},
 		Agents: []herdr.AgentInfo{
-			{PaneID: "pane-1", TabID: "tab-1", WorkspaceID: "ws-1", DisplayAgent: herdr.Ptr("claude"), AgentStatus: herdr.AgentStatusWorking, Focused: true},
-			{PaneID: "pane-2", TabID: "tab-2", WorkspaceID: "ws-1", Agent: herdr.Ptr("codex"), Name: herdr.Ptr("reviewer"), AgentStatus: herdr.AgentStatusBlocked},
+			{PaneID: "pane-1", TabID: "tab-1", WorkspaceID: "ws-1", DisplayAgent: herdr.Some("claude"), AgentStatus: herdr.AgentStatusWorking, Focused: true},
+			{PaneID: "pane-2", TabID: "tab-2", WorkspaceID: "ws-1", Agent: herdr.Some("codex"), Name: herdr.Some("reviewer"), AgentStatus: herdr.AgentStatusBlocked},
 			{PaneID: "pane-3", TabID: "tab-3", WorkspaceID: "ws-2", AgentStatus: herdr.AgentStatusIdle},
 		},
 		Panes: map[string]herdr.PaneInfo{
-			"pane-1": {PaneID: "pane-1", Label: herdr.Ptr("api")},
+			"pane-1": {PaneID: "pane-1", Label: herdr.Some("api")},
 			"pane-2": {PaneID: "pane-2"},
 		},
 	}

@@ -226,10 +226,6 @@ func eventLine(t *testing.T, event string, data any) string {
 	return string(encoded)
 }
 
-func stringPtr(value string) *string { return &value }
-
-func boolPtr(value bool) *bool { return &value }
-
 // testSnapshot is a two-workspace session: w1 holds tabs t1 and t2 with one
 // pane each, w2 holds one tab with one pane, and w1:p1 runs an agent.
 func testSnapshot() SessionSnapshot {
@@ -246,9 +242,9 @@ func testSnapshot() SessionSnapshot {
 	return SessionSnapshot{
 		Version:            "0.9.0",
 		Protocol:           SchemaProtocol,
-		FocusedWorkspaceID: stringPtr("w1"),
-		FocusedTabID:       stringPtr("w1:t1"),
-		FocusedPaneID:      stringPtr("w1:p1"),
+		FocusedWorkspaceID: Some("w1"),
+		FocusedTabID:       Some("w1:t1"),
+		FocusedPaneID:      Some("w1:p1"),
 		Workspaces:         []WorkspaceInfo{firstWorkspace, testWorkspace("w2", "two")},
 		Tabs:               []TabInfo{firstTab, testTab("w1", "w1:t2"), testTab("w2", "w2:t1")},
 		Panes:              []PaneInfo{first, second, third},
@@ -287,12 +283,12 @@ func testTab(workspaceID, tabID string) TabInfo {
 func testPane(workspaceID, tabID, paneID string) PaneInfo {
 	return PaneInfo{
 		AgentStatus: AgentStatusIdle,
-		Cwd:         stringPtr("/tmp"),
+		Cwd:         Some("/tmp"),
 		PaneID:      paneID,
 		Revision:    1,
 		TabID:       tabID,
 		TerminalID:  "term_" + paneID,
-		Tokens:      map[string]string{"pane": paneID},
+		Tokens:      Some(map[string]string{"pane": paneID}),
 		WorkspaceID: workspaceID,
 	}
 }
@@ -300,14 +296,14 @@ func testPane(workspaceID, tabID, paneID string) PaneInfo {
 func testAgent(pane PaneInfo, agent string) AgentInfo {
 	info := AgentInfo{
 		AgentStatus: AgentStatusWorking,
-		Name:        stringPtr(agent + " in " + pane.PaneID),
+		Name:        Some(agent + " in " + pane.PaneID),
 		PaneID:      pane.PaneID,
 		Revision:    pane.Revision,
 		TabID:       pane.TabID,
 		TerminalID:  pane.TerminalID,
 		WorkspaceID: pane.WorkspaceID,
 	}
-	info.Agent = stringPtr(agent)
+	info.Agent = Some(agent)
 	return info
 }
 

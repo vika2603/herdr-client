@@ -126,8 +126,8 @@ func newPlan(url string, cfg config) (plan, error) {
 	}
 	return plan{
 		Worktree: herdr.WorktreeCreateParams{
-			Branch: herdr.Ptr(branch),
-			Focus:  herdr.Ptr(true),
+			Branch: herdr.Some(branch),
+			Focus:  herdr.Some(true),
 		},
 		Metadata: herdr.WorkspaceReportMetadataParams{
 			Source: metadataSource,
@@ -145,17 +145,17 @@ func newPlan(url string, cfg config) (plan, error) {
 // pane the working directory of whatever created it, so both panes name the
 // checkout explicitly.
 func (p plan) layout(created *herdr.WorktreeCreatedResponse) herdr.LayoutApplyParams {
-	checkout := herdr.Ptr(created.Worktree.Path)
+	checkout := herdr.Some(created.Worktree.Path)
 	return herdr.LayoutApplyParams{
 		// The worktree opens as a single pane in a tab of its own, so the
 		// arrangement replaces that tab rather than adding a second one.
-		TabID: herdr.Ptr(created.Tab.TabID),
-		Focus: herdr.Ptr(true),
+		TabID: herdr.Some(created.Tab.TabID),
+		Focus: herdr.Some(true),
 		Root: herdr.LayoutNodeSplit{
 			Direction: herdr.SplitDirectionRight,
 			Ratio:     0.6,
-			First:     herdr.LayoutNodePane{Label: herdr.Ptr(p.Agent.Name), Cwd: checkout},
-			Second:    herdr.LayoutNodePane{Label: herdr.Ptr("shell"), Cwd: checkout},
+			First:     herdr.LayoutNodePane{Label: herdr.Some(p.Agent.Name), Cwd: checkout},
+			Second:    herdr.LayoutNodePane{Label: herdr.Some("shell"), Cwd: checkout},
 		},
 	}
 }
@@ -165,7 +165,7 @@ func (p plan) layout(created *herdr.WorktreeCreatedResponse) herdr.LayoutApplyPa
 func bootstrap(ctx context.Context, client *herdr.Client, workspaceID string, p plan) error {
 	// The workspace names the repository the worktree branches from; without
 	// it the server resolves a repository from its own working directory.
-	p.Worktree.WorkspaceID = herdr.Ptr(workspaceID)
+	p.Worktree.WorkspaceID = herdr.Some(workspaceID)
 	created, err := client.WorktreeCreate(ctx, p.Worktree)
 	if err != nil {
 		return err
@@ -206,8 +206,8 @@ func bootstrap(ctx context.Context, client *herdr.Client, workspaceID string, p 
 // answer, and the label rather than the position is what identifies the pane.
 func agentPaneID(root herdr.LayoutNode, label string) string {
 	for _, pane := range herdr.LayoutPanes(root) {
-		if herdr.Value(pane.Label) == label {
-			return herdr.Value(pane.PaneID)
+		if pane.Label.ValueOrZero() == label {
+			return pane.PaneID.ValueOrZero()
 		}
 	}
 	return ""

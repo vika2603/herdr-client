@@ -10,7 +10,7 @@ package herdr
 //
 //	applied, err := client.LayoutApply(ctx, params)
 //	for _, pane := range herdr.LayoutPanes(applied.Layout.Root) {
-//		if Value(pane.Label) == "agent" {
+//		if pane.Label.ValueOrZero() == "agent" {
 //			…
 //		}
 //	}

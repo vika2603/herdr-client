@@ -63,8 +63,8 @@ func (c *sessionCache) apply(event Event) {
 	case *WorktreeOpenedEvent:
 		c.workspaces.set(e.Workspace.WorkspaceID, e.Workspace.Clone())
 	case *WorktreeRemovedEvent:
-		if e.Workspace != nil {
-			c.workspaces.set(e.Workspace.WorkspaceID, e.Workspace.Clone())
+		if workspace, ok := e.Workspace.Get(); ok {
+			c.workspaces.set(workspace.WorkspaceID, workspace.Clone())
 		}
 	case *TabCreatedEvent:
 		c.tabs.set(e.Tab.TabID, e.Tab.Clone())
@@ -96,8 +96,7 @@ func (c *sessionCache) apply(event Event) {
 		}
 	case *PaneScrollChangedEvent:
 		if pane, ok := c.panes.get(e.PaneID); ok {
-			scroll := e.Scroll
-			pane.Scroll = &scroll
+			pane.Scroll = Some(e.Scroll)
 			c.setPane(pane)
 		}
 	case *PaneAgentDetectedEvent:
@@ -130,11 +129,11 @@ func (c *sessionCache) closePane(paneID string) {
 // movePane follows a pane to its destination. The pane id changes with the
 // move, so the entry is rekeyed rather than updated.
 func (c *sessionCache) movePane(e *PaneMovedEvent) {
-	if e.CreatedWorkspace != nil {
-		c.workspaces.set(e.CreatedWorkspace.WorkspaceID, e.CreatedWorkspace.Clone())
+	if workspace, ok := e.CreatedWorkspace.Get(); ok {
+		c.workspaces.set(workspace.WorkspaceID, workspace.Clone())
 	}
-	if e.CreatedTab != nil {
-		c.tabs.set(e.CreatedTab.TabID, e.CreatedTab.Clone())
+	if tab, ok := e.CreatedTab.Get(); ok {
+		c.tabs.set(tab.TabID, tab.Clone())
 	}
 	agent, hadAgent := c.agents.get(e.PreviousPaneID)
 	c.closePane(e.PreviousPaneID)
@@ -145,11 +144,11 @@ func (c *sessionCache) movePane(e *PaneMovedEvent) {
 	}
 	// The pane already carries its destination, so the cascade below cannot
 	// remove it with the container it left.
-	if e.ClosedTabID != nil {
-		c.closeTab(*e.ClosedTabID)
+	if tabID, ok := e.ClosedTabID.Get(); ok {
+		c.closeTab(tabID)
 	}
-	if e.ClosedWorkspaceID != nil {
-		c.closeWorkspace(*e.ClosedWorkspaceID)
+	if workspaceID, ok := e.ClosedWorkspaceID.Get(); ok {
+		c.closeWorkspace(workspaceID)
 	}
 }
 
@@ -185,16 +184,16 @@ func (c *sessionCache) reorderTabs(workspaceID string, tabs []TabInfo) {
 // src/api/app_api.rs).
 func (c *sessionCache) applyAgentDetected(e *PaneAgentDetectedEvent) {
 	pane, hasPane := c.panes.get(e.PaneID)
-	released := e.Released != nil && *e.Released
+	released := e.Released.ValueOrZero()
 	if hasPane {
 		if released {
-			pane.Agent = nil
-			pane.DisplayAgent = nil
+			pane.Agent = Optional[string]{}
+			pane.DisplayAgent = Optional[string]{}
 		} else {
-			pane.Agent = clonePtr(e.Agent)
+			pane.Agent = e.Agent
 		}
-		if e.FinalStatus != nil {
-			pane.AgentStatus = *e.FinalStatus
+		if status, ok := e.FinalStatus.Get(); ok {
+			pane.AgentStatus = status
 		}
 		c.panes.set(e.PaneID, pane)
 	}
@@ -215,17 +214,17 @@ func (c *sessionCache) applyAgentStatus(e *PaneAgentStatusChangedEvent) {
 	pane, hasPane := c.panes.get(e.PaneID)
 	if hasPane {
 		pane.AgentStatus = e.AgentStatus
-		if e.Agent != nil {
-			pane.Agent = clonePtr(e.Agent)
+		if value, ok := e.Agent.Get(); ok {
+			pane.Agent = Some(value)
 		}
-		if e.DisplayAgent != nil {
-			pane.DisplayAgent = clonePtr(e.DisplayAgent)
+		if value, ok := e.DisplayAgent.Get(); ok {
+			pane.DisplayAgent = Some(value)
 		}
-		if e.Title != nil {
-			pane.Title = clonePtr(e.Title)
+		if value, ok := e.Title.Get(); ok {
+			pane.Title = Some(value)
 		}
-		if e.StateLabels != nil {
-			pane.StateLabels = maps.Clone(e.StateLabels)
+		if labels, ok := e.StateLabels.Get(); ok {
+			pane.StateLabels = Some(maps.Clone(labels))
 		}
 		c.panes.set(e.PaneID, pane)
 	}

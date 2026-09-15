@@ -14,8 +14,8 @@ import (
 // checkouts under the caller's home directory, outside the temporary root.
 func stageWorktree(t *testing.T, h *harness, _ *state) {
 	list, err := h.client.WorktreeList(h.ctx(t), herdr.WorktreeListParams{
-		Cwd:             ptr(h.repo),
-		TrustRepository: ptr(true),
+		Cwd:             herdr.Some(h.repo),
+		TrustRepository: herdr.Some(true),
 	})
 	if h.cover(t, herdr.MethodWorktreeList, list, err) {
 		if list.Source.RepoRoot != h.repo {
@@ -28,24 +28,24 @@ func stageWorktree(t *testing.T, h *harness, _ *state) {
 
 	checkout := filepath.Join(h.root, "wt-created")
 	created, err := h.client.WorktreeCreate(h.ctx(t), herdr.WorktreeCreateParams{
-		Cwd:             ptr(h.repo),
-		Branch:          ptr("e2e-created"),
-		Path:            ptr(checkout),
-		TrustRepository: ptr(true),
-		Focus:           ptr(false),
+		Cwd:             herdr.Some(h.repo),
+		Branch:          herdr.Some("e2e-created"),
+		Path:            herdr.Some(checkout),
+		TrustRepository: herdr.Some(true),
+		Focus:           herdr.Some(false),
 	})
 	if h.cover(t, herdr.MethodWorktreeCreate, created, err) {
 		if created.Worktree.Path != checkout {
 			t.Errorf("worktree.create checked out at %s, asked for %s", created.Worktree.Path, checkout)
 		}
-		if created.Workspace.Worktree == nil {
+		if _, ok := created.Workspace.Worktree.Get(); !ok {
 			t.Errorf("worktree.create returned a workspace without worktree information")
 		}
 
 		removed, err := h.client.WorktreeRemove(h.ctx(t), herdr.WorktreeRemoveParams{
 			WorkspaceID:     created.Workspace.WorkspaceID,
-			Force:           ptr(true),
-			TrustRepository: ptr(true),
+			Force:           herdr.Some(true),
+			TrustRepository: herdr.Some(true),
 		})
 		if h.cover(t, herdr.MethodWorktreeRemove, removed, err) && removed.Path != checkout {
 			t.Errorf("worktree.remove removed %s, expected %s", removed.Path, checkout)
@@ -58,10 +58,10 @@ func stageWorktree(t *testing.T, h *harness, _ *state) {
 		t.Fatalf("prepare the checkout for worktree.open: %v", err)
 	}
 	opened, err := h.client.WorktreeOpen(h.ctx(t), herdr.WorktreeOpenParams{
-		Cwd:             ptr(h.repo),
-		Path:            ptr(adopted),
-		TrustRepository: ptr(true),
-		Focus:           ptr(false),
+		Cwd:             herdr.Some(h.repo),
+		Path:            herdr.Some(adopted),
+		TrustRepository: herdr.Some(true),
+		Focus:           herdr.Some(false),
 	})
 	if !h.cover(t, herdr.MethodWorktreeOpen, opened, err) {
 		return

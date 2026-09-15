@@ -87,9 +87,9 @@ func TestSessionAccessorsReturnCopies(t *testing.T) {
 	}
 
 	pane, _ := session.Pane("w1:p1")
-	pane.Tokens["pane"] = "rewritten"
+	pane.Tokens.ValueOrZero()["pane"] = "rewritten"
 	again, _ := session.Pane("w1:p1")
-	if got := again.Tokens["pane"]; got != "w1:p1" {
+	if got := again.Tokens.ValueOrZero()["pane"]; got != "w1:p1" {
 		t.Errorf("pane token = %q, want w1:p1", got)
 	}
 
@@ -268,13 +268,13 @@ func TestSessionAppliesPaneEvents(t *testing.T) {
 
 	updated := testPane("w1", "w1:t1", "w1:p1")
 	updated.Revision = 7
-	updated.Title = stringPtr("busy")
+	updated.Title = Some("busy")
 	applyEvent(t, session, stream, string(EventKindPaneUpdated), PaneUpdatedEvent{Pane: updated})
 	pane, _ := session.Pane("w1:p1")
-	if pane.Revision != 7 || pane.Title == nil || *pane.Title != "busy" {
+	if pane.Revision != 7 || pane.Title.ValueOrZero() != "busy" {
 		t.Errorf("pane = %+v", pane)
 	}
-	if got := session.Agents()[0]; got.Revision != 7 || got.Title == nil || *got.Title != "busy" {
+	if got := session.Agents()[0]; got.Revision != 7 || got.Title.ValueOrZero() != "busy" {
 		t.Errorf("agent = %+v, want the fields of its pane", got)
 	}
 
@@ -301,7 +301,7 @@ func TestSessionAppliesPaneEvents(t *testing.T) {
 		Scroll:      PaneScrollInfo{MaxOffsetFromBottom: 90, OffsetFromBottom: 12, ViewportRows: 40},
 	})
 	pane, _ = session.Pane("w1:p1")
-	if pane.Scroll == nil || pane.Scroll.OffsetFromBottom != 12 {
+	if scroll, ok := pane.Scroll.Get(); !ok || scroll.OffsetFromBottom != 12 {
 		t.Errorf("scroll = %+v", pane.Scroll)
 	}
 
@@ -333,8 +333,8 @@ func TestSessionAppliesPaneMovedWithNewPaneID(t *testing.T) {
 		PreviousPaneID:      "w1:p1",
 		PreviousTabID:       "w1:t1",
 		PreviousWorkspaceID: "w1",
-		CreatedTab:          &createdTab,
-		ClosedTabID:         stringPtr("w1:t1"),
+		CreatedTab:          Some(createdTab),
+		ClosedTabID:         Some("w1:t1"),
 	})
 
 	if _, ok := session.Pane("w1:p1"); ok {
@@ -364,17 +364,17 @@ func TestSessionAppliesAgentEvents(t *testing.T) {
 	applyEvent(t, session, stream, string(EventKindPaneAgentDetected), PaneAgentDetectedEvent{
 		PaneID:      "w1:p2",
 		WorkspaceID: "w1",
-		Agent:       stringPtr("claude"),
+		Agent:       Some("claude"),
 	})
 	agents := session.Agents()
 	if len(agents) != 2 || agents[1].PaneID != "w1:p2" {
 		t.Fatalf("agents = %+v, want an entry for w1:p2", agents)
 	}
-	if agents[1].Agent == nil || *agents[1].Agent != "claude" {
+	if agents[1].Agent.ValueOrZero() != "claude" {
 		t.Errorf("agent = %+v, want claude", agents[1].Agent)
 	}
 	pane, _ := session.Pane("w1:p2")
-	if pane.Agent == nil || *pane.Agent != "claude" {
+	if pane.Agent.ValueOrZero() != "claude" {
 		t.Errorf("pane agent = %+v, want claude", pane.Agent)
 	}
 
@@ -382,10 +382,10 @@ func TestSessionAppliesAgentEvents(t *testing.T) {
 		PaneID:      "w1:p2",
 		WorkspaceID: "w1",
 		AgentStatus: AgentStatusBlocked,
-		Title:       stringPtr("waiting"),
+		Title:       Some("waiting"),
 	})
 	pane, _ = session.Pane("w1:p2")
-	if pane.AgentStatus != AgentStatusBlocked || pane.Title == nil || *pane.Title != "waiting" {
+	if pane.AgentStatus != AgentStatusBlocked || pane.Title.ValueOrZero() != "waiting" {
 		t.Errorf("pane = %+v", pane)
 	}
 	if got := session.Agents()[1]; got.AgentStatus != AgentStatusBlocked {
@@ -404,15 +404,15 @@ func TestSessionAppliesAgentEvents(t *testing.T) {
 	applyEvent(t, session, stream, string(EventKindPaneAgentDetected), PaneAgentDetectedEvent{
 		PaneID:      "w1:p2",
 		WorkspaceID: "w1",
-		Released:    boolPtr(true),
-		FinalStatus: agentStatusPtr(AgentStatusDone),
+		Released:    Some(true),
+		FinalStatus: Some(AgentStatusDone),
 	})
 	agents = session.Agents()
 	if len(agents) != 1 || agents[0].PaneID != "w1:p1" {
 		t.Fatalf("agents = %+v, want only the entry for w1:p1", agents)
 	}
 	pane, _ = session.Pane("w1:p2")
-	if pane.Agent != nil || pane.AgentStatus != AgentStatusDone {
+	if pane.Agent.IsSet() || pane.AgentStatus != AgentStatusDone {
 		t.Errorf("pane = %+v, want no agent and the final status", pane)
 	}
 }
@@ -473,8 +473,6 @@ func tabIDs(session *Session) string {
 	}
 	return fmt.Sprint(ids)
 }
-
-func agentStatusPtr(status AgentStatus) *AgentStatus { return &status }
 
 func TestSessionReconnectsAfterStreamDrops(t *testing.T) {
 	server := newMirrorServer(t, testSnapshot())
@@ -735,15 +733,15 @@ func TestSessionSnapshotReturnsTheWholeMirror(t *testing.T) {
 		t.Fatalf("counts: workspaces %d tabs %d panes %d agents %d layouts %d",
 			len(got.Workspaces), len(got.Tabs), len(got.Panes), len(got.Agents), len(got.Layouts))
 	}
-	if Value(got.FocusedWorkspaceID) != "w1" || Value(got.FocusedTabID) != "w1:t1" || Value(got.FocusedPaneID) != "w1:p1" {
+	if got.FocusedWorkspaceID.ValueOrZero() != "w1" || got.FocusedTabID.ValueOrZero() != "w1:t1" || got.FocusedPaneID.ValueOrZero() != "w1:p1" {
 		t.Errorf("focused: workspace %q tab %q pane %q",
-			Value(got.FocusedWorkspaceID), Value(got.FocusedTabID), Value(got.FocusedPaneID))
+			got.FocusedWorkspaceID.ValueOrZero(), got.FocusedTabID.ValueOrZero(), got.FocusedPaneID.ValueOrZero())
 	}
 
 	got.Workspaces[0].Label = "rewritten"
-	got.Panes[0].Tokens["pane"] = "rewritten"
+	got.Panes[0].Tokens.ValueOrZero()["pane"] = "rewritten"
 	again := session.Snapshot()
-	if again.Workspaces[0].Label != "one" || again.Panes[0].Tokens["pane"] != "w1:p1" {
+	if again.Workspaces[0].Label != "one" || again.Panes[0].Tokens.ValueOrZero()["pane"] != "w1:p1" {
 		t.Error("Snapshot shares state with the mirror")
 	}
 }
@@ -756,13 +754,13 @@ func TestSessionSnapshotTracksFocus(t *testing.T) {
 	stream := server.acceptStream()
 
 	applyEvent(t, session, stream, string(EventKindPaneFocused), PaneFocusedEvent{PaneID: "w1:p2", WorkspaceID: "w1"})
-	if got := Value(session.Snapshot().FocusedPaneID); got != "w1:p2" {
+	if got := session.Snapshot().FocusedPaneID.ValueOrZero(); got != "w1:p2" {
 		t.Errorf("FocusedPaneID = %q, want w1:p2", got)
 	}
 
 	applyEvent(t, session, stream, string(EventKindPaneClosed), PaneClosedEvent{PaneID: "w1:p2", WorkspaceID: "w1"})
-	if got := session.Snapshot().FocusedPaneID; got != nil {
-		t.Errorf("FocusedPaneID = %q, want none", *got)
+	if got := session.Snapshot().FocusedPaneID; got.IsSet() {
+		t.Errorf("FocusedPaneID = %q, want none", got.ValueOrZero())
 	}
 }
 
@@ -795,7 +793,7 @@ func TestSessionKeepsLayoutFocusCurrent(t *testing.T) {
 	if untouched, _ := session.Layout("w1:t2"); untouched.FocusedPaneID != "w1:p2" {
 		t.Errorf("layout w1:t2 focused on %q, want it left at w1:p2", untouched.FocusedPaneID)
 	}
-	if got := Value(session.Snapshot().FocusedPaneID); got != "w1:p3" {
+	if got := session.Snapshot().FocusedPaneID.ValueOrZero(); got != "w1:p3" {
 		t.Errorf("snapshot FocusedPaneID = %q, want w1:p3", got)
 	}
 }

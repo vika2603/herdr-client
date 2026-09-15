@@ -109,7 +109,7 @@ func Context(invocation herdr.PluginInvocationContext) Option {
 func Workspace(id string) Option {
 	return func(f *fake) {
 		f.env.WorkspaceID = id
-		f.withContext().WorkspaceID = &id
+		f.withContext().WorkspaceID = herdr.Some(id)
 	}
 }
 
@@ -117,7 +117,7 @@ func Workspace(id string) Option {
 func Tab(id string) Option {
 	return func(f *fake) {
 		f.env.TabID = id
-		f.withContext().TabID = &id
+		f.withContext().TabID = herdr.Some(id)
 	}
 }
 
@@ -129,13 +129,13 @@ func Pane(id string) Option {
 
 // FocusedPane sets the focused pane of the invocation context.
 func FocusedPane(id string) Option {
-	return func(f *fake) { f.withContext().FocusedPaneID = &id }
+	return func(f *fake) { f.withContext().FocusedPaneID = herdr.Some(id) }
 }
 
 // SelectedText sets the terminal selection an action in the "selection"
 // context was invoked on.
 func SelectedText(text string) Option {
-	return func(f *fake) { f.withContext().SelectedText = &text }
+	return func(f *fake) { f.withContext().SelectedText = herdr.Some(text) }
 }
 
 // ClickedURL sets the URL a link handler was invoked for, in the invocation
@@ -143,7 +143,7 @@ func SelectedText(text string) Option {
 func ClickedURL(url string) Option {
 	return func(f *fake) {
 		f.env.ClickedURL = url
-		f.withContext().ClickedURL = &url
+		f.withContext().ClickedURL = herdr.Some(url)
 	}
 }
 
@@ -151,7 +151,7 @@ func ClickedURL(url string) Option {
 func LinkHandler(id string) Option {
 	return func(f *fake) {
 		f.env.LinkHandlerID = id
-		f.withContext().LinkHandlerID = &id
+		f.withContext().LinkHandlerID = herdr.Some(id)
 	}
 }
 

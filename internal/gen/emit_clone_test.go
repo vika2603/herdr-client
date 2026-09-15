@@ -24,6 +24,7 @@ func TestCloneMethodsAreAdjacentAndCopyNestedValues(t *testing.T) {
 			{Name: "Lists", Type: "*map[string][]string"},
 			{Name: "Raw", Type: "map[string]json.RawMessage"},
 			{Name: "Empty", Type: "*[]string"}, {Name: "Flags", Type: "[]Flag"},
+			{Name: "Maybe", Type: "Optional[[]Child]"}, {Name: "Label", Type: "Optional[string]"},
 		}},
 	}}
 	for _, typ := range pkg.Types {
@@ -56,6 +57,12 @@ func TestCloneMethodsAreAdjacentAndCopyNestedValues(t *testing.T) {
 	files := map[string]string{
 		"go.mod":       "module fixture\n\ngo 1.25\n",
 		"types_gen.go": source,
+		"optional.go": `package fixture
+type Optional[T any] struct { value T; state uint8 }
+func Some[T any](v T) Optional[T] { return Optional[T]{value: v, state: 2} }
+func Null[T any]() Optional[T] { return Optional[T]{state: 1} }
+func (o Optional[T]) Get() (T, bool) { return o.value, o.state == 2 }
+`,
 		"clone_test.go": `package fixture
 import ("encoding/json"; "reflect"; "testing")
 func TestClone(t *testing.T) {
@@ -65,7 +72,8 @@ func TestClone(t *testing.T) {
     source := Envelope{
         Child: &Child{Text: &text, Next: &Child{}}, Rows: []Child{{Text: &text}},
         Lists: &lists, Empty: &nilSlice, Flags: []Flag{"source"},
-        Raw: map[string]json.RawMessage{"value": {1,2}, "empty": {}, "nil": nil},
+		Raw: map[string]json.RawMessage{"value": {1,2}, "empty": {}, "nil": nil},
+		Maybe: Some([]Child{{Text: &text}}), Label: Some("source"),
     }
     cloned := source.Clone()
     if !reflect.DeepEqual(source, cloned) { t.Fatal("Clone changed values") }
@@ -76,14 +84,21 @@ func TestClone(t *testing.T) {
     (*cloned.Lists)["value"][0] = "clone"
     (*cloned.Lists)["empty"] = append((*cloned.Lists)["empty"], "clone")
     cloned.Raw["value"][0] = 9
-    cloned.Flags[0] = "clone"
+	cloned.Flags[0] = "clone"
+	maybe, ok := cloned.Maybe.Get()
+	if !ok { t.Fatal("present optional became absent") }
+	*maybe[0].Text = "clone"
+	if label, ok := cloned.Label.Get(); !ok || label != "source" { t.Fatal("scalar optional changed") }
     if text != "source" || source.Child.Next.Text != nil ||
         lists["value"][0] != "source" || len(lists["empty"]) != 0 ||
-        source.Raw["value"][0] != 1 || source.Flags[0] != "source" {
+		source.Raw["value"][0] != 1 || source.Flags[0] != "source" ||
+		func() bool { value, _ := source.Maybe.Get(); return *value[0].Text != "source" }() {
         t.Fatal("nested values still alias source")
     }
-    zero := Envelope{}
-    if !reflect.DeepEqual(zero, zero.Clone()) { t.Fatal("Clone changed nil values") }
+	zero := Envelope{}
+	if !reflect.DeepEqual(zero, zero.Clone()) { t.Fatal("Clone changed nil values") }
+	null := Envelope{Maybe: Null[[]Child]()}
+	if !reflect.DeepEqual(null, null.Clone()) { t.Fatal("Clone changed null optional") }
 }
 `,
 	}

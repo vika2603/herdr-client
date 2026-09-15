@@ -144,9 +144,12 @@ config directory is `$XDG_CONFIG_HOME/herdr` or the platform default. A herdr
 built with debug assertions uses `herdr-dev` instead, so a resolved path only
 reaches a release build; `HERDR_SOCKET_PATH` is the way to a debug one.
 
-Optional request fields that are not strings are pointers, so that leaving one
-unset differs from sending its zero value. `Ptr` and `Value` cover the 134
-such fields without a named variable per field.
+Optional object fields use `Optional[T]` with `omitzero`. The zero wrapper
+omits the field; `Some` sends a value including zero/false/empty values, and
+`Null` sends explicit JSON null where allowed. `Get` exposes present values,
+`IsSet`/`IsNull` distinguish null from absence, and `ValueOrZero` flattens either
+to the value's zero. `Ptr` and `Value` remain for genuine pointer-shaped values,
+such as nullable map entries.
 
 ## Generated code
 
@@ -224,11 +227,30 @@ Optional and nullable fields:
 | Case | Go field |
 | --- | --- |
 | required, not nullable | `T` |
-| required, nullable | `*T` |
-| optional `string` or enum, not nullable | `T` with `omitempty` |
-| optional `bool`/integer/float/struct, not nullable | `*T` with `omitempty` (`strip_ansi` defaults to true; a value type could not express an explicit false) |
-| optional, nullable | `*T` with `omitempty` (serde treats null and absent identically for `Option` fields, so an explicit null is never needed) |
-| optional array/map | `[]T` / `map[string]T` with `omitempty` |
+| required, nullable scalar/struct | `*T` |
+| optional object field (scalar, struct, collection or union) | `Optional[T]` with `omitzero` |
+| recursive optional struct edge | `Optional[*T]` with `omitzero` |
+| nullable collection element | `*T`, independent of whether the containing field is optional |
+
+`Required`, `Nullable` and `Optional` are explicit IR facts, and `ValueType`
+records the contained type. The builder retains pointer edges when inlining an
+optional recursive struct would create an infinitely sized Go type; required
+by-value cycles are rejected. Optional fields are identified from schema
+requiredness, not inferred from old pointer spelling or `omitempty`.
+
+`Optional` stores a value and a three-state marker inline. `IsZero` omits only
+absent fields. Its JSON methods emit the wrapped value or null, and decode into
+a temporary value before replacing the receiver. Missing object fields do not
+invoke its decoder: normal `encoding/json` reuse semantics remain, while the
+existing custom union struct decoder continues to rebuild its receiver. Use a
+fresh struct when decoding independent messages. Nullability is retained as a
+schema fact, not a new client-wide validation policy; `Null` is only valid for
+fields that the protocol permits to be null.
+
+An absent Optional marshaled by itself becomes null, since omission requires
+an enclosing struct field. `Some` of a nil slice, map or pointer also encodes
+as null and decodes as the null state. Use an absent wrapper for omission and
+`Some` of a nonnil empty collection for an explicit `[]` or `{}`.
 
 Discriminated unions are generated as:
 
@@ -253,7 +275,7 @@ interface, so the wrong one compiles and matches nothing; writing
 `examples/worktree-bootstrap`, which touches both sides, is what made the cost
 visible.
 
-Structs with union-typed fields (including slices and pointers of them) get an
+Structs with union-typed fields (including optional wrappers and slices) get an
 `UnmarshalJSON` that first decodes into an auxiliary struct holding the union
 fields as `json.RawMessage`, then calls the matching `decodeX` per field.
 
@@ -324,7 +346,9 @@ configuration and references the handwritten names: `PopupSize` (integer or a
 
 Each protocol struct gets a `Clone` method immediately after its declaration in
 the original generated file. The emitter handles all IR types without a named
-root or clone-selection list. Scalars and enums copy by value; pointers, slices,
+root or clone-selection list. Optional scalar values copy inline. For a present
+Optional holding references, the contained value is cloned and rewrapped with
+Some; absent/null states stay unchanged. Pointers, slices,
 string-keyed maps, named structs and raw JSON bytes are copied recursively.
 Nil, nonnil empty collections and optional zero values remain distinct. Runtime
 copies use typed code without reflection or a JSON round trip.
@@ -416,28 +440,26 @@ backoff, queued events and resync marker; bootstrap collection is kept in
 replacement, and `sessionCache` applies events without I/O or synchronization.
 The ordered collections keep the existing event ordering and cascade rules.
 
-The state owner returns fully independent values, including nested pointers,
+The state owner returns fully independent values, including nested optionals,
 maps and slices. Bootstrap records and references retained from events are
 also cloned at ingestion, so an event returned by `Next` cannot mutate cached
-state. Nested nil pointers/maps/slices remain nil and nonnil empty collections
-remain nonnil. Top-level mirror lists continue to normalize absent entries to
-nonnil empty slices. Cache records may share internal references with each other, but no
-such reference crosses the ownership boundary. Generated `Clone` methods own
-the record-copy rules; `session_clone.go` retains only the collection projection
-and scalar event-pointer helpers.
+state. Nested absent/null/value states are preserved. Genuine nil pointers,
+maps and slices remain nil, and nonnil empty collections remain nonnil. Top-level mirror lists continue to normalize absent entries to
+nonnil empty slices. Cache records may share internal references with each
+other, but no such reference crosses the ownership boundary. Generated `Clone` methods own
+the record-copy rules; `session_clone.go` retains the collection projection
+helper. Scalar pointers in handwritten protocol adapters use `ptr.go`.
 
 `BenchmarkSessionSnapshot` exercises populated snapshots at 1, 15 and 100 panes.
-Deep copying necessarily adds allocations compared with borrowing pointers;
-the benchmark measures that tradeoff independently of socket or rendering
+Deep copying reference-bearing data adds allocations compared with borrowing;
+optional scalar wrappers can be copied directly without allocating pointers.
+The benchmark measures that tradeoff independently of socket or rendering
 costs. It does not establish UI latency or production throughput.
 
-Each accessor takes the lock on its own, which is enough while the mirror is
-only advanced by `Next`, but leaves no way to read one consistent frame under
-one lock, and no way to list panes or layouts at all. `Snapshot` closes both:
-it returns the same `SessionSnapshot` the bootstrap consumed, with the focused
-ids read back from the `Focused` flags and the version and protocol carried
-from the snapshot the mirror was built on. Writing `examples/agent-board` is
-what showed the gap; the board needs a whole frame, not a field at a time.
+Each accessor takes the lock independently. `Snapshot` reads all collections
+under one lock and returns one consistent `SessionSnapshot`, including panes
+and layouts. Focused ids are derived from the `Focused` flags; version and
+protocol come from the snapshot used to bootstrap the mirror.
 
 A server restart, which is what live handoff does, ends the stream.`Session`
 reconnects, bootstraps again, and reports the gap as one `*ResyncEvent` so a
@@ -783,8 +805,8 @@ decode rather than only the handler function it calls directly.
 flattened to values: a field Herdr did not send reads as the empty string.
 It reports no error, because an entrypoint invoked without a context and a
 context that fails to decode leave a plugin reading one field with nothing
-different to do; `Env.Context` keeps the pointer form for when the difference
-matters. `Worktree` stays a pointer, having no useful empty value.
+different to do; `Env.Context` preserves the Optional fields when presence or
+null matters. `Worktree` remains Optional because it has no useful empty value.
 
 ### Owning state without the file plumbing
 

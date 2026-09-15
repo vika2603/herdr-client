@@ -14,8 +14,10 @@ func TestSessionAccessorsReturnFullyDetachedValues(t *testing.T) {
 	server.acceptStream()
 
 	workspaces := session.Workspaces()
-	workspaces[0].Tokens["owner"] = "caller"
-	workspaces[0].Worktree.CheckoutPath = "/caller"
+	workspaces[0].Tokens.ValueOrZero()["owner"] = "caller"
+	worktree := workspaces[0].Worktree.ValueOrZero()
+	worktree.CheckoutPath = "/caller"
+	workspaces[0].Worktree = Some(worktree)
 	workspaces[0].Label = "caller"
 
 	tabs := session.Tabs()
@@ -56,8 +58,8 @@ func TestSessionSnapshotRemainsStableAcrossLaterEvents(t *testing.T) {
 	before := session.Snapshot()
 	updatedPane := richPane("w1", "w1:t1", "w1:p1")
 	updatedPane.Focused = true
-	*updatedPane.Title = "later title"
-	updatedPane.Tokens["phase"] = "later"
+	updatedPane.Title = Some("later title")
+	updatedPane.Tokens.ValueOrZero()["phase"] = "later"
 	applyEvent(t, session, stream, string(EventKindPaneUpdated), PaneUpdatedEvent{Pane: updatedPane})
 
 	updatedLayout := richLayout("w1", "w1:t1", "w1:p1")
@@ -68,7 +70,7 @@ func TestSessionSnapshotRemainsStableAcrossLaterEvents(t *testing.T) {
 		t.Fatalf("an earlier Snapshot changed after later events\ngot:  %#v\nwant: %#v", before, wantBefore)
 	}
 	after := session.Snapshot()
-	if *after.Panes[0].Title != "later title" || after.Panes[0].Tokens["phase"] != "later" {
+	if after.Panes[0].Title.ValueOrZero() != "later title" || after.Panes[0].Tokens.ValueOrZero()["phase"] != "later" {
 		t.Errorf("later pane update is absent: %#v", after.Panes[0])
 	}
 	if after.Layouts[0].Panes[0].PaneID != "later-pane" {
@@ -82,8 +84,10 @@ func TestSessionNextEventDoesNotAliasMirror(t *testing.T) {
 		workspace := richWorkspace("w1", "updated workspace")
 		event := applyEvent(t, session, stream, string(EventKindWorkspaceUpdated), WorkspaceUpdatedEvent{Workspace: workspace}).(*WorkspaceUpdatedEvent)
 		event.Workspace.Label = "caller"
-		event.Workspace.Tokens["owner"] = "caller"
-		event.Workspace.Worktree.CheckoutPath = "/caller"
+		event.Workspace.Tokens.ValueOrZero()["owner"] = "caller"
+		worktree := event.Workspace.Worktree.ValueOrZero()
+		worktree.CheckoutPath = "/caller"
+		event.Workspace.Worktree = Some(worktree)
 
 		got := session.Workspaces()[0]
 		if !reflect.DeepEqual(got, workspace) {
@@ -99,8 +103,10 @@ func TestSessionNextEventDoesNotAliasMirror(t *testing.T) {
 			Workspaces:   ordered,
 		}).(*WorkspaceReorderedEvent)
 		event.Workspaces[0].Label = "caller"
-		event.Workspaces[0].Tokens["owner"] = "caller"
-		event.Workspaces[0].Worktree.RepoName = "caller"
+		event.Workspaces[0].Tokens.ValueOrZero()["owner"] = "caller"
+		worktree := event.Workspaces[0].Worktree.ValueOrZero()
+		worktree.RepoName = "caller"
+		event.Workspaces[0].Worktree = Some(worktree)
 		event.Workspaces[0], event.Workspaces[1] = event.Workspaces[1], event.Workspaces[0]
 
 		got := session.Workspaces()
@@ -112,7 +118,7 @@ func TestSessionNextEventDoesNotAliasMirror(t *testing.T) {
 	t.Run("pane update", func(t *testing.T) {
 		session, stream := openOwnershipEventSession(t)
 		pane := richPane("w1", "w1:t1", "w1:p1")
-		*pane.Title = "updated pane"
+		pane.Title = Some("updated pane")
 		event := applyEvent(t, session, stream, string(EventKindPaneUpdated), PaneUpdatedEvent{Pane: pane}).(*PaneUpdatedEvent)
 		mutateOwnedPane(&event.Pane)
 
@@ -128,18 +134,24 @@ func TestSessionNextEventDoesNotAliasMirror(t *testing.T) {
 		workspace := richWorkspace("w3", "created workspace")
 		tab := testTab("w3", "w3:t1")
 		event := applyEvent(t, session, stream, string(EventKindPaneMoved), PaneMovedEvent{
-			CreatedTab:          &tab,
-			CreatedWorkspace:    &workspace,
+			CreatedTab:          Some(tab),
+			CreatedWorkspace:    Some(workspace),
 			Pane:                pane,
 			PreviousPaneID:      "w1:p1",
 			PreviousTabID:       "w1:t1",
 			PreviousWorkspaceID: "w1",
 		}).(*PaneMovedEvent)
 		mutateOwnedPane(&event.Pane)
-		event.CreatedWorkspace.Label = "caller"
-		event.CreatedWorkspace.Tokens["owner"] = "caller"
-		event.CreatedWorkspace.Worktree.CheckoutPath = "/caller"
-		event.CreatedTab.Label = "caller"
+		createdWorkspace := event.CreatedWorkspace.ValueOrZero()
+		createdWorkspace.Label = "caller"
+		createdWorkspace.Tokens.ValueOrZero()["owner"] = "caller"
+		worktree := createdWorkspace.Worktree.ValueOrZero()
+		worktree.CheckoutPath = "/caller"
+		createdWorkspace.Worktree = Some(worktree)
+		event.CreatedWorkspace = Some(createdWorkspace)
+		createdTab := event.CreatedTab.ValueOrZero()
+		createdTab.Label = "caller"
+		event.CreatedTab = Some(createdTab)
 
 		gotPane, ok := session.Pane("w3:p1")
 		if !ok || !reflect.DeepEqual(gotPane, pane) {
@@ -153,7 +165,7 @@ func TestSessionNextEventDoesNotAliasMirror(t *testing.T) {
 			t.Fatalf("created tab aliases returned event\ngot:  %#v\nwant: %#v", got, tab)
 		}
 		agents := session.Agents()
-		if len(agents) != 1 || agents[0].PaneID != "w3:p1" || *agents[0].AgentSession != *pane.AgentSession {
+		if len(agents) != 1 || agents[0].PaneID != "w3:p1" || agents[0].AgentSession.ValueOrZero() != pane.AgentSession.ValueOrZero() {
 			t.Fatalf("agent did not move with its pane: %#v", agents)
 		}
 	})
@@ -162,18 +174,18 @@ func TestSessionNextEventDoesNotAliasMirror(t *testing.T) {
 		session, stream := openOwnershipEventSession(t)
 		agent := "new-agent"
 		event := applyEvent(t, session, stream, string(EventKindPaneAgentDetected), PaneAgentDetectedEvent{
-			Agent:       &agent,
+			Agent:       Some(agent),
 			PaneID:      "w1:p1",
 			WorkspaceID: "w1",
 		}).(*PaneAgentDetectedEvent)
-		*event.Agent = "caller"
+		event.Agent = Some("caller")
 
 		pane, _ := session.Pane("w1:p1")
-		if Value(pane.Agent) != agent {
-			t.Errorf("pane agent = %q, want %q", Value(pane.Agent), agent)
+		if pane.Agent.ValueOrZero() != agent {
+			t.Errorf("pane agent = %q, want %q", pane.Agent.ValueOrZero(), agent)
 		}
 		agents := session.Agents()
-		if len(agents) != 1 || Value(agents[0].Agent) != agent {
+		if len(agents) != 1 || agents[0].Agent.ValueOrZero() != agent {
 			t.Errorf("agents = %#v, want detected agent %q", agents, agent)
 		}
 	})
@@ -183,25 +195,25 @@ func TestSessionNextEventDoesNotAliasMirror(t *testing.T) {
 		agent, display, title := "codex-updated", "Codex Updated", "updated title"
 		labels := map[string]string{"phase": "updated"}
 		event := applyEvent(t, session, stream, string(EventKindPaneAgentStatusChanged), PaneAgentStatusChangedEvent{
-			Agent:        &agent,
+			Agent:        Some(agent),
 			AgentStatus:  AgentStatusBlocked,
-			DisplayAgent: &display,
+			DisplayAgent: Some(display),
 			PaneID:       "w1:p1",
-			StateLabels:  labels,
-			Title:        &title,
+			StateLabels:  Some(labels),
+			Title:        Some(title),
 			WorkspaceID:  "w1",
 		}).(*PaneAgentStatusChangedEvent)
-		*event.Agent = "caller"
-		*event.DisplayAgent = "caller"
-		*event.Title = "caller"
-		event.StateLabels["phase"] = "caller"
+		event.Agent = Some("caller")
+		event.DisplayAgent = Some("caller")
+		event.Title = Some("caller")
+		event.StateLabels.ValueOrZero()["phase"] = "caller"
 
 		pane, _ := session.Pane("w1:p1")
-		if Value(pane.Agent) != agent || Value(pane.DisplayAgent) != display || Value(pane.Title) != title || pane.StateLabels["phase"] != "updated" {
+		if pane.Agent.ValueOrZero() != agent || pane.DisplayAgent.ValueOrZero() != display || pane.Title.ValueOrZero() != title || pane.StateLabels.ValueOrZero()["phase"] != "updated" {
 			t.Errorf("pane aliases returned agent event: %#v", pane)
 		}
 		agents := session.Agents()
-		if len(agents) != 1 || Value(agents[0].Agent) != agent || agents[0].StateLabels["phase"] != "updated" {
+		if len(agents) != 1 || agents[0].Agent.ValueOrZero() != agent || agents[0].StateLabels.ValueOrZero()["phase"] != "updated" {
 			t.Errorf("agent aliases returned agent event: %#v", agents)
 		}
 	})
@@ -235,8 +247,10 @@ func TestSessionCacheOwnsSnapshotAndEventInputs(t *testing.T) {
 	event := &WorkspaceUpdatedEvent{Workspace: updated}
 	cache.apply(event)
 	event.Workspace.Label = "caller"
-	event.Workspace.Tokens["owner"] = "caller"
-	event.Workspace.Worktree.CheckoutPath = "/caller"
+	event.Workspace.Tokens.ValueOrZero()["owner"] = "caller"
+	worktree := event.Workspace.Worktree.ValueOrZero()
+	worktree.CheckoutPath = "/caller"
+	event.Workspace.Worktree = Some(worktree)
 
 	got, ok := cache.workspaces.get("w1")
 	if !ok || !reflect.DeepEqual(got, wantUpdated) {
@@ -246,14 +260,14 @@ func TestSessionCacheOwnsSnapshotAndEventInputs(t *testing.T) {
 
 func TestSessionCopiesPreserveNilAndEmptyCollections(t *testing.T) {
 	snapshot := ownershipSnapshot()
-	snapshot.Workspaces[0].Tokens = nil
-	snapshot.Workspaces[1].Tokens = map[string]string{}
-	snapshot.Panes[0].StateLabels = nil
-	snapshot.Panes[0].Tokens = map[string]string{}
-	snapshot.Panes[1].StateLabels = map[string]string{}
-	snapshot.Panes[1].Tokens = nil
-	snapshot.Agents[0].StateLabels = nil
-	snapshot.Agents[0].Tokens = map[string]string{}
+	snapshot.Workspaces[0].Tokens = Optional[map[string]string]{}
+	snapshot.Workspaces[1].Tokens = Some(map[string]string{})
+	snapshot.Panes[0].StateLabels = Optional[map[string]string]{}
+	snapshot.Panes[0].Tokens = Some(map[string]string{})
+	snapshot.Panes[1].StateLabels = Some(map[string]string{})
+	snapshot.Panes[1].Tokens = Optional[map[string]string]{}
+	snapshot.Agents[0].StateLabels = Optional[map[string]string]{}
+	snapshot.Agents[0].Tokens = Some(map[string]string{})
 	snapshot.Layouts[0].Panes = nil
 	snapshot.Layouts[0].Splits = []PaneLayoutSplit{}
 	snapshot.Layouts[1].Panes = []PaneLayoutPane{}
@@ -261,13 +275,14 @@ func TestSessionCopiesPreserveNilAndEmptyCollections(t *testing.T) {
 
 	session := &Session{state: &sessionState{cache: newSessionCache(snapshot)}}
 	got := session.Snapshot()
-	if got.Workspaces[0].Tokens != nil || got.Workspaces[1].Tokens == nil {
+	if got.Workspaces[0].Tokens.IsSet() || !got.Workspaces[1].Tokens.IsSet() || got.Workspaces[1].Tokens.ValueOrZero() == nil {
 		t.Errorf("workspace maps lost nil/empty distinction: %#v", got.Workspaces)
 	}
-	if got.Panes[0].StateLabels != nil || got.Panes[0].Tokens == nil || got.Panes[1].StateLabels == nil || got.Panes[1].Tokens != nil {
+	if got.Panes[0].StateLabels.IsSet() || !got.Panes[0].Tokens.IsSet() || got.Panes[0].Tokens.ValueOrZero() == nil ||
+		!got.Panes[1].StateLabels.IsSet() || got.Panes[1].StateLabels.ValueOrZero() == nil || got.Panes[1].Tokens.IsSet() {
 		t.Errorf("pane maps lost nil/empty distinction: %#v", got.Panes)
 	}
-	if got.Agents[0].StateLabels != nil || got.Agents[0].Tokens == nil {
+	if got.Agents[0].StateLabels.IsSet() || !got.Agents[0].Tokens.IsSet() || got.Agents[0].Tokens.ValueOrZero() == nil {
 		t.Errorf("agent maps lost nil/empty distinction: %#v", got.Agents[0])
 	}
 	if got.Layouts[0].Panes != nil || got.Layouts[0].Splits == nil || got.Layouts[1].Panes == nil || got.Layouts[1].Splits != nil {
@@ -299,7 +314,9 @@ func TestSessionReturnedValuesCanBeMutatedWhileEventsAreApplied(t *testing.T) {
 				default:
 				}
 				workspaces := session.Workspaces()
-				workspaces[0].Worktree.CheckoutPath = "/caller"
+				worktree := workspaces[0].Worktree.ValueOrZero()
+				worktree.CheckoutPath = "/caller"
+				workspaces[0].Worktree = Some(worktree)
 				pane, _ := session.Pane("w1:p1")
 				mutateOwnedPane(&pane)
 				agents := session.Agents()
@@ -331,7 +348,7 @@ func TestSessionReturnedValuesCanBeMutatedWhileEventsAreApplied(t *testing.T) {
 	for i := range 40 {
 		pane := richPane("w1", "w1:t1", "w1:p1")
 		pane.Revision = uint64(i + 2)
-		*pane.Title = "server"
+		pane.Title = Some("server")
 		applyEvent(t, session, stream, string(EventKindPaneUpdated), PaneUpdatedEvent{Pane: pane})
 		layout := richLayout("w1", "w1:t1", "w1:p1")
 		layout.Panes[0].Rect.X = uint16(i)
@@ -340,7 +357,7 @@ func TestSessionReturnedValuesCanBeMutatedWhileEventsAreApplied(t *testing.T) {
 	stopReaders()
 
 	pane, _ := session.Pane("w1:p1")
-	if pane.Revision != 41 || Value(pane.Title) != "server" {
+	if pane.Revision != 41 || pane.Title.ValueOrZero() != "server" {
 		t.Errorf("final pane = %#v, want the last server update", pane)
 	}
 }
@@ -375,14 +392,14 @@ func ownershipSnapshot() SessionSnapshot {
 
 func richWorkspace(workspaceID, label string) WorkspaceInfo {
 	workspace := testWorkspace(workspaceID, label)
-	workspace.Tokens = map[string]string{"owner": "server", "workspace": workspaceID}
-	workspace.Worktree = &WorkspaceWorktreeInfo{
+	workspace.Tokens = Some(map[string]string{"owner": "server", "workspace": workspaceID})
+	workspace.Worktree = Some(WorkspaceWorktreeInfo{
 		CheckoutPath:     "/checkout/" + workspaceID,
 		IsLinkedWorktree: true,
 		RepoKey:          "repo/" + workspaceID,
 		RepoName:         "repo-" + workspaceID,
 		RepoRoot:         "/repo/" + workspaceID,
-	}
+	})
 	return workspace
 }
 
@@ -393,39 +410,37 @@ func richPane(workspaceID, tabID, paneID string) PaneInfo {
 	displayAgent := "Codex"
 	label := "label " + paneID
 	title := "title " + paneID
-	pane.Agent = &agent
-	pane.AgentSession = &AgentSessionInfo{Agent: agent, Kind: AgentSessionRefKindID, Source: "test", Value: "session-" + paneID}
-	pane.Cwd = &cwd
-	pane.DisplayAgent = &displayAgent
-	pane.ForegroundCwd = stringPtr(cwd + "/foreground")
-	pane.Label = &label
-	pane.Scroll = &PaneScrollInfo{MaxOffsetFromBottom: 100, OffsetFromBottom: 3, ViewportRows: 40}
-	pane.StateLabels = map[string]string{"phase": "server"}
-	pane.TerminalTitle = &title
-	pane.TerminalTitleStripped = stringPtr(title + " stripped")
-	pane.Title = stringPtr(title + " agent")
-	pane.Tokens = map[string]string{"owner": "server", "pane": paneID}
+	pane.Agent = Some(agent)
+	pane.AgentSession = Some(AgentSessionInfo{Agent: agent, Kind: AgentSessionRefKindID, Source: "test", Value: "session-" + paneID})
+	pane.Cwd = Some(cwd)
+	pane.DisplayAgent = Some(displayAgent)
+	pane.ForegroundCwd = Some(cwd + "/foreground")
+	pane.Label = Some(label)
+	pane.Scroll = Some(PaneScrollInfo{MaxOffsetFromBottom: 100, OffsetFromBottom: 3, ViewportRows: 40})
+	pane.StateLabels = Some(map[string]string{"phase": "server"})
+	pane.TerminalTitle = Some(title)
+	pane.TerminalTitleStripped = Some(title + " stripped")
+	pane.Title = Some(title + " agent")
+	pane.Tokens = Some(map[string]string{"owner": "server", "pane": paneID})
 	return pane
 }
 
 func richAgent(pane PaneInfo, agentName string) AgentInfo {
 	agent := testAgent(pane, agentName)
-	ready, pending, skipped := true, false, false
-	seq := uint64(42)
-	agent.Agent = cloneTestPtr(pane.Agent)
-	agent.AgentSession = cloneTestPtr(pane.AgentSession)
-	agent.Cwd = cloneTestPtr(pane.Cwd)
-	agent.DisplayAgent = cloneTestPtr(pane.DisplayAgent)
-	agent.ForegroundCwd = cloneTestPtr(pane.ForegroundCwd)
-	agent.InteractiveReady = &ready
-	agent.LaunchPending = &pending
-	agent.ScreenDetectionSkipped = &skipped
-	agent.StateChangeSeq = &seq
-	agent.StateLabels = map[string]string{"phase": "server"}
-	agent.TerminalTitle = cloneTestPtr(pane.TerminalTitle)
-	agent.TerminalTitleStripped = cloneTestPtr(pane.TerminalTitleStripped)
-	agent.Title = cloneTestPtr(pane.Title)
-	agent.Tokens = map[string]string{"owner": "server", "pane": pane.PaneID}
+	agent.Agent = pane.Agent
+	agent.AgentSession = pane.AgentSession
+	agent.Cwd = pane.Cwd
+	agent.DisplayAgent = pane.DisplayAgent
+	agent.ForegroundCwd = pane.ForegroundCwd
+	agent.InteractiveReady = Some(true)
+	agent.LaunchPending = Some(false)
+	agent.ScreenDetectionSkipped = Some(false)
+	agent.StateChangeSeq = Some(uint64(42))
+	agent.StateLabels = Some(map[string]string{"phase": "server"})
+	agent.TerminalTitle = pane.TerminalTitle
+	agent.TerminalTitleStripped = pane.TerminalTitleStripped
+	agent.Title = pane.Title
+	agent.Tokens = Some(map[string]string{"owner": "server", "pane": pane.PaneID})
 	return agent
 }
 
@@ -441,19 +456,21 @@ func richLayout(workspaceID, tabID string, paneIDs ...string) PaneLayoutSnapshot
 }
 
 func mutateOwnedSnapshot(snapshot *SessionSnapshot) {
-	if snapshot.FocusedWorkspaceID != nil {
-		*snapshot.FocusedWorkspaceID = "caller"
+	if snapshot.FocusedWorkspaceID.IsSet() {
+		snapshot.FocusedWorkspaceID = Some("caller")
 	}
-	if snapshot.FocusedTabID != nil {
-		*snapshot.FocusedTabID = "caller"
+	if snapshot.FocusedTabID.IsSet() {
+		snapshot.FocusedTabID = Some("caller")
 	}
-	if snapshot.FocusedPaneID != nil {
-		*snapshot.FocusedPaneID = "caller"
+	if snapshot.FocusedPaneID.IsSet() {
+		snapshot.FocusedPaneID = Some("caller")
 	}
 	if len(snapshot.Workspaces) > 0 {
 		snapshot.Workspaces[0].Label = "caller"
-		snapshot.Workspaces[0].Tokens["owner"] = "caller"
-		snapshot.Workspaces[0].Worktree.CheckoutPath = "/caller"
+		snapshot.Workspaces[0].Tokens.ValueOrZero()["owner"] = "caller"
+		worktree := snapshot.Workspaces[0].Worktree.ValueOrZero()
+		worktree.CheckoutPath = "/caller"
+		snapshot.Workspaces[0].Worktree = Some(worktree)
 	}
 	if len(snapshot.Tabs) > 0 {
 		snapshot.Tabs[0].Label = "caller"
@@ -470,36 +487,42 @@ func mutateOwnedSnapshot(snapshot *SessionSnapshot) {
 }
 
 func mutateOwnedPane(pane *PaneInfo) {
-	*pane.Agent = "caller"
-	pane.AgentSession.Value = "caller"
-	*pane.Cwd = "/caller"
-	*pane.DisplayAgent = "caller"
-	*pane.ForegroundCwd = "/caller"
-	*pane.Label = "caller"
-	pane.Scroll.OffsetFromBottom = 99
-	pane.StateLabels["phase"] = "caller"
-	*pane.TerminalTitle = "caller"
-	*pane.TerminalTitleStripped = "caller"
-	*pane.Title = "caller"
-	pane.Tokens["owner"] = "caller"
+	pane.Agent = Some("caller")
+	agentSession := pane.AgentSession.ValueOrZero()
+	agentSession.Value = "caller"
+	pane.AgentSession = Some(agentSession)
+	pane.Cwd = Some("/caller")
+	pane.DisplayAgent = Some("caller")
+	pane.ForegroundCwd = Some("/caller")
+	pane.Label = Some("caller")
+	scroll := pane.Scroll.ValueOrZero()
+	scroll.OffsetFromBottom = 99
+	pane.Scroll = Some(scroll)
+	pane.StateLabels.ValueOrZero()["phase"] = "caller"
+	pane.TerminalTitle = Some("caller")
+	pane.TerminalTitleStripped = Some("caller")
+	pane.Title = Some("caller")
+	pane.Tokens.ValueOrZero()["owner"] = "caller"
 }
 
 func mutateOwnedAgent(agent *AgentInfo) {
-	*agent.Agent = "caller"
-	agent.AgentSession.Value = "caller"
-	*agent.Cwd = "/caller"
-	*agent.DisplayAgent = "caller"
-	*agent.ForegroundCwd = "/caller"
-	*agent.InteractiveReady = false
-	*agent.LaunchPending = true
-	*agent.Name = "caller"
-	*agent.ScreenDetectionSkipped = true
-	*agent.StateChangeSeq = 99
-	agent.StateLabels["phase"] = "caller"
-	*agent.TerminalTitle = "caller"
-	*agent.TerminalTitleStripped = "caller"
-	*agent.Title = "caller"
-	agent.Tokens["owner"] = "caller"
+	agent.Agent = Some("caller")
+	agentSession := agent.AgentSession.ValueOrZero()
+	agentSession.Value = "caller"
+	agent.AgentSession = Some(agentSession)
+	agent.Cwd = Some("/caller")
+	agent.DisplayAgent = Some("caller")
+	agent.ForegroundCwd = Some("/caller")
+	agent.InteractiveReady = Some(false)
+	agent.LaunchPending = Some(true)
+	agent.Name = Some("caller")
+	agent.ScreenDetectionSkipped = Some(true)
+	agent.StateChangeSeq = Some(uint64(99))
+	agent.StateLabels.ValueOrZero()["phase"] = "caller"
+	agent.TerminalTitle = Some("caller")
+	agent.TerminalTitleStripped = Some("caller")
+	agent.Title = Some("caller")
+	agent.Tokens.ValueOrZero()["owner"] = "caller"
 }
 
 func mutateOwnedLayout(layout *PaneLayoutSnapshot) {
@@ -551,12 +574,4 @@ func findTab(t *testing.T, tabs []TabInfo, tabID string) TabInfo {
 	}
 	t.Fatalf("tab %s is missing from %#v", tabID, tabs)
 	return TabInfo{}
-}
-
-func cloneTestPtr[T any](value *T) *T {
-	if value == nil {
-		return nil
-	}
-	cloned := *value
-	return &cloned
 }

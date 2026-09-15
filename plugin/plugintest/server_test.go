@@ -26,8 +26,8 @@ func twoCallPlugin() *plugin.Plugin {
 		}
 		_, err = client.PaneSendInput(ctx, herdr.PaneSendInputParams{
 			PaneID: split.Pane.PaneID,
-			Text:   "go test ./...",
-			Keys:   []string{"enter"},
+			Text:   herdr.Some("go test ./..."),
+			Keys:   herdr.Some([]string{"enter"}),
 		})
 		return err
 	})

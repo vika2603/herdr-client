@@ -46,13 +46,13 @@ func TestEnvInvocation(t *testing.T) {
 				LinkHandlerID:     "issue",
 				InvocationSource:  "palette",
 				CorrelationID:     "req-7",
-				Worktree: &herdr.WorkspaceWorktreeInfo{
+				Worktree: herdr.Some(herdr.WorkspaceWorktreeInfo{
 					CheckoutPath:     "/wt",
 					IsLinkedWorktree: true,
 					RepoKey:          "k",
 					RepoName:         "herdr-client",
 					RepoRoot:         "/repo",
-				},
+				}),
 			},
 		},
 	}

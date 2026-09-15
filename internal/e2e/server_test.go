@@ -54,8 +54,8 @@ func stageServer(t *testing.T, h *harness, _ *state) {
 	// why it was not shown; the result type is what is under test.
 	shown, err := h.client.NotificationShow(h.ctx(t), herdr.NotificationShowParams{
 		Title: "herdr-client e2e",
-		Body:  ptr("end-to-end verification"),
-		Sound: herdr.NotificationShowSoundNone,
+		Body:  herdr.Some("end-to-end verification"),
+		Sound: herdr.Some(herdr.NotificationShowSoundNone),
 	})
 	if h.cover(t, herdr.MethodNotificationShow, shown, err) && shown.Shown && shown.Reason == "" {
 		t.Errorf("notification.show reported neither a surface nor a reason")

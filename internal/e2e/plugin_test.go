@@ -61,7 +61,7 @@ func stagePlugin(t *testing.T, h *harness, st *state) {
 
 	linked, err := h.client.PluginLink(h.ctx(t), herdr.PluginLinkParams{
 		Path:    dir,
-		Enabled: ptr(true),
+		Enabled: herdr.Some(true),
 	})
 	if !h.cover(t, herdr.MethodPluginLink, linked, err) {
 		t.Fatal("no linked plugin to continue with")
@@ -70,19 +70,21 @@ func stagePlugin(t *testing.T, h *harness, st *state) {
 	if linked.Plugin.PluginID != fixturePluginID || !linked.Plugin.Enabled {
 		t.Fatalf("plugin.link returned %+v, expected %s enabled", linked.Plugin, fixturePluginID)
 	}
-	if len(linked.Plugin.Actions) != 1 || len(linked.Plugin.Panes) != 1 {
+	manifestActions := linked.Plugin.Actions.ValueOrZero()
+	manifestPanes := linked.Plugin.Panes.ValueOrZero()
+	if len(manifestActions) != 1 || len(manifestPanes) != 1 {
 		t.Errorf("plugin.link read %d actions and %d panes out of the manifest, expected one of each",
-			len(linked.Plugin.Actions), len(linked.Plugin.Panes))
+			len(manifestActions), len(manifestPanes))
 	}
 
-	list, err := h.client.PluginList(h.ctx(t), herdr.PluginListParams{PluginID: ptr(fixturePluginID)})
+	list, err := h.client.PluginList(h.ctx(t), herdr.PluginListParams{PluginID: herdr.Some(fixturePluginID)})
 	if h.cover(t, herdr.MethodPluginList, list, err) {
 		if len(list.Plugins) != 1 || list.Plugins[0].PluginID != fixturePluginID {
 			t.Errorf("plugin.list returned %+v, expected the linked fixture alone", list.Plugins)
 		}
 	}
 
-	actions, err := h.client.PluginActionList(h.ctx(t), herdr.PluginActionListParams{PluginID: ptr(fixturePluginID)})
+	actions, err := h.client.PluginActionList(h.ctx(t), herdr.PluginActionListParams{PluginID: herdr.Some(fixturePluginID)})
 	if h.cover(t, herdr.MethodPluginActionList, actions, err) {
 		if len(actions.Actions) != 1 || actions.Actions[0].ActionID != fixtureActionID {
 			t.Errorf("plugin.action.list returned %+v, expected the action the manifest declares", actions.Actions)
@@ -137,8 +139,8 @@ func stagePluginPanes(t *testing.T, h *harness, st *state) {
 	split := openPluginPane(t, h, herdr.PluginPaneOpenParams{
 		PluginID:     fixturePluginID,
 		Entrypoint:   fixturePaneID,
-		Placement:    ptr(herdr.PluginPanePlacementSplit),
-		TargetPaneID: ptr(st.paneID),
+		Placement:    herdr.Some(herdr.PluginPanePlacementSplit),
+		TargetPaneID: herdr.Some(st.paneID),
 	})
 	if split != "" {
 		closePluginPane(t, h, split)
@@ -167,7 +169,7 @@ func invokePluginAction(t *testing.T, h *harness) string {
 	t.Helper()
 	invoked, err := h.client.PluginActionInvoke(h.ctx(t), herdr.PluginActionInvokeParams{
 		ActionID: fixtureActionID,
-		PluginID: ptr(fixturePluginID),
+		PluginID: herdr.Some(fixturePluginID),
 	})
 	if !h.cover(t, herdr.MethodPluginActionInvoke, invoked, err) {
 		return ""
@@ -184,8 +186,8 @@ func invokePluginAction(t *testing.T, h *harness) string {
 func assertPluginLog(t *testing.T, h *harness, logID string) {
 	t.Helper()
 	logs, err := h.client.PluginLogList(h.ctx(t), herdr.PluginLogListParams{
-		PluginID: ptr(fixturePluginID),
-		Limit:    ptr(uint64(10)),
+		PluginID: herdr.Some(fixturePluginID),
+		Limit:    herdr.Some(uint64(10)),
 	})
 	if !h.cover(t, herdr.MethodPluginLogList, logs, err) || logID == "" {
 		return

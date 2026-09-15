@@ -165,7 +165,7 @@ func TestDispatchOpensBoardPane(t *testing.T) {
 	if params.PluginID != env.PluginID || params.Entrypoint != paneBoard {
 		t.Errorf("PluginPaneOpenParams = %+v, want plugin %q entrypoint %q", params, env.PluginID, paneBoard)
 	}
-	if params.Focus == nil || !*params.Focus {
+	if !params.Focus.ValueOrZero() {
 		t.Errorf("PluginPaneOpenParams.Focus = %v, want true", params.Focus)
 	}
 }

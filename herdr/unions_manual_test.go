@@ -193,8 +193,8 @@ func TestPopupSizeInParams(t *testing.T) {
 	params := PluginPaneOpenParams{
 		PluginID:   "demo",
 		Entrypoint: "main",
-		Width:      &PopupSize{Percent: 80},
-		Height:     &PopupSize{Cells: 20},
+		Width:      Some(PopupSize{Percent: 80}),
+		Height:     Some(PopupSize{Cells: 20}),
 	}
 	encoded, err := json.Marshal(params)
 	if err != nil {
@@ -207,10 +207,10 @@ func TestPopupSizeInParams(t *testing.T) {
 	if err := json.Unmarshal(encoded, &decoded); err != nil {
 		t.Fatalf("Unmarshal: %v", err)
 	}
-	if decoded.Width == nil || *decoded.Width != (PopupSize{Percent: 80}) {
+	if decoded.Width.ValueOrZero() != (PopupSize{Percent: 80}) {
 		t.Errorf("width = %+v", decoded.Width)
 	}
-	if decoded.Height == nil || *decoded.Height != (PopupSize{Cells: 20}) {
+	if decoded.Height.ValueOrZero() != (PopupSize{Cells: 20}) {
 		t.Errorf("height = %+v", decoded.Height)
 	}
 }

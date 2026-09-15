@@ -54,14 +54,14 @@ func benchmarkSnapshot(paneCount int) herdr.SessionSnapshot {
 			Number:      1,
 			PaneCount:   uint64(paneCount),
 			TabCount:    1,
-			Tokens:      map[string]string{"scope": "benchmark"},
-			Worktree: &herdr.WorkspaceWorktreeInfo{
+			Tokens:      herdr.Some(map[string]string{"scope": "benchmark"}),
+			Worktree: herdr.Some(herdr.WorkspaceWorktreeInfo{
 				CheckoutPath:     "/tmp/benchmark",
 				IsLinkedWorktree: true,
 				RepoKey:          "benchmark/repository",
 				RepoName:         "repository",
 				RepoRoot:         "/tmp/repository",
-			},
+			}),
 		}},
 		Tabs: []herdr.TabInfo{{
 			WorkspaceID: workspaceID,
@@ -72,9 +72,9 @@ func benchmarkSnapshot(paneCount int) herdr.SessionSnapshot {
 			Number:      1,
 			PaneCount:   uint64(paneCount),
 		}},
-		FocusedWorkspaceID: benchmarkPtr(workspaceID),
-		FocusedTabID:       benchmarkPtr(tabID),
-		FocusedPaneID:      benchmarkPtr(focusedPaneID),
+		FocusedWorkspaceID: herdr.Some(workspaceID),
+		FocusedTabID:       herdr.Some(tabID),
+		FocusedPaneID:      herdr.Some(focusedPaneID),
 	}
 
 	layout := herdr.PaneLayoutSnapshot{
@@ -92,24 +92,24 @@ func benchmarkSnapshot(paneCount int) herdr.SessionSnapshot {
 		cwd := fmt.Sprintf("/tmp/benchmark/%d", i+1)
 		focused := i == 0
 		pane := herdr.PaneInfo{
-			Agent:                 benchmarkPtr(agent),
-			AgentSession:          &herdr.AgentSessionInfo{Agent: agent, Kind: herdr.AgentSessionRefKindID, Source: "benchmark", Value: fmt.Sprintf("session-%d", i+1)},
+			Agent:                 herdr.Some(agent),
+			AgentSession:          herdr.Some(herdr.AgentSessionInfo{Agent: agent, Kind: herdr.AgentSessionRefKindID, Source: "benchmark", Value: fmt.Sprintf("session-%d", i+1)}),
 			AgentStatus:           herdr.AgentStatusWorking,
-			Cwd:                   benchmarkPtr(cwd),
-			DisplayAgent:          benchmarkPtr(agent),
+			Cwd:                   herdr.Some(cwd),
+			DisplayAgent:          herdr.Some(agent),
 			Focused:               focused,
-			ForegroundCwd:         benchmarkPtr(cwd),
-			Label:                 benchmarkPtr(title),
+			ForegroundCwd:         herdr.Some(cwd),
+			Label:                 herdr.Some(title),
 			PaneID:                paneID,
 			Revision:              uint64(i + 1),
-			Scroll:                &herdr.PaneScrollInfo{MaxOffsetFromBottom: 1000, OffsetFromBottom: uint64(i), ViewportRows: 60},
-			StateLabels:           map[string]string{"phase": "working", "owner": agent},
+			Scroll:                herdr.Some(herdr.PaneScrollInfo{MaxOffsetFromBottom: 1000, OffsetFromBottom: uint64(i), ViewportRows: 60}),
+			StateLabels:           herdr.Some(map[string]string{"phase": "working", "owner": agent}),
 			TabID:                 tabID,
 			TerminalID:            fmt.Sprintf("terminal-%d", i+1),
-			TerminalTitle:         benchmarkPtr(title),
-			TerminalTitleStripped: benchmarkPtr(title),
-			Title:                 benchmarkPtr(title),
-			Tokens:                map[string]string{"pane": paneID, "agent": agent},
+			TerminalTitle:         herdr.Some(title),
+			TerminalTitleStripped: herdr.Some(title),
+			Title:                 herdr.Some(title),
+			Tokens:                herdr.Some(map[string]string{"pane": paneID, "agent": agent}),
 			WorkspaceID:           workspaceID,
 		}
 		snapshot.Panes = append(snapshot.Panes, pane)
@@ -121,20 +121,20 @@ func benchmarkSnapshot(paneCount int) herdr.SessionSnapshot {
 			DisplayAgent:           pane.DisplayAgent,
 			Focused:                pane.Focused,
 			ForegroundCwd:          pane.ForegroundCwd,
-			InteractiveReady:       benchmarkPtr(true),
-			LaunchPending:          benchmarkPtr(false),
-			Name:                   benchmarkPtr(agent),
+			InteractiveReady:       herdr.Some(true),
+			LaunchPending:          herdr.Some(false),
+			Name:                   herdr.Some(agent),
 			PaneID:                 pane.PaneID,
 			Revision:               pane.Revision,
-			ScreenDetectionSkipped: benchmarkPtr(false),
-			StateChangeSeq:         benchmarkPtr(uint64(i + 1)),
-			StateLabels:            map[string]string{"phase": "working", "owner": agent},
+			ScreenDetectionSkipped: herdr.Some(false),
+			StateChangeSeq:         herdr.Some(uint64(i + 1)),
+			StateLabels:            herdr.Some(map[string]string{"phase": "working", "owner": agent}),
 			TabID:                  pane.TabID,
 			TerminalID:             pane.TerminalID,
 			TerminalTitle:          pane.TerminalTitle,
 			TerminalTitleStripped:  pane.TerminalTitleStripped,
 			Title:                  pane.Title,
-			Tokens:                 map[string]string{"pane": paneID, "agent": agent},
+			Tokens:                 herdr.Some(map[string]string{"pane": paneID, "agent": agent}),
 			WorkspaceID:            pane.WorkspaceID,
 		})
 		layout.Panes = append(layout.Panes, herdr.PaneLayoutPane{
@@ -154,5 +154,3 @@ func benchmarkSnapshot(paneCount int) herdr.SessionSnapshot {
 	snapshot.Layouts = []herdr.PaneLayoutSnapshot{layout}
 	return snapshot
 }
-
-func benchmarkPtr[T any](value T) *T { return &value }

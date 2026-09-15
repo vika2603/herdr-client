@@ -567,28 +567,16 @@ func (v LayoutUpdatedEvent) MarshalJSON() ([]byte, error) {
 
 // PaneAgentDetectedEvent is the "pane.agent_detected" event payload.
 type PaneAgentDetectedEvent struct {
-	Agent       *string      `json:"agent,omitempty"`
-	FinalStatus *AgentStatus `json:"final_status,omitempty"`
-	PaneID      string       `json:"pane_id"`
-	Released    *bool        `json:"released,omitempty"`
-	WorkspaceID string       `json:"workspace_id"`
+	Agent       Optional[string]      `json:"agent,omitzero"`
+	FinalStatus Optional[AgentStatus] `json:"final_status,omitzero"`
+	PaneID      string                `json:"pane_id"`
+	Released    Optional[bool]        `json:"released,omitzero"`
+	WorkspaceID string                `json:"workspace_id"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneAgentDetectedEvent) Clone() PaneAgentDetectedEvent {
 	out := v
-	if v.Agent != nil {
-		out.Agent = new(string)
-		(*out.Agent) = (*v.Agent)
-	}
-	if v.FinalStatus != nil {
-		out.FinalStatus = new(AgentStatus)
-		(*out.FinalStatus) = (*v.FinalStatus)
-	}
-	if v.Released != nil {
-		out.Released = new(bool)
-		(*out.Released) = (*v.Released)
-	}
 	return out
 }
 
@@ -607,35 +595,27 @@ func (v PaneAgentDetectedEvent) MarshalJSON() ([]byte, error) {
 // PaneAgentStatusChangedEvent is the "pane.agent_status_changed" event
 // payload.
 type PaneAgentStatusChangedEvent struct {
-	Agent        *string           `json:"agent,omitempty"`
-	AgentStatus  AgentStatus       `json:"agent_status"`
-	DisplayAgent *string           `json:"display_agent,omitempty"`
-	PaneID       string            `json:"pane_id"`
-	StateLabels  map[string]string `json:"state_labels,omitempty"`
-	Title        *string           `json:"title,omitempty"`
-	WorkspaceID  string            `json:"workspace_id"`
+	Agent        Optional[string]            `json:"agent,omitzero"`
+	AgentStatus  AgentStatus                 `json:"agent_status"`
+	DisplayAgent Optional[string]            `json:"display_agent,omitzero"`
+	PaneID       string                      `json:"pane_id"`
+	StateLabels  Optional[map[string]string] `json:"state_labels,omitzero"`
+	Title        Optional[string]            `json:"title,omitzero"`
+	WorkspaceID  string                      `json:"workspace_id"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneAgentStatusChangedEvent) Clone() PaneAgentStatusChangedEvent {
 	out := v
-	if v.Agent != nil {
-		out.Agent = new(string)
-		(*out.Agent) = (*v.Agent)
-	}
-	if v.DisplayAgent != nil {
-		out.DisplayAgent = new(string)
-		(*out.DisplayAgent) = (*v.DisplayAgent)
-	}
-	if v.StateLabels != nil {
-		out.StateLabels = make(map[string]string, len(v.StateLabels))
-		for key1, value2 := range v.StateLabels {
-			out.StateLabels[key1] = value2
+	if value1, ok2 := v.StateLabels.Get(); ok2 {
+		var cloned3 map[string]string
+		if value1 != nil {
+			cloned3 = make(map[string]string, len(value1))
+			for key4, value5 := range value1 {
+				cloned3[key4] = value5
+			}
 		}
-	}
-	if v.Title != nil {
-		out.Title = new(string)
-		(*out.Title) = (*v.Title)
+		out.StateLabels = Some(cloned3)
 	}
 	return out
 }
@@ -750,34 +730,28 @@ func (v PaneFocusedEvent) MarshalJSON() ([]byte, error) {
 
 // PaneMovedEvent is the "pane.moved" event payload.
 type PaneMovedEvent struct {
-	ClosedTabID         *string        `json:"closed_tab_id,omitempty"`
-	ClosedWorkspaceID   *string        `json:"closed_workspace_id,omitempty"`
-	CreatedTab          *TabInfo       `json:"created_tab,omitempty"`
-	CreatedWorkspace    *WorkspaceInfo `json:"created_workspace,omitempty"`
-	Pane                PaneInfo       `json:"pane"`
-	PreviousPaneID      string         `json:"previous_pane_id"`
-	PreviousTabID       string         `json:"previous_tab_id"`
-	PreviousWorkspaceID string         `json:"previous_workspace_id"`
+	ClosedTabID         Optional[string]        `json:"closed_tab_id,omitzero"`
+	ClosedWorkspaceID   Optional[string]        `json:"closed_workspace_id,omitzero"`
+	CreatedTab          Optional[TabInfo]       `json:"created_tab,omitzero"`
+	CreatedWorkspace    Optional[WorkspaceInfo] `json:"created_workspace,omitzero"`
+	Pane                PaneInfo                `json:"pane"`
+	PreviousPaneID      string                  `json:"previous_pane_id"`
+	PreviousTabID       string                  `json:"previous_tab_id"`
+	PreviousWorkspaceID string                  `json:"previous_workspace_id"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneMovedEvent) Clone() PaneMovedEvent {
 	out := v
-	if v.ClosedTabID != nil {
-		out.ClosedTabID = new(string)
-		(*out.ClosedTabID) = (*v.ClosedTabID)
+	if value1, ok2 := v.CreatedTab.Get(); ok2 {
+		var cloned3 TabInfo
+		cloned3 = value1.Clone()
+		out.CreatedTab = Some(cloned3)
 	}
-	if v.ClosedWorkspaceID != nil {
-		out.ClosedWorkspaceID = new(string)
-		(*out.ClosedWorkspaceID) = (*v.ClosedWorkspaceID)
-	}
-	if v.CreatedTab != nil {
-		out.CreatedTab = new(TabInfo)
-		(*out.CreatedTab) = (*v.CreatedTab).Clone()
-	}
-	if v.CreatedWorkspace != nil {
-		out.CreatedWorkspace = new(WorkspaceInfo)
-		(*out.CreatedWorkspace) = (*v.CreatedWorkspace).Clone()
+	if value4, ok5 := v.CreatedWorkspace.Get(); ok5 {
+		var cloned6 WorkspaceInfo
+		cloned6 = value4.Clone()
+		out.CreatedWorkspace = Some(cloned6)
 	}
 	out.Pane = v.Pane.Clone()
 	return out
@@ -1009,16 +983,17 @@ func (v TabRenamedEvent) MarshalJSON() ([]byte, error) {
 
 // WorkspaceClosedEvent is the "workspace.closed" event payload.
 type WorkspaceClosedEvent struct {
-	Workspace   *WorkspaceInfo `json:"workspace,omitempty"`
-	WorkspaceID string         `json:"workspace_id"`
+	Workspace   Optional[WorkspaceInfo] `json:"workspace,omitzero"`
+	WorkspaceID string                  `json:"workspace_id"`
 }
 
 // Clone returns a deep copy of v.
 func (v WorkspaceClosedEvent) Clone() WorkspaceClosedEvent {
 	out := v
-	if v.Workspace != nil {
-		out.Workspace = new(WorkspaceInfo)
-		(*out.Workspace) = (*v.Workspace).Clone()
+	if value1, ok2 := v.Workspace.Get(); ok2 {
+		var cloned3 WorkspaceInfo
+		cloned3 = value1.Clone()
+		out.Workspace = Some(cloned3)
 	}
 	return out
 }
@@ -1164,18 +1139,14 @@ func (v WorkspaceRenamedEvent) MarshalJSON() ([]byte, error) {
 
 // WorkspaceReorderedEvent is the "workspace.reordered" event payload.
 type WorkspaceReorderedEvent struct {
-	BeforeWorkspaceID *string         `json:"before_workspace_id,omitempty"`
-	WorkspaceIds      []string        `json:"workspace_ids"`
-	Workspaces        []WorkspaceInfo `json:"workspaces"`
+	BeforeWorkspaceID Optional[string] `json:"before_workspace_id,omitzero"`
+	WorkspaceIds      []string         `json:"workspace_ids"`
+	Workspaces        []WorkspaceInfo  `json:"workspaces"`
 }
 
 // Clone returns a deep copy of v.
 func (v WorkspaceReorderedEvent) Clone() WorkspaceReorderedEvent {
 	out := v
-	if v.BeforeWorkspaceID != nil {
-		out.BeforeWorkspaceID = new(string)
-		(*out.BeforeWorkspaceID) = (*v.BeforeWorkspaceID)
-	}
 	if v.WorkspaceIds != nil {
 		out.WorkspaceIds = make([]string, len(v.WorkspaceIds))
 		copy(out.WorkspaceIds, v.WorkspaceIds)
@@ -1280,18 +1251,19 @@ func (v WorktreeOpenedEvent) MarshalJSON() ([]byte, error) {
 
 // WorktreeRemovedEvent is the "worktree.removed" event payload.
 type WorktreeRemovedEvent struct {
-	Forced      bool           `json:"forced"`
-	Workspace   *WorkspaceInfo `json:"workspace,omitempty"`
-	WorkspaceID string         `json:"workspace_id"`
-	Worktree    WorktreeInfo   `json:"worktree"`
+	Forced      bool                    `json:"forced"`
+	Workspace   Optional[WorkspaceInfo] `json:"workspace,omitzero"`
+	WorkspaceID string                  `json:"workspace_id"`
+	Worktree    WorktreeInfo            `json:"worktree"`
 }
 
 // Clone returns a deep copy of v.
 func (v WorktreeRemovedEvent) Clone() WorktreeRemovedEvent {
 	out := v
-	if v.Workspace != nil {
-		out.Workspace = new(WorkspaceInfo)
-		(*out.Workspace) = (*v.Workspace).Clone()
+	if value1, ok2 := v.Workspace.Get(); ok2 {
+		var cloned3 WorkspaceInfo
+		cloned3 = value1.Clone()
+		out.Workspace = Some(cloned3)
 	}
 	out.Worktree = v.Worktree.Clone()
 	return out

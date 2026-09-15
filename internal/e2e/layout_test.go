@@ -13,13 +13,13 @@ import (
 // LayoutNode union decodes. layout.apply builds a tab of its own so the
 // fixture layout survives.
 func stageLayout(t *testing.T, h *harness, st *state) {
-	exported, err := h.client.LayoutExport(h.ctx(t), herdr.LayoutExportParams{TabID: ptr(st.tabID)})
+	exported, err := h.client.LayoutExport(h.ctx(t), herdr.LayoutExportParams{TabID: herdr.Some(st.tabID)})
 	if h.cover(t, herdr.MethodLayoutExport, exported, err) {
 		assertSplitOfPanes(t, "layout.export", exported.Layout.Root)
 	}
 
 	ratio, err := h.client.LayoutSetSplitRatio(h.ctx(t), herdr.LayoutSetSplitRatioParams{
-		TabID: ptr(st.tabID),
+		TabID: herdr.Some(st.tabID),
 		Path:  []bool{},
 		Ratio: 0.4,
 	})
@@ -30,14 +30,14 @@ func stageLayout(t *testing.T, h *harness, st *state) {
 	}
 
 	applied, err := h.client.LayoutApply(h.ctx(t), herdr.LayoutApplyParams{
-		WorkspaceID: ptr(st.workspaceID),
-		TabLabel:    ptr("e2e-applied"),
-		Focus:       ptr(false),
+		WorkspaceID: herdr.Some(st.workspaceID),
+		TabLabel:    herdr.Some("e2e-applied"),
+		Focus:       herdr.Some(false),
 		Root: herdr.LayoutNodeSplit{
 			Direction: herdr.SplitDirectionDown,
 			Ratio:     0.5,
-			First:     herdr.LayoutNodePane{Label: ptr("e2e-first"), Cwd: ptr(h.root)},
-			Second:    herdr.LayoutNodePane{Label: ptr("e2e-second"), Cwd: ptr(h.root)},
+			First:     herdr.LayoutNodePane{Label: herdr.Some("e2e-first"), Cwd: herdr.Some(h.root)},
+			Second:    herdr.LayoutNodePane{Label: herdr.Some("e2e-second"), Cwd: herdr.Some(h.root)},
 		},
 	})
 	if !h.cover(t, herdr.MethodLayoutApply, applied, err) {

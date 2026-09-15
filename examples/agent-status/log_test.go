@@ -14,7 +14,7 @@ func statusChange(paneID, workspaceID string, status herdr.AgentStatus) *herdr.P
 	return &herdr.PaneAgentStatusChangedEvent{
 		PaneID:       paneID,
 		WorkspaceID:  workspaceID,
-		DisplayAgent: herdr.Ptr("claude"),
+		DisplayAgent: herdr.Some("claude"),
 		AgentStatus:  status,
 	}
 }

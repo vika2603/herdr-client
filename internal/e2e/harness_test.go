@@ -537,5 +537,3 @@ func marshal(value any) string {
 	}
 	return string(data)
 }
-
-func ptr[T any](value T) *T { return &value }

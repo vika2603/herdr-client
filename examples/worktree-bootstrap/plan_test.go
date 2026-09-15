@@ -53,10 +53,10 @@ func TestNewPlan(t *testing.T) {
 			if err != nil {
 				t.Fatalf("newPlan() error = %v", err)
 			}
-			if got := herdr.Value(p.Worktree.Branch); got != test.wantBranch {
+			if got := p.Worktree.Branch.ValueOrZero(); got != test.wantBranch {
 				t.Errorf("branch = %q, want %q", got, test.wantBranch)
 			}
-			if !herdr.Value(p.Worktree.Focus) {
+			if !p.Worktree.Focus.ValueOrZero() {
 				t.Error("worktree.create is asked not to focus the new workspace")
 			}
 			if p.Agent.Kind != test.wantKind {
@@ -100,7 +100,7 @@ func TestPlanLayoutUsesTheCheckout(t *testing.T) {
 	}
 
 	params := p.layout(created)
-	if got := herdr.Value(params.TabID); got != "tab-1" {
+	if got := params.TabID.ValueOrZero(); got != "tab-1" {
 		t.Errorf("tab_id = %q, want the tab worktree.create opened", got)
 	}
 	split, ok := params.Root.(herdr.LayoutNodeSplit)
@@ -112,7 +112,7 @@ func TestPlanLayoutUsesTheCheckout(t *testing.T) {
 		if !ok {
 			t.Fatalf("%s child = %T, want a pane", name, child)
 		}
-		if got := herdr.Value(pane.Cwd); got != created.Worktree.Path {
+		if got := pane.Cwd.ValueOrZero(); got != created.Worktree.Path {
 			t.Errorf("%s pane cwd = %q, want the checkout %q", name, got, created.Worktree.Path)
 		}
 	}
@@ -120,7 +120,7 @@ func TestPlanLayoutUsesTheCheckout(t *testing.T) {
 	if !ok {
 		t.Fatalf("first child = %T, want a pane", split.First)
 	}
-	if got := herdr.Value(agent.Label); got != "issue-7" {
+	if got := agent.Label.ValueOrZero(); got != "issue-7" {
 		t.Errorf("agent pane label = %q, want the agent name", got)
 	}
 }
@@ -136,10 +136,10 @@ func TestAgentPaneID(t *testing.T) {
 		First: herdr.LayoutNodeSplit{
 			Direction: herdr.SplitDirectionDown,
 			Ratio:     0.5,
-			First:     herdr.LayoutNodePane{Label: herdr.Ptr("shell"), PaneID: herdr.Ptr("pane-1")},
-			Second:    herdr.LayoutNodePane{Label: herdr.Ptr("issue-7"), PaneID: herdr.Ptr("pane-2")},
+			First:     herdr.LayoutNodePane{Label: herdr.Some("shell"), PaneID: herdr.Some("pane-1")},
+			Second:    herdr.LayoutNodePane{Label: herdr.Some("issue-7"), PaneID: herdr.Some("pane-2")},
 		},
-		Second: herdr.LayoutNodePane{Label: herdr.Ptr("notes"), PaneID: herdr.Ptr("pane-3")},
+		Second: herdr.LayoutNodePane{Label: herdr.Some("notes"), PaneID: herdr.Some("pane-3")},
 	}
 	if got := agentPaneID(applied, "issue-7"); got != "pane-2" {
 		t.Errorf("agentPaneID() = %q, want the pane labelled for the agent", got)

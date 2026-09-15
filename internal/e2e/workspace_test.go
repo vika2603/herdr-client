@@ -14,9 +14,9 @@ import (
 // be the last workspace of the session.
 func stageWorkspace(t *testing.T, h *harness, st *state) {
 	created, err := h.client.WorkspaceCreate(h.ctx(t), herdr.WorkspaceCreateParams{
-		Label: ptr("e2e-main"),
-		Cwd:   ptr(h.root),
-		Focus: ptr(true),
+		Label: herdr.Some("e2e-main"),
+		Cwd:   herdr.Some(h.root),
+		Focus: herdr.Some(true),
 	})
 	if !h.cover(t, herdr.MethodWorkspaceCreate, created, err) {
 		t.Fatal("no workspace to continue with")
@@ -29,9 +29,9 @@ func stageWorkspace(t *testing.T, h *harness, st *state) {
 	}
 
 	second, err := h.client.WorkspaceCreate(h.ctx(t), herdr.WorkspaceCreateParams{
-		Label: ptr("e2e-second"),
-		Cwd:   ptr(h.root),
-		Focus: ptr(false),
+		Label: herdr.Some("e2e-second"),
+		Cwd:   herdr.Some(h.root),
+		Focus: herdr.Some(false),
 	})
 	if err != nil {
 		t.Fatalf("second workspace: %v", err)
@@ -76,8 +76,7 @@ func stageWorkspace(t *testing.T, h *harness, st *state) {
 	}
 
 	block, err := h.client.WorkspaceMoveBlock(h.ctx(t), herdr.WorkspaceMoveBlockParams{
-		WorkspaceIds:      []string{secondID},
-		BeforeWorkspaceID: nil,
+		WorkspaceIds: []string{secondID},
 	})
 	if h.cover(t, herdr.MethodWorkspaceMoveBlock, block, err) && len(block.Workspaces) < 2 {
 		t.Errorf("workspace.move_block returned %d workspaces", len(block.Workspaces))
@@ -86,7 +85,7 @@ func stageWorkspace(t *testing.T, h *harness, st *state) {
 	metadata, err := h.client.WorkspaceReportMetadata(h.ctx(t), herdr.WorkspaceReportMetadataParams{
 		WorkspaceID: st.workspaceID,
 		Source:      "herdr-client-e2e",
-		Tokens:      map[string]*string{"e2e": ptr("1")},
+		Tokens:      map[string]*string{"e2e": herdr.Ptr("1")},
 	})
 	h.cover(t, herdr.MethodWorkspaceReportMetadata, metadata, err)
 

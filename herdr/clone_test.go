@@ -45,13 +45,15 @@ func TestClonePreservesNilAndEmptyValues(t *testing.T) {
 
 func TestCloneCopiesUnionAndManualValues(t *testing.T) {
 	source := LayoutApplyParams{Root: LayoutNodeSplit{
-		First: LayoutNodePane{Cwd: Ptr("first")}, Second: &LayoutNodePane{Cwd: Ptr("second")},
+		First: LayoutNodePane{Cwd: Some("first")}, Second: &LayoutNodePane{Cwd: Some("second")},
 	}}
 	cloned := source.Clone().Root.(LayoutNodeSplit)
-	*cloned.First.(LayoutNodePane).Cwd = "changed"
-	*cloned.Second.(*LayoutNodePane).Cwd = "changed"
+	first := cloned.First.(LayoutNodePane)
+	first.Cwd = Some("changed")
+	cloned.First = first
+	cloned.Second.(*LayoutNodePane).Cwd = Some("changed")
 	original := source.Root.(LayoutNodeSplit)
-	if *original.First.(LayoutNodePane).Cwd != "first" || *original.Second.(*LayoutNodePane).Cwd != "second" {
+	if original.First.(LayoutNodePane).Cwd.ValueOrZero() != "first" || original.Second.(*LayoutNodePane).Cwd.ValueOrZero() != "second" {
 		t.Fatal("union variant references still alias source")
 	}
 	typedNil := LayoutApplyParams{Root: (*LayoutNodePane)(nil)}
@@ -65,10 +67,10 @@ func TestCloneCopiesUnionAndManualValues(t *testing.T) {
 	if *filter.Values[0].Text != "source" || *filter.Values[1].Bool {
 		t.Fatal("manual field adapter did not detach its pointers")
 	}
-	event := EventEnvelope{Data: &WorkspaceUpdatedEvent{Workspace: WorkspaceInfo{Tokens: map[string]string{"key": "source"}}}}
+	event := EventEnvelope{Data: &WorkspaceUpdatedEvent{Workspace: WorkspaceInfo{Tokens: Some(map[string]string{"key": "source"})}}}
 	eventCopy := event.Clone()
-	eventCopy.Data.(*WorkspaceUpdatedEvent).Workspace.Tokens["key"] = "changed"
-	if event.Data.(*WorkspaceUpdatedEvent).Workspace.Tokens["key"] != "source" {
+	eventCopy.Data.(*WorkspaceUpdatedEvent).Workspace.Tokens.ValueOrZero()["key"] = "changed"
+	if event.Data.(*WorkspaceUpdatedEvent).Workspace.Tokens.ValueOrZero()["key"] != "source" {
 		t.Fatal("event interface payload still aliases source")
 	}
 }

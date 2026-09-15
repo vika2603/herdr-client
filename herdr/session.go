@@ -27,7 +27,7 @@ func (ResyncEvent) EventName() string { return "session.resync" }
 // mirror before returning it, so a reader that consults the accessors after
 // Next sees the state that event produced; events that have not been read yet
 // are not applied. Accessors and Snapshot return independent values, including
-// nested pointers, maps and slices. Events returned by Next do not alias the
+// nested optional values, maps and slices. Events returned by Next do not alias the
 // mirror either; callers may modify their returned data independently.
 type Session struct {
 	client *Client

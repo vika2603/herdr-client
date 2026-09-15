@@ -9,15 +9,15 @@ func TestLayoutPanesWalksLeftToRight(t *testing.T) {
 		First: LayoutNodeSplit{
 			Direction: SplitDirectionDown,
 			Ratio:     0.5,
-			First:     LayoutNodePane{Label: Ptr("agent"), PaneID: Ptr("w1:p1")},
-			Second:    LayoutNodePane{Label: Ptr("logs"), PaneID: Ptr("w1:p2")},
+			First:     LayoutNodePane{Label: Some("agent"), PaneID: Some("w1:p1")},
+			Second:    LayoutNodePane{Label: Some("logs"), PaneID: Some("w1:p2")},
 		},
-		Second: LayoutNodePane{Label: Ptr("shell"), PaneID: Ptr("w1:p3")},
+		Second: LayoutNodePane{Label: Some("shell"), PaneID: Some("w1:p3")},
 	}
 
 	var ids []string
 	for _, pane := range LayoutPanes(root) {
-		ids = append(ids, Value(pane.PaneID))
+		ids = append(ids, pane.PaneID.ValueOrZero())
 	}
 	want := []string{"w1:p1", "w1:p2", "w1:p3"}
 	if len(ids) != len(want) {
@@ -36,18 +36,18 @@ func TestLayoutPanesWalksThePointerForm(t *testing.T) {
 	root := &LayoutNodeSplit{
 		Direction: SplitDirectionRight,
 		Ratio:     0.5,
-		First:     &LayoutNodePane{PaneID: Ptr("w1:p1")},
-		Second:    LayoutNodePane{PaneID: Ptr("w1:p2")},
+		First:     &LayoutNodePane{PaneID: Some("w1:p1")},
+		Second:    LayoutNodePane{PaneID: Some("w1:p2")},
 	}
 
 	panes := LayoutPanes(root)
-	if len(panes) != 2 || Value(panes[0].PaneID) != "w1:p1" || Value(panes[1].PaneID) != "w1:p2" {
+	if len(panes) != 2 || panes[0].PaneID.ValueOrZero() != "w1:p1" || panes[1].PaneID.ValueOrZero() != "w1:p2" {
 		t.Errorf("panes = %+v, want both leaves in order", panes)
 	}
 }
 
 func TestLayoutPanesOnALeafAndOnNothing(t *testing.T) {
-	if got := LayoutPanes(LayoutNodePane{PaneID: Ptr("w1:p1")}); len(got) != 1 {
+	if got := LayoutPanes(LayoutNodePane{PaneID: Some("w1:p1")}); len(got) != 1 {
 		t.Errorf("a single pane yielded %d panes, want 1", len(got))
 	}
 	if got := LayoutPanes(nil); got != nil {

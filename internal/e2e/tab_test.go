@@ -12,10 +12,10 @@ import (
 // pane stages need intact.
 func stageTab(t *testing.T, h *harness, st *state) {
 	created, err := h.client.TabCreate(h.ctx(t), herdr.TabCreateParams{
-		WorkspaceID: ptr(st.workspaceID),
-		Label:       ptr("e2e-tab"),
-		Cwd:         ptr(h.root),
-		Focus:       ptr(false),
+		WorkspaceID: herdr.Some(st.workspaceID),
+		Label:       herdr.Some("e2e-tab"),
+		Cwd:         herdr.Some(h.root),
+		Focus:       herdr.Some(false),
 	})
 	if !h.cover(t, herdr.MethodTabCreate, created, err) {
 		t.Fatal("no tab to continue with")
@@ -25,7 +25,7 @@ func stageTab(t *testing.T, h *harness, st *state) {
 		t.Fatalf("tab.create returned an incomplete tab: %+v", created)
 	}
 
-	list, err := h.client.TabList(h.ctx(t), herdr.TabListParams{WorkspaceID: ptr(st.workspaceID)})
+	list, err := h.client.TabList(h.ctx(t), herdr.TabListParams{WorkspaceID: herdr.Some(st.workspaceID)})
 	if h.cover(t, herdr.MethodTabList, list, err) {
 		seen := false
 		for _, tab := range list.Tabs {

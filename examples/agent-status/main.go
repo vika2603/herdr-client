@@ -63,7 +63,7 @@ func onStatusChanged(_ context.Context, env *plugin.Env, changed *herdr.PaneAgen
 		WorkspaceID: changed.WorkspaceID,
 		PaneID:      changed.PaneID,
 		// Prefer the label Herdr displays over the detected agent id.
-		Agent:  cmp.Or(herdr.Value(changed.DisplayAgent), herdr.Value(changed.Agent)),
+		Agent:  cmp.Or(changed.DisplayAgent.ValueOrZero(), changed.Agent.ValueOrZero()),
 		Status: string(changed.AgentStatus),
 	})
 }

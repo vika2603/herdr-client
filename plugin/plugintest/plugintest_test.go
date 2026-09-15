@@ -100,8 +100,8 @@ func TestEnvWithoutContextOptions(t *testing.T) {
 func TestContextOptionAndOverrides(t *testing.T) {
 	env := plugintest.Env(
 		plugintest.Context(herdr.PluginInvocationContext{
-			WorkspaceID:    herdr.Ptr("ws-1"),
-			WorkspaceLabel: herdr.Ptr("herdr"),
+			WorkspaceID:    herdr.Some("ws-1"),
+			WorkspaceLabel: herdr.Some("herdr"),
 		}),
 		plugintest.Workspace("ws-2"),
 	)

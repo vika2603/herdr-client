@@ -33,9 +33,9 @@ func stageEventsSubscribe(t *testing.T, h *harness, st *state) {
 	defer func() { _ = stream.Close() }()
 
 	created, err := h.trigger.WorkspaceCreate(h.ctx(t), herdr.WorkspaceCreateParams{
-		Label: ptr("e2e-events"),
-		Cwd:   ptr(h.root),
-		Focus: ptr(false),
+		Label: herdr.Some("e2e-events"),
+		Cwd:   herdr.Some(h.root),
+		Focus: herdr.Some(false),
 	})
 	if err != nil {
 		t.Fatalf("trigger workspace.created: %v", err)
@@ -105,7 +105,7 @@ func stageEventsWait(t *testing.T, h *harness, st *state) {
 			PaneID:      st.paneID,
 			AgentStatus: herdr.AgentStatusBlocked,
 		},
-		TimeoutMs: ptr(uint64(15000)),
+		TimeoutMs: herdr.Some(uint64(15000)),
 	})
 	if err := <-triggered; err != nil {
 		t.Fatalf("trigger the awaited status change: %v", err)

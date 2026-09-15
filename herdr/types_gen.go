@@ -8,212 +8,138 @@ import (
 )
 
 type AgentInfo struct {
-	Agent                  *string           `json:"agent,omitempty"`
-	AgentSession           *AgentSessionInfo `json:"agent_session,omitempty"`
-	AgentStatus            AgentStatus       `json:"agent_status"`
-	Cwd                    *string           `json:"cwd,omitempty"`
-	DisplayAgent           *string           `json:"display_agent,omitempty"`
-	Focused                bool              `json:"focused"`
-	ForegroundCwd          *string           `json:"foreground_cwd,omitempty"`
-	InteractiveReady       *bool             `json:"interactive_ready,omitempty"`
-	LaunchPending          *bool             `json:"launch_pending,omitempty"`
-	Name                   *string           `json:"name,omitempty"`
-	PaneID                 string            `json:"pane_id"`
-	Revision               uint64            `json:"revision"`
-	ScreenDetectionSkipped *bool             `json:"screen_detection_skipped,omitempty"`
-	StateChangeSeq         *uint64           `json:"state_change_seq,omitempty"`
-	StateLabels            map[string]string `json:"state_labels,omitempty"`
-	TabID                  string            `json:"tab_id"`
-	TerminalID             string            `json:"terminal_id"`
-	TerminalTitle          *string           `json:"terminal_title,omitempty"`
-	TerminalTitleStripped  *string           `json:"terminal_title_stripped,omitempty"`
-	Title                  *string           `json:"title,omitempty"`
-	Tokens                 map[string]string `json:"tokens,omitempty"`
-	WorkspaceID            string            `json:"workspace_id"`
+	Agent                  Optional[string]            `json:"agent,omitzero"`
+	AgentSession           Optional[AgentSessionInfo]  `json:"agent_session,omitzero"`
+	AgentStatus            AgentStatus                 `json:"agent_status"`
+	Cwd                    Optional[string]            `json:"cwd,omitzero"`
+	DisplayAgent           Optional[string]            `json:"display_agent,omitzero"`
+	Focused                bool                        `json:"focused"`
+	ForegroundCwd          Optional[string]            `json:"foreground_cwd,omitzero"`
+	InteractiveReady       Optional[bool]              `json:"interactive_ready,omitzero"`
+	LaunchPending          Optional[bool]              `json:"launch_pending,omitzero"`
+	Name                   Optional[string]            `json:"name,omitzero"`
+	PaneID                 string                      `json:"pane_id"`
+	Revision               uint64                      `json:"revision"`
+	ScreenDetectionSkipped Optional[bool]              `json:"screen_detection_skipped,omitzero"`
+	StateChangeSeq         Optional[uint64]            `json:"state_change_seq,omitzero"`
+	StateLabels            Optional[map[string]string] `json:"state_labels,omitzero"`
+	TabID                  string                      `json:"tab_id"`
+	TerminalID             string                      `json:"terminal_id"`
+	TerminalTitle          Optional[string]            `json:"terminal_title,omitzero"`
+	TerminalTitleStripped  Optional[string]            `json:"terminal_title_stripped,omitzero"`
+	Title                  Optional[string]            `json:"title,omitzero"`
+	Tokens                 Optional[map[string]string] `json:"tokens,omitzero"`
+	WorkspaceID            string                      `json:"workspace_id"`
 }
 
 // Clone returns a deep copy of v.
 func (v AgentInfo) Clone() AgentInfo {
 	out := v
-	if v.Agent != nil {
-		out.Agent = new(string)
-		(*out.Agent) = (*v.Agent)
+	if value1, ok2 := v.AgentSession.Get(); ok2 {
+		var cloned3 AgentSessionInfo
+		cloned3 = value1.Clone()
+		out.AgentSession = Some(cloned3)
 	}
-	if v.AgentSession != nil {
-		out.AgentSession = new(AgentSessionInfo)
-		(*out.AgentSession) = (*v.AgentSession).Clone()
-	}
-	if v.Cwd != nil {
-		out.Cwd = new(string)
-		(*out.Cwd) = (*v.Cwd)
-	}
-	if v.DisplayAgent != nil {
-		out.DisplayAgent = new(string)
-		(*out.DisplayAgent) = (*v.DisplayAgent)
-	}
-	if v.ForegroundCwd != nil {
-		out.ForegroundCwd = new(string)
-		(*out.ForegroundCwd) = (*v.ForegroundCwd)
-	}
-	if v.InteractiveReady != nil {
-		out.InteractiveReady = new(bool)
-		(*out.InteractiveReady) = (*v.InteractiveReady)
-	}
-	if v.LaunchPending != nil {
-		out.LaunchPending = new(bool)
-		(*out.LaunchPending) = (*v.LaunchPending)
-	}
-	if v.Name != nil {
-		out.Name = new(string)
-		(*out.Name) = (*v.Name)
-	}
-	if v.ScreenDetectionSkipped != nil {
-		out.ScreenDetectionSkipped = new(bool)
-		(*out.ScreenDetectionSkipped) = (*v.ScreenDetectionSkipped)
-	}
-	if v.StateChangeSeq != nil {
-		out.StateChangeSeq = new(uint64)
-		(*out.StateChangeSeq) = (*v.StateChangeSeq)
-	}
-	if v.StateLabels != nil {
-		out.StateLabels = make(map[string]string, len(v.StateLabels))
-		for key1, value2 := range v.StateLabels {
-			out.StateLabels[key1] = value2
+	if value4, ok5 := v.StateLabels.Get(); ok5 {
+		var cloned6 map[string]string
+		if value4 != nil {
+			cloned6 = make(map[string]string, len(value4))
+			for key7, value8 := range value4 {
+				cloned6[key7] = value8
+			}
 		}
+		out.StateLabels = Some(cloned6)
 	}
-	if v.TerminalTitle != nil {
-		out.TerminalTitle = new(string)
-		(*out.TerminalTitle) = (*v.TerminalTitle)
-	}
-	if v.TerminalTitleStripped != nil {
-		out.TerminalTitleStripped = new(string)
-		(*out.TerminalTitleStripped) = (*v.TerminalTitleStripped)
-	}
-	if v.Title != nil {
-		out.Title = new(string)
-		(*out.Title) = (*v.Title)
-	}
-	if v.Tokens != nil {
-		out.Tokens = make(map[string]string, len(v.Tokens))
-		for key3, value4 := range v.Tokens {
-			out.Tokens[key3] = value4
+	if value9, ok10 := v.Tokens.Get(); ok10 {
+		var cloned11 map[string]string
+		if value9 != nil {
+			cloned11 = make(map[string]string, len(value9))
+			for key12, value13 := range value9 {
+				cloned11[key12] = value13
+			}
 		}
+		out.Tokens = Some(cloned11)
 	}
 	return out
 }
 
 type AgentManifestInfo struct {
-	ActiveVersion                *string `json:"active_version,omitempty"`
-	Agent                        string  `json:"agent"`
-	CachedRemoteVersion          *string `json:"cached_remote_version,omitempty"`
-	LocalOverrideShadowingRemote bool    `json:"local_override_shadowing_remote"`
-	RemoteLastCheckedUnix        *uint64 `json:"remote_last_checked_unix,omitempty"`
-	RemoteUpdateError            *string `json:"remote_update_error,omitempty"`
-	RemoteUpdateResult           *string `json:"remote_update_result,omitempty"`
-	Source                       string  `json:"source"`
-	SourceKind                   string  `json:"source_kind"`
-	Warning                      *string `json:"warning,omitempty"`
+	ActiveVersion                Optional[string] `json:"active_version,omitzero"`
+	Agent                        string           `json:"agent"`
+	CachedRemoteVersion          Optional[string] `json:"cached_remote_version,omitzero"`
+	LocalOverrideShadowingRemote bool             `json:"local_override_shadowing_remote"`
+	RemoteLastCheckedUnix        Optional[uint64] `json:"remote_last_checked_unix,omitzero"`
+	RemoteUpdateError            Optional[string] `json:"remote_update_error,omitzero"`
+	RemoteUpdateResult           Optional[string] `json:"remote_update_result,omitzero"`
+	Source                       string           `json:"source"`
+	SourceKind                   string           `json:"source_kind"`
+	Warning                      Optional[string] `json:"warning,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v AgentManifestInfo) Clone() AgentManifestInfo {
 	out := v
-	if v.ActiveVersion != nil {
-		out.ActiveVersion = new(string)
-		(*out.ActiveVersion) = (*v.ActiveVersion)
-	}
-	if v.CachedRemoteVersion != nil {
-		out.CachedRemoteVersion = new(string)
-		(*out.CachedRemoteVersion) = (*v.CachedRemoteVersion)
-	}
-	if v.RemoteLastCheckedUnix != nil {
-		out.RemoteLastCheckedUnix = new(uint64)
-		(*out.RemoteLastCheckedUnix) = (*v.RemoteLastCheckedUnix)
-	}
-	if v.RemoteUpdateError != nil {
-		out.RemoteUpdateError = new(string)
-		(*out.RemoteUpdateError) = (*v.RemoteUpdateError)
-	}
-	if v.RemoteUpdateResult != nil {
-		out.RemoteUpdateResult = new(string)
-		(*out.RemoteUpdateResult) = (*v.RemoteUpdateResult)
-	}
-	if v.Warning != nil {
-		out.Warning = new(string)
-		(*out.Warning) = (*v.Warning)
-	}
 	return out
 }
 
 type AgentPromptParams struct {
-	Target string                  `json:"target"`
-	Text   string                  `json:"text"`
-	Wait   *AgentPromptWaitOptions `json:"wait,omitempty"`
+	Target string                           `json:"target"`
+	Text   string                           `json:"text"`
+	Wait   Optional[AgentPromptWaitOptions] `json:"wait,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v AgentPromptParams) Clone() AgentPromptParams {
 	out := v
-	if v.Wait != nil {
-		out.Wait = new(AgentPromptWaitOptions)
-		(*out.Wait) = (*v.Wait).Clone()
+	if value1, ok2 := v.Wait.Get(); ok2 {
+		var cloned3 AgentPromptWaitOptions
+		cloned3 = value1.Clone()
+		out.Wait = Some(cloned3)
 	}
 	return out
 }
 
 type AgentPromptWaitOptions struct {
-	TimeoutMs *uint64       `json:"timeout_ms,omitempty"`
-	Until     []AgentStatus `json:"until,omitempty"`
+	TimeoutMs Optional[uint64]        `json:"timeout_ms,omitzero"`
+	Until     Optional[[]AgentStatus] `json:"until,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v AgentPromptWaitOptions) Clone() AgentPromptWaitOptions {
 	out := v
-	if v.TimeoutMs != nil {
-		out.TimeoutMs = new(uint64)
-		(*out.TimeoutMs) = (*v.TimeoutMs)
-	}
-	if v.Until != nil {
-		out.Until = make([]AgentStatus, len(v.Until))
-		copy(out.Until, v.Until)
+	if value1, ok2 := v.Until.Get(); ok2 {
+		var cloned3 []AgentStatus
+		if value1 != nil {
+			cloned3 = make([]AgentStatus, len(value1))
+			copy(cloned3, value1)
+		}
+		out.Until = Some(cloned3)
 	}
 	return out
 }
 
 type AgentReadParams struct {
-	Format    ReadFormat `json:"format,omitempty"`
-	Lines     *uint32    `json:"lines,omitempty"`
-	Source    ReadSource `json:"source"`
-	StripANSI *bool      `json:"strip_ansi,omitempty"`
-	Target    string     `json:"target"`
+	Format    Optional[ReadFormat] `json:"format,omitzero"`
+	Lines     Optional[uint32]     `json:"lines,omitzero"`
+	Source    ReadSource           `json:"source"`
+	StripANSI Optional[bool]       `json:"strip_ansi,omitzero"`
+	Target    string               `json:"target"`
 }
 
 // Clone returns a deep copy of v.
 func (v AgentReadParams) Clone() AgentReadParams {
 	out := v
-	if v.Lines != nil {
-		out.Lines = new(uint32)
-		(*out.Lines) = (*v.Lines)
-	}
-	if v.StripANSI != nil {
-		out.StripANSI = new(bool)
-		(*out.StripANSI) = (*v.StripANSI)
-	}
 	return out
 }
 
 type AgentRenameParams struct {
-	Name   *string `json:"name,omitempty"`
-	Target string  `json:"target"`
+	Name   Optional[string] `json:"name,omitzero"`
+	Target string           `json:"target"`
 }
 
 // Clone returns a deep copy of v.
 func (v AgentRenameParams) Clone() AgentRenameParams {
 	out := v
-	if v.Name != nil {
-		out.Name = new(string)
-		(*out.Name) = (*v.Name)
-	}
 	return out
 }
 
@@ -254,26 +180,26 @@ const (
 )
 
 type AgentStartParams struct {
-	Args   []string `json:"args,omitempty"`
-	Kind   string   `json:"kind"`
-	Name   string   `json:"name"`
-	PaneID string   `json:"pane_id"`
+	Args   Optional[[]string] `json:"args,omitzero"`
+	Kind   string             `json:"kind"`
+	Name   string             `json:"name"`
+	PaneID string             `json:"pane_id"`
 
 	// Startup timeout in milliseconds. Values must be greater than 3000
 	// and at most 300000.
-	TimeoutMs *uint64 `json:"timeout_ms,omitempty"`
+	TimeoutMs Optional[uint64] `json:"timeout_ms,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v AgentStartParams) Clone() AgentStartParams {
 	out := v
-	if v.Args != nil {
-		out.Args = make([]string, len(v.Args))
-		copy(out.Args, v.Args)
-	}
-	if v.TimeoutMs != nil {
-		out.TimeoutMs = new(uint64)
-		(*out.TimeoutMs) = (*v.TimeoutMs)
+	if value1, ok2 := v.Args.Get(); ok2 {
+		var cloned3 []string
+		if value1 != nil {
+			cloned3 = make([]string, len(value1))
+			copy(cloned3, value1)
+		}
+		out.Args = Some(cloned3)
 	}
 	return out
 }
@@ -327,16 +253,12 @@ const (
 )
 
 type AgentViewClearParams struct {
-	Source *string `json:"source,omitempty"`
+	Source Optional[string] `json:"source,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v AgentViewClearParams) Clone() AgentViewClearParams {
 	out := v
-	if v.Source != nil {
-		out.Source = new(string)
-		(*out.Source) = (*v.Source)
-	}
 	return out
 }
 
@@ -690,25 +612,29 @@ func (v *AgentViewFilterNot) UnmarshalJSON(data []byte) error {
 }
 
 type AgentViewSetParams struct {
-	Filter AgentViewFilter `json:"filter,omitempty"`
-	Label  *string         `json:"label,omitempty"`
-	Sort   []AgentViewSort `json:"sort,omitempty"`
-	Source string          `json:"source"`
+	Filter Optional[AgentViewFilter] `json:"filter,omitzero"`
+	Label  Optional[string]          `json:"label,omitzero"`
+	Sort   Optional[[]AgentViewSort] `json:"sort,omitzero"`
+	Source string                    `json:"source"`
 }
 
 // Clone returns a deep copy of v.
 func (v AgentViewSetParams) Clone() AgentViewSetParams {
 	out := v
-	out.Filter = cloneAgentViewFilter(v.Filter)
-	if v.Label != nil {
-		out.Label = new(string)
-		(*out.Label) = (*v.Label)
+	if value1, ok2 := v.Filter.Get(); ok2 {
+		var cloned3 AgentViewFilter
+		cloned3 = cloneAgentViewFilter(value1)
+		out.Filter = Some(cloned3)
 	}
-	if v.Sort != nil {
-		out.Sort = make([]AgentViewSort, len(v.Sort))
-		for i1 := range v.Sort {
-			out.Sort[i1] = v.Sort[i1].Clone()
+	if value4, ok5 := v.Sort.Get(); ok5 {
+		var cloned6 []AgentViewSort
+		if value4 != nil {
+			cloned6 = make([]AgentViewSort, len(value4))
+			for i7 := range value4 {
+				cloned6[i7] = value4[i7].Clone()
+			}
 		}
+		out.Sort = Some(cloned6)
 	}
 	return out
 }
@@ -718,25 +644,29 @@ func (v *AgentViewSetParams) UnmarshalJSON(data []byte) error {
 	type alias AgentViewSetParams
 	var aux struct {
 		alias
-		Filter json.RawMessage `json:"filter,omitempty"`
+		Filter json.RawMessage `json:"filter,omitzero"`
 	}
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
 	*v = AgentViewSetParams(aux.alias)
-	if len(aux.Filter) > 0 && string(aux.Filter) != "null" {
-		decoded, err := decodeAgentViewFilter(aux.Filter)
-		if err != nil {
-			return err
+	if len(aux.Filter) > 0 {
+		if string(aux.Filter) == "null" {
+			v.Filter = Null[AgentViewFilter]()
+		} else {
+			decoded, err := decodeAgentViewFilter(aux.Filter)
+			if err != nil {
+				return err
+			}
+			v.Filter = Some(decoded)
 		}
-		v.Filter = decoded
 	}
 	return nil
 }
 
 type AgentViewSort struct {
-	Field AgentViewSortField `json:"field"`
-	Order AgentViewSortOrder `json:"order,omitempty"`
+	Field AgentViewSortField           `json:"field"`
+	Order Optional[AgentViewSortOrder] `json:"order,omitzero"`
 }
 
 // Clone returns a deep copy of v.
@@ -755,21 +685,21 @@ const (
 )
 
 type AgentWaitParams struct {
-	Target    string        `json:"target"`
-	TimeoutMs *uint64       `json:"timeout_ms,omitempty"`
-	Until     []AgentStatus `json:"until,omitempty"`
+	Target    string                  `json:"target"`
+	TimeoutMs Optional[uint64]        `json:"timeout_ms,omitzero"`
+	Until     Optional[[]AgentStatus] `json:"until,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v AgentWaitParams) Clone() AgentWaitParams {
 	out := v
-	if v.TimeoutMs != nil {
-		out.TimeoutMs = new(uint64)
-		(*out.TimeoutMs) = (*v.TimeoutMs)
-	}
-	if v.Until != nil {
-		out.Until = make([]AgentStatus, len(v.Until))
-		copy(out.Until, v.Until)
+	if value1, ok2 := v.Until.Get(); ok2 {
+		var cloned3 []AgentStatus
+		if value1 != nil {
+			cloned3 = make([]AgentStatus, len(value1))
+			copy(cloned3, value1)
+		}
+		out.Until = Some(cloned3)
 	}
 	return out
 }
@@ -808,34 +738,23 @@ func (v ClientWindowTitleSetParams) Clone() ClientWindowTitleSetParams {
 type CommandInvokeParams struct {
 	// Opaque endpoint-issued command identifier from the client-shell
 	// projection.
-	CommandID string  `json:"command_id"`
-	PaneID    *string `json:"pane_id,omitempty"`
+	CommandID string           `json:"command_id"`
+	PaneID    Optional[string] `json:"pane_id,omitzero"`
 
 	// Client-owned selection coordinates, validated against the pane's
 	// content revision.
-	Selection   *PaneSelectionReadParams `json:"selection,omitempty"`
-	TabID       *string                  `json:"tab_id,omitempty"`
-	WorkspaceID *string                  `json:"workspace_id,omitempty"`
+	Selection   Optional[PaneSelectionReadParams] `json:"selection,omitzero"`
+	TabID       Optional[string]                  `json:"tab_id,omitzero"`
+	WorkspaceID Optional[string]                  `json:"workspace_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v CommandInvokeParams) Clone() CommandInvokeParams {
 	out := v
-	if v.PaneID != nil {
-		out.PaneID = new(string)
-		(*out.PaneID) = (*v.PaneID)
-	}
-	if v.Selection != nil {
-		out.Selection = new(PaneSelectionReadParams)
-		(*out.Selection) = (*v.Selection).Clone()
-	}
-	if v.TabID != nil {
-		out.TabID = new(string)
-		(*out.TabID) = (*v.TabID)
-	}
-	if v.WorkspaceID != nil {
-		out.WorkspaceID = new(string)
-		(*out.WorkspaceID) = (*v.WorkspaceID)
+	if value1, ok2 := v.Selection.Get(); ok2 {
+		var cloned3 PaneSelectionReadParams
+		cloned3 = value1.Clone()
+		out.Selection = Some(cloned3)
 	}
 	return out
 }
@@ -1167,17 +1086,13 @@ func decodeEventMatch(data []byte) (EventMatch, error) {
 // EventMatchPaneAgentDetected is the "pane_agent_detected" variant of
 // EventMatch.
 type EventMatchPaneAgentDetected struct {
-	Agent  *string `json:"agent,omitempty"`
-	PaneID string  `json:"pane_id"`
+	Agent  Optional[string] `json:"agent,omitzero"`
+	PaneID string           `json:"pane_id"`
 }
 
 // Clone returns a deep copy of v.
 func (v EventMatchPaneAgentDetected) Clone() EventMatchPaneAgentDetected {
 	out := v
-	if v.Agent != nil {
-		out.Agent = new(string)
-		(*out.Agent) = (*v.Agent)
-	}
 	return out
 }
 
@@ -1240,21 +1155,13 @@ func (v EventMatchPaneClosed) MarshalJSON() ([]byte, error) {
 
 // EventMatchPaneCreated is the "pane_created" variant of EventMatch.
 type EventMatchPaneCreated struct {
-	PaneID      *string `json:"pane_id,omitempty"`
-	WorkspaceID *string `json:"workspace_id,omitempty"`
+	PaneID      Optional[string] `json:"pane_id,omitzero"`
+	WorkspaceID Optional[string] `json:"workspace_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v EventMatchPaneCreated) Clone() EventMatchPaneCreated {
 	out := v
-	if v.PaneID != nil {
-		out.PaneID = new(string)
-		(*out.PaneID) = (*v.PaneID)
-	}
-	if v.WorkspaceID != nil {
-		out.WorkspaceID = new(string)
-		(*out.WorkspaceID) = (*v.WorkspaceID)
-	}
 	return out
 }
 
@@ -1338,17 +1245,13 @@ func (v EventMatchPaneMoved) MarshalJSON() ([]byte, error) {
 // EventMatchPaneOutputChanged is the "pane_output_changed" variant of
 // EventMatch.
 type EventMatchPaneOutputChanged struct {
-	MinRevision *uint64 `json:"min_revision,omitempty"`
-	PaneID      string  `json:"pane_id"`
+	MinRevision Optional[uint64] `json:"min_revision,omitzero"`
+	PaneID      string           `json:"pane_id"`
 }
 
 // Clone returns a deep copy of v.
 func (v EventMatchPaneOutputChanged) Clone() EventMatchPaneOutputChanged {
 	out := v
-	if v.MinRevision != nil {
-		out.MinRevision = new(uint64)
-		(*out.MinRevision) = (*v.MinRevision)
-	}
 	return out
 }
 
@@ -1387,21 +1290,13 @@ func (v EventMatchTabClosed) MarshalJSON() ([]byte, error) {
 
 // EventMatchTabCreated is the "tab_created" variant of EventMatch.
 type EventMatchTabCreated struct {
-	TabID       *string `json:"tab_id,omitempty"`
-	WorkspaceID *string `json:"workspace_id,omitempty"`
+	TabID       Optional[string] `json:"tab_id,omitzero"`
+	WorkspaceID Optional[string] `json:"workspace_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v EventMatchTabCreated) Clone() EventMatchTabCreated {
 	out := v
-	if v.TabID != nil {
-		out.TabID = new(string)
-		(*out.TabID) = (*v.TabID)
-	}
-	if v.WorkspaceID != nil {
-		out.WorkspaceID = new(string)
-		(*out.WorkspaceID) = (*v.WorkspaceID)
-	}
 	return out
 }
 
@@ -1462,17 +1357,13 @@ func (v EventMatchTabMoved) MarshalJSON() ([]byte, error) {
 
 // EventMatchTabRenamed is the "tab_renamed" variant of EventMatch.
 type EventMatchTabRenamed struct {
-	Label *string `json:"label,omitempty"`
-	TabID string  `json:"tab_id"`
+	Label Optional[string] `json:"label,omitzero"`
+	TabID string           `json:"tab_id"`
 }
 
 // Clone returns a deep copy of v.
 func (v EventMatchTabRenamed) Clone() EventMatchTabRenamed {
 	out := v
-	if v.Label != nil {
-		out.Label = new(string)
-		(*out.Label) = (*v.Label)
-	}
 	return out
 }
 
@@ -1513,16 +1404,12 @@ func (v EventMatchWorkspaceClosed) MarshalJSON() ([]byte, error) {
 // EventMatchWorkspaceCreated is the "workspace_created" variant of
 // EventMatch.
 type EventMatchWorkspaceCreated struct {
-	WorkspaceID *string `json:"workspace_id,omitempty"`
+	WorkspaceID Optional[string] `json:"workspace_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v EventMatchWorkspaceCreated) Clone() EventMatchWorkspaceCreated {
 	out := v
-	if v.WorkspaceID != nil {
-		out.WorkspaceID = new(string)
-		(*out.WorkspaceID) = (*v.WorkspaceID)
-	}
 	return out
 }
 
@@ -1585,17 +1472,13 @@ func (v EventMatchWorkspaceMoved) MarshalJSON() ([]byte, error) {
 // EventMatchWorkspaceRenamed is the "workspace_renamed" variant of
 // EventMatch.
 type EventMatchWorkspaceRenamed struct {
-	Label       *string `json:"label,omitempty"`
-	WorkspaceID string  `json:"workspace_id"`
+	Label       Optional[string] `json:"label,omitzero"`
+	WorkspaceID string           `json:"workspace_id"`
 }
 
 // Clone returns a deep copy of v.
 func (v EventMatchWorkspaceRenamed) Clone() EventMatchWorkspaceRenamed {
 	out := v
-	if v.Label != nil {
-		out.Label = new(string)
-		(*out.Label) = (*v.Label)
-	}
 	return out
 }
 
@@ -1674,18 +1557,14 @@ func (v *EventsSubscribeParams) UnmarshalJSON(data []byte) error {
 }
 
 type EventsWaitParams struct {
-	MatchEvent EventMatch `json:"match_event"`
-	TimeoutMs  *uint64    `json:"timeout_ms,omitempty"`
+	MatchEvent EventMatch       `json:"match_event"`
+	TimeoutMs  Optional[uint64] `json:"timeout_ms,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v EventsWaitParams) Clone() EventsWaitParams {
 	out := v
 	out.MatchEvent = cloneEventMatch(v.MatchEvent)
-	if v.TimeoutMs != nil {
-		out.TimeoutMs = new(uint64)
-		(*out.TimeoutMs) = (*v.TimeoutMs)
-	}
 	return out
 }
 
@@ -1711,83 +1590,112 @@ func (v *EventsWaitParams) UnmarshalJSON(data []byte) error {
 }
 
 type InstalledPluginInfo struct {
-	Actions         []PluginManifestAction      `json:"actions,omitempty"`
-	Build           []PluginManifestBuild       `json:"build,omitempty"`
-	Description     *string                     `json:"description,omitempty"`
-	Enabled         bool                        `json:"enabled"`
-	Events          []PluginManifestEventHook   `json:"events,omitempty"`
-	LinkHandlers    []PluginManifestLinkHandler `json:"link_handlers,omitempty"`
-	ManifestPath    string                      `json:"manifest_path"`
-	MinHerdrVersion string                      `json:"min_herdr_version,omitempty"`
-	Name            string                      `json:"name"`
-	Panes           []PluginManifestPane        `json:"panes,omitempty"`
-	Platforms       []PluginPlatform            `json:"platforms,omitempty"`
-	PluginID        string                      `json:"plugin_id"`
-	PluginRoot      string                      `json:"plugin_root"`
-	Source          *PluginSourceInfo           `json:"source,omitempty"`
-	Startup         []PluginManifestStartup     `json:"startup,omitempty"`
-	Version         string                      `json:"version"`
+	Actions         Optional[[]PluginManifestAction]      `json:"actions,omitzero"`
+	Build           Optional[[]PluginManifestBuild]       `json:"build,omitzero"`
+	Description     Optional[string]                      `json:"description,omitzero"`
+	Enabled         bool                                  `json:"enabled"`
+	Events          Optional[[]PluginManifestEventHook]   `json:"events,omitzero"`
+	LinkHandlers    Optional[[]PluginManifestLinkHandler] `json:"link_handlers,omitzero"`
+	ManifestPath    string                                `json:"manifest_path"`
+	MinHerdrVersion Optional[string]                      `json:"min_herdr_version,omitzero"`
+	Name            string                                `json:"name"`
+	Panes           Optional[[]PluginManifestPane]        `json:"panes,omitzero"`
+	Platforms       Optional[[]PluginPlatform]            `json:"platforms,omitzero"`
+	PluginID        string                                `json:"plugin_id"`
+	PluginRoot      string                                `json:"plugin_root"`
+	Source          Optional[PluginSourceInfo]            `json:"source,omitzero"`
+	Startup         Optional[[]PluginManifestStartup]     `json:"startup,omitzero"`
+	Version         string                                `json:"version"`
 
 	// Warnings collected at link time or on registry load (e.g. unknown
 	// event names, missing manifest file). Non-fatal — the entry is kept
 	// and surfaced by plugin.list.
-	Warnings []string `json:"warnings,omitempty"`
+	Warnings Optional[[]string] `json:"warnings,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v InstalledPluginInfo) Clone() InstalledPluginInfo {
 	out := v
-	if v.Actions != nil {
-		out.Actions = make([]PluginManifestAction, len(v.Actions))
-		for i1 := range v.Actions {
-			out.Actions[i1] = v.Actions[i1].Clone()
+	if value1, ok2 := v.Actions.Get(); ok2 {
+		var cloned3 []PluginManifestAction
+		if value1 != nil {
+			cloned3 = make([]PluginManifestAction, len(value1))
+			for i4 := range value1 {
+				cloned3[i4] = value1[i4].Clone()
+			}
 		}
+		out.Actions = Some(cloned3)
 	}
-	if v.Build != nil {
-		out.Build = make([]PluginManifestBuild, len(v.Build))
-		for i2 := range v.Build {
-			out.Build[i2] = v.Build[i2].Clone()
+	if value5, ok6 := v.Build.Get(); ok6 {
+		var cloned7 []PluginManifestBuild
+		if value5 != nil {
+			cloned7 = make([]PluginManifestBuild, len(value5))
+			for i8 := range value5 {
+				cloned7[i8] = value5[i8].Clone()
+			}
 		}
+		out.Build = Some(cloned7)
 	}
-	if v.Description != nil {
-		out.Description = new(string)
-		(*out.Description) = (*v.Description)
-	}
-	if v.Events != nil {
-		out.Events = make([]PluginManifestEventHook, len(v.Events))
-		for i3 := range v.Events {
-			out.Events[i3] = v.Events[i3].Clone()
+	if value9, ok10 := v.Events.Get(); ok10 {
+		var cloned11 []PluginManifestEventHook
+		if value9 != nil {
+			cloned11 = make([]PluginManifestEventHook, len(value9))
+			for i12 := range value9 {
+				cloned11[i12] = value9[i12].Clone()
+			}
 		}
+		out.Events = Some(cloned11)
 	}
-	if v.LinkHandlers != nil {
-		out.LinkHandlers = make([]PluginManifestLinkHandler, len(v.LinkHandlers))
-		for i4 := range v.LinkHandlers {
-			out.LinkHandlers[i4] = v.LinkHandlers[i4].Clone()
+	if value13, ok14 := v.LinkHandlers.Get(); ok14 {
+		var cloned15 []PluginManifestLinkHandler
+		if value13 != nil {
+			cloned15 = make([]PluginManifestLinkHandler, len(value13))
+			for i16 := range value13 {
+				cloned15[i16] = value13[i16].Clone()
+			}
 		}
+		out.LinkHandlers = Some(cloned15)
 	}
-	if v.Panes != nil {
-		out.Panes = make([]PluginManifestPane, len(v.Panes))
-		for i5 := range v.Panes {
-			out.Panes[i5] = v.Panes[i5].Clone()
+	if value17, ok18 := v.Panes.Get(); ok18 {
+		var cloned19 []PluginManifestPane
+		if value17 != nil {
+			cloned19 = make([]PluginManifestPane, len(value17))
+			for i20 := range value17 {
+				cloned19[i20] = value17[i20].Clone()
+			}
 		}
+		out.Panes = Some(cloned19)
 	}
-	if v.Platforms != nil {
-		out.Platforms = make([]PluginPlatform, len(v.Platforms))
-		copy(out.Platforms, v.Platforms)
-	}
-	if v.Source != nil {
-		out.Source = new(PluginSourceInfo)
-		(*out.Source) = (*v.Source).Clone()
-	}
-	if v.Startup != nil {
-		out.Startup = make([]PluginManifestStartup, len(v.Startup))
-		for i6 := range v.Startup {
-			out.Startup[i6] = v.Startup[i6].Clone()
+	if value21, ok22 := v.Platforms.Get(); ok22 {
+		var cloned23 []PluginPlatform
+		if value21 != nil {
+			cloned23 = make([]PluginPlatform, len(value21))
+			copy(cloned23, value21)
 		}
+		out.Platforms = Some(cloned23)
 	}
-	if v.Warnings != nil {
-		out.Warnings = make([]string, len(v.Warnings))
-		copy(out.Warnings, v.Warnings)
+	if value24, ok25 := v.Source.Get(); ok25 {
+		var cloned26 PluginSourceInfo
+		cloned26 = value24.Clone()
+		out.Source = Some(cloned26)
+	}
+	if value27, ok28 := v.Startup.Get(); ok28 {
+		var cloned29 []PluginManifestStartup
+		if value27 != nil {
+			cloned29 = make([]PluginManifestStartup, len(value27))
+			for i30 := range value27 {
+				cloned29[i30] = value27[i30].Clone()
+			}
+		}
+		out.Startup = Some(cloned29)
+	}
+	if value31, ok32 := v.Warnings.Get(); ok32 {
+		var cloned33 []string
+		if value31 != nil {
+			cloned33 = make([]string, len(value31))
+			copy(cloned33, value31)
+		}
+		out.Warnings = Some(cloned33)
 	}
 	return out
 }
@@ -1887,33 +1795,17 @@ func (v IntegrationUninstallResult) Clone() IntegrationUninstallResult {
 }
 
 type LayoutApplyParams struct {
-	Focus       *bool      `json:"focus,omitempty"`
-	Root        LayoutNode `json:"root"`
-	TabID       *string    `json:"tab_id,omitempty"`
-	TabLabel    *string    `json:"tab_label,omitempty"`
-	WorkspaceID *string    `json:"workspace_id,omitempty"`
+	Focus       Optional[bool]   `json:"focus,omitzero"`
+	Root        LayoutNode       `json:"root"`
+	TabID       Optional[string] `json:"tab_id,omitzero"`
+	TabLabel    Optional[string] `json:"tab_label,omitzero"`
+	WorkspaceID Optional[string] `json:"workspace_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v LayoutApplyParams) Clone() LayoutApplyParams {
 	out := v
-	if v.Focus != nil {
-		out.Focus = new(bool)
-		(*out.Focus) = (*v.Focus)
-	}
 	out.Root = cloneLayoutNode(v.Root)
-	if v.TabID != nil {
-		out.TabID = new(string)
-		(*out.TabID) = (*v.TabID)
-	}
-	if v.TabLabel != nil {
-		out.TabLabel = new(string)
-		(*out.TabLabel) = (*v.TabLabel)
-	}
-	if v.WorkspaceID != nil {
-		out.WorkspaceID = new(string)
-		(*out.WorkspaceID) = (*v.WorkspaceID)
-	}
 	return out
 }
 
@@ -1975,21 +1867,13 @@ func (v *LayoutDescription) UnmarshalJSON(data []byte) error {
 }
 
 type LayoutExportParams struct {
-	PaneID *string `json:"pane_id,omitempty"`
-	TabID  *string `json:"tab_id,omitempty"`
+	PaneID Optional[string] `json:"pane_id,omitzero"`
+	TabID  Optional[string] `json:"tab_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v LayoutExportParams) Clone() LayoutExportParams {
 	out := v
-	if v.PaneID != nil {
-		out.PaneID = new(string)
-		(*out.PaneID) = (*v.PaneID)
-	}
-	if v.TabID != nil {
-		out.TabID = new(string)
-		(*out.TabID) = (*v.TabID)
-	}
 	return out
 }
 
@@ -2053,37 +1937,33 @@ func decodeLayoutNode(data []byte) (LayoutNode, error) {
 
 // LayoutNodePane is the "pane" variant of LayoutNode.
 type LayoutNodePane struct {
-	Command []string          `json:"command,omitempty"`
-	Cwd     *string           `json:"cwd,omitempty"`
-	Env     map[string]string `json:"env,omitempty"`
-	Label   *string           `json:"label,omitempty"`
-	PaneID  *string           `json:"pane_id,omitempty"`
+	Command Optional[[]string]          `json:"command,omitzero"`
+	Cwd     Optional[string]            `json:"cwd,omitzero"`
+	Env     Optional[map[string]string] `json:"env,omitzero"`
+	Label   Optional[string]            `json:"label,omitzero"`
+	PaneID  Optional[string]            `json:"pane_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v LayoutNodePane) Clone() LayoutNodePane {
 	out := v
-	if v.Command != nil {
-		out.Command = make([]string, len(v.Command))
-		copy(out.Command, v.Command)
-	}
-	if v.Cwd != nil {
-		out.Cwd = new(string)
-		(*out.Cwd) = (*v.Cwd)
-	}
-	if v.Env != nil {
-		out.Env = make(map[string]string, len(v.Env))
-		for key1, value2 := range v.Env {
-			out.Env[key1] = value2
+	if value1, ok2 := v.Command.Get(); ok2 {
+		var cloned3 []string
+		if value1 != nil {
+			cloned3 = make([]string, len(value1))
+			copy(cloned3, value1)
 		}
+		out.Command = Some(cloned3)
 	}
-	if v.Label != nil {
-		out.Label = new(string)
-		(*out.Label) = (*v.Label)
-	}
-	if v.PaneID != nil {
-		out.PaneID = new(string)
-		(*out.PaneID) = (*v.PaneID)
+	if value4, ok5 := v.Env.Get(); ok5 {
+		var cloned6 map[string]string
+		if value4 != nil {
+			cloned6 = make(map[string]string, len(value4))
+			for key7, value8 := range value4 {
+				cloned6[key7] = value8
+			}
+		}
+		out.Env = Some(cloned6)
 	}
 	return out
 }
@@ -2156,26 +2036,18 @@ func (v *LayoutNodeSplit) UnmarshalJSON(data []byte) error {
 }
 
 type LayoutSetSplitRatioParams struct {
-	PaneID *string `json:"pane_id,omitempty"`
-	Path   []bool  `json:"path"`
-	Ratio  float64 `json:"ratio"`
-	TabID  *string `json:"tab_id,omitempty"`
+	PaneID Optional[string] `json:"pane_id,omitzero"`
+	Path   []bool           `json:"path"`
+	Ratio  float64          `json:"ratio"`
+	TabID  Optional[string] `json:"tab_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v LayoutSetSplitRatioParams) Clone() LayoutSetSplitRatioParams {
 	out := v
-	if v.PaneID != nil {
-		out.PaneID = new(string)
-		(*out.PaneID) = (*v.PaneID)
-	}
 	if v.Path != nil {
 		out.Path = make([]bool, len(v.Path))
 		copy(out.Path, v.Path)
-	}
-	if v.TabID != nil {
-		out.TabID = new(string)
-		(*out.TabID) = (*v.TabID)
 	}
 	return out
 }
@@ -2202,23 +2074,15 @@ func (v LayoutUpdatedSubscription) MarshalJSON() ([]byte, error) {
 }
 
 type NotificationShowParams struct {
-	Body     *string               `json:"body,omitempty"`
-	Position *ToastHerdrPosition   `json:"position,omitempty"`
-	Sound    NotificationShowSound `json:"sound,omitempty"`
-	Title    string                `json:"title"`
+	Body     Optional[string]                `json:"body,omitzero"`
+	Position Optional[ToastHerdrPosition]    `json:"position,omitzero"`
+	Sound    Optional[NotificationShowSound] `json:"sound,omitzero"`
+	Title    string                          `json:"title"`
 }
 
 // Clone returns a deep copy of v.
 func (v NotificationShowParams) Clone() NotificationShowParams {
 	out := v
-	if v.Body != nil {
-		out.Body = new(string)
-		(*out.Body) = (*v.Body)
-	}
-	if v.Position != nil {
-		out.Position = new(ToastHerdrPosition)
-		(*out.Position) = (*v.Position)
-	}
 	return out
 }
 
@@ -2378,17 +2242,13 @@ const (
 // PaneAgentStatusChangedSubscription is the "pane.agent_status_changed"
 // variant of Subscription.
 type PaneAgentStatusChangedSubscription struct {
-	AgentStatus *AgentStatus `json:"agent_status,omitempty"`
-	PaneID      string       `json:"pane_id"`
+	AgentStatus Optional[AgentStatus] `json:"agent_status,omitzero"`
+	PaneID      string                `json:"pane_id"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneAgentStatusChangedSubscription) Clone() PaneAgentStatusChangedSubscription {
 	out := v
-	if v.AgentStatus != nil {
-		out.AgentStatus = new(AgentStatus)
-		(*out.AgentStatus) = (*v.AgentStatus)
-	}
 	return out
 }
 
@@ -2404,22 +2264,14 @@ func (v PaneAgentStatusChangedSubscription) MarshalJSON() ([]byte, error) {
 }
 
 type PaneClearAgentAuthorityParams struct {
-	PaneID string  `json:"pane_id"`
-	Seq    *uint64 `json:"seq,omitempty"`
-	Source *string `json:"source,omitempty"`
+	PaneID string           `json:"pane_id"`
+	Seq    Optional[uint64] `json:"seq,omitzero"`
+	Source Optional[string] `json:"source,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneClearAgentAuthorityParams) Clone() PaneClearAgentAuthorityParams {
 	out := v
-	if v.Seq != nil {
-		out.Seq = new(uint64)
-		(*out.Seq) = (*v.Seq)
-	}
-	if v.Source != nil {
-		out.Source = new(string)
-		(*out.Source) = (*v.Source)
-	}
 	return out
 }
 
@@ -2460,19 +2312,15 @@ const (
 )
 
 type PaneCopyMotionParams struct {
-	ContentRevision *uint64        `json:"content_revision,omitempty"`
-	Cursor          PaneTextPoint  `json:"cursor"`
-	Motion          PaneCopyMotion `json:"motion"`
-	PaneID          string         `json:"pane_id"`
+	ContentRevision Optional[uint64] `json:"content_revision,omitzero"`
+	Cursor          PaneTextPoint    `json:"cursor"`
+	Motion          PaneCopyMotion   `json:"motion"`
+	PaneID          string           `json:"pane_id"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneCopyMotionParams) Clone() PaneCopyMotionParams {
 	out := v
-	if v.ContentRevision != nil {
-		out.ContentRevision = new(uint64)
-		(*out.ContentRevision) = (*v.ContentRevision)
-	}
 	out.Cursor = v.Cursor.Clone()
 	return out
 }
@@ -2490,7 +2338,7 @@ type PaneCopySearchParams struct {
 	Cursor          PaneTextPoint           `json:"cursor"`
 	Direction       PaneCopySearchDirection `json:"direction"`
 	PaneID          string                  `json:"pane_id"`
-	Previous        *PaneTextRange          `json:"previous,omitempty"`
+	Previous        Optional[PaneTextRange] `json:"previous,omitzero"`
 	Query           string                  `json:"query"`
 }
 
@@ -2498,9 +2346,10 @@ type PaneCopySearchParams struct {
 func (v PaneCopySearchParams) Clone() PaneCopySearchParams {
 	out := v
 	out.Cursor = v.Cursor.Clone()
-	if v.Previous != nil {
-		out.Previous = new(PaneTextRange)
-		(*out.Previous) = (*v.Previous).Clone()
+	if value1, ok2 := v.Previous.Get(); ok2 {
+		var cloned3 PaneTextRange
+		cloned3 = value1.Clone()
+		out.Previous = Some(cloned3)
 	}
 	return out
 }
@@ -2526,16 +2375,12 @@ func (v PaneCreatedSubscription) MarshalJSON() ([]byte, error) {
 }
 
 type PaneCurrentParams struct {
-	CallerPaneID *string `json:"caller_pane_id,omitempty"`
+	CallerPaneID Optional[string] `json:"caller_pane_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneCurrentParams) Clone() PaneCurrentParams {
 	out := v
-	if v.CallerPaneID != nil {
-		out.CallerPaneID = new(string)
-		(*out.CallerPaneID) = (*v.CallerPaneID)
-	}
 	return out
 }
 
@@ -2550,16 +2395,12 @@ const (
 )
 
 type PaneEdgesParams struct {
-	PaneID *string `json:"pane_id,omitempty"`
+	PaneID Optional[string] `json:"pane_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneEdgesParams) Clone() PaneEdgesParams {
 	out := v
-	if v.PaneID != nil {
-		out.PaneID = new(string)
-		(*out.PaneID) = (*v.PaneID)
-	}
 	return out
 }
 
@@ -2600,17 +2441,13 @@ func (v PaneExitedSubscription) MarshalJSON() ([]byte, error) {
 }
 
 type PaneFocusDirectionParams struct {
-	Direction PaneDirection `json:"direction"`
-	PaneID    *string       `json:"pane_id,omitempty"`
+	Direction PaneDirection    `json:"direction"`
+	PaneID    Optional[string] `json:"pane_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneFocusDirectionParams) Clone() PaneFocusDirectionParams {
 	out := v
-	if v.PaneID != nil {
-		out.PaneID = new(string)
-		(*out.PaneID) = (*v.PaneID)
-	}
 	return out
 }
 
@@ -2622,25 +2459,17 @@ const (
 )
 
 type PaneFocusDirectionResult struct {
-	Changed       bool                      `json:"changed"`
-	FocusedPaneID *string                   `json:"focused_pane_id,omitempty"`
-	Layout        PaneLayoutSnapshot        `json:"layout"`
-	Reason        *PaneFocusDirectionReason `json:"reason,omitempty"`
-	SourcePaneID  string                    `json:"source_pane_id"`
+	Changed       bool                               `json:"changed"`
+	FocusedPaneID Optional[string]                   `json:"focused_pane_id,omitzero"`
+	Layout        PaneLayoutSnapshot                 `json:"layout"`
+	Reason        Optional[PaneFocusDirectionReason] `json:"reason,omitzero"`
+	SourcePaneID  string                             `json:"source_pane_id"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneFocusDirectionResult) Clone() PaneFocusDirectionResult {
 	out := v
-	if v.FocusedPaneID != nil {
-		out.FocusedPaneID = new(string)
-		(*out.FocusedPaneID) = (*v.FocusedPaneID)
-	}
 	out.Layout = v.Layout.Clone()
-	if v.Reason != nil {
-		out.Reason = new(PaneFocusDirectionReason)
-		(*out.Reason) = (*v.Reason)
-	}
 	return out
 }
 
@@ -2665,17 +2494,13 @@ func (v PaneFocusedSubscription) MarshalJSON() ([]byte, error) {
 }
 
 type PaneGraphicsClearParams struct {
-	LayerID *string `json:"layer_id,omitempty"`
-	PaneID  string  `json:"pane_id"`
+	LayerID Optional[string] `json:"layer_id,omitzero"`
+	PaneID  string           `json:"pane_id"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneGraphicsClearParams) Clone() PaneGraphicsClearParams {
 	out := v
-	if v.LayerID != nil {
-		out.LayerID = new(string)
-		(*out.LayerID) = (*v.LayerID)
-	}
 	return out
 }
 
@@ -2690,139 +2515,94 @@ const (
 )
 
 type PaneGraphicsPlacementParams struct {
-	GridCols    *uint32 `json:"grid_cols,omitempty"`
-	GridRows    *uint32 `json:"grid_rows,omitempty"`
-	ViewportCol *int32  `json:"viewport_col,omitempty"`
-	ViewportRow *int32  `json:"viewport_row,omitempty"`
+	GridCols    Optional[uint32] `json:"grid_cols,omitzero"`
+	GridRows    Optional[uint32] `json:"grid_rows,omitzero"`
+	ViewportCol Optional[int32]  `json:"viewport_col,omitzero"`
+	ViewportRow Optional[int32]  `json:"viewport_row,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneGraphicsPlacementParams) Clone() PaneGraphicsPlacementParams {
 	out := v
-	if v.GridCols != nil {
-		out.GridCols = new(uint32)
-		(*out.GridCols) = (*v.GridCols)
-	}
-	if v.GridRows != nil {
-		out.GridRows = new(uint32)
-		(*out.GridRows) = (*v.GridRows)
-	}
-	if v.ViewportCol != nil {
-		out.ViewportCol = new(int32)
-		(*out.ViewportCol) = (*v.ViewportCol)
-	}
-	if v.ViewportRow != nil {
-		out.ViewportRow = new(int32)
-		(*out.ViewportRow) = (*v.ViewportRow)
-	}
 	return out
 }
 
 type PaneGraphicsSetParams struct {
-	DataBase64  string                       `json:"data_base64,omitempty"`
-	Format      PaneGraphicsFormat           `json:"format"`
-	ImageHeight uint32                       `json:"image_height"`
-	ImageWidth  uint32                       `json:"image_width"`
-	LayerID     *string                      `json:"layer_id,omitempty"`
-	PaneID      string                       `json:"pane_id"`
-	Placement   *PaneGraphicsPlacementParams `json:"placement,omitempty"`
-	ZIndex      *int32                       `json:"z_index,omitempty"`
+	DataBase64  Optional[string]                      `json:"data_base64,omitzero"`
+	Format      PaneGraphicsFormat                    `json:"format"`
+	ImageHeight uint32                                `json:"image_height"`
+	ImageWidth  uint32                                `json:"image_width"`
+	LayerID     Optional[string]                      `json:"layer_id,omitzero"`
+	PaneID      string                                `json:"pane_id"`
+	Placement   Optional[PaneGraphicsPlacementParams] `json:"placement,omitzero"`
+	ZIndex      Optional[int32]                       `json:"z_index,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneGraphicsSetParams) Clone() PaneGraphicsSetParams {
 	out := v
-	if v.LayerID != nil {
-		out.LayerID = new(string)
-		(*out.LayerID) = (*v.LayerID)
-	}
-	if v.Placement != nil {
-		out.Placement = new(PaneGraphicsPlacementParams)
-		(*out.Placement) = (*v.Placement).Clone()
-	}
-	if v.ZIndex != nil {
-		out.ZIndex = new(int32)
-		(*out.ZIndex) = (*v.ZIndex)
+	if value1, ok2 := v.Placement.Get(); ok2 {
+		var cloned3 PaneGraphicsPlacementParams
+		cloned3 = value1.Clone()
+		out.Placement = Some(cloned3)
 	}
 	return out
 }
 
 type PaneInfo struct {
-	Agent                 *string           `json:"agent,omitempty"`
-	AgentSession          *AgentSessionInfo `json:"agent_session,omitempty"`
-	AgentStatus           AgentStatus       `json:"agent_status"`
-	Cwd                   *string           `json:"cwd,omitempty"`
-	DisplayAgent          *string           `json:"display_agent,omitempty"`
-	Focused               bool              `json:"focused"`
-	ForegroundCwd         *string           `json:"foreground_cwd,omitempty"`
-	Label                 *string           `json:"label,omitempty"`
-	PaneID                string            `json:"pane_id"`
-	Revision              uint64            `json:"revision"`
-	Scroll                *PaneScrollInfo   `json:"scroll,omitempty"`
-	StateLabels           map[string]string `json:"state_labels,omitempty"`
-	TabID                 string            `json:"tab_id"`
-	TerminalID            string            `json:"terminal_id"`
-	TerminalTitle         *string           `json:"terminal_title,omitempty"`
-	TerminalTitleStripped *string           `json:"terminal_title_stripped,omitempty"`
-	Title                 *string           `json:"title,omitempty"`
-	Tokens                map[string]string `json:"tokens,omitempty"`
-	WorkspaceID           string            `json:"workspace_id"`
+	Agent                 Optional[string]            `json:"agent,omitzero"`
+	AgentSession          Optional[AgentSessionInfo]  `json:"agent_session,omitzero"`
+	AgentStatus           AgentStatus                 `json:"agent_status"`
+	Cwd                   Optional[string]            `json:"cwd,omitzero"`
+	DisplayAgent          Optional[string]            `json:"display_agent,omitzero"`
+	Focused               bool                        `json:"focused"`
+	ForegroundCwd         Optional[string]            `json:"foreground_cwd,omitzero"`
+	Label                 Optional[string]            `json:"label,omitzero"`
+	PaneID                string                      `json:"pane_id"`
+	Revision              uint64                      `json:"revision"`
+	Scroll                Optional[PaneScrollInfo]    `json:"scroll,omitzero"`
+	StateLabels           Optional[map[string]string] `json:"state_labels,omitzero"`
+	TabID                 string                      `json:"tab_id"`
+	TerminalID            string                      `json:"terminal_id"`
+	TerminalTitle         Optional[string]            `json:"terminal_title,omitzero"`
+	TerminalTitleStripped Optional[string]            `json:"terminal_title_stripped,omitzero"`
+	Title                 Optional[string]            `json:"title,omitzero"`
+	Tokens                Optional[map[string]string] `json:"tokens,omitzero"`
+	WorkspaceID           string                      `json:"workspace_id"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneInfo) Clone() PaneInfo {
 	out := v
-	if v.Agent != nil {
-		out.Agent = new(string)
-		(*out.Agent) = (*v.Agent)
+	if value1, ok2 := v.AgentSession.Get(); ok2 {
+		var cloned3 AgentSessionInfo
+		cloned3 = value1.Clone()
+		out.AgentSession = Some(cloned3)
 	}
-	if v.AgentSession != nil {
-		out.AgentSession = new(AgentSessionInfo)
-		(*out.AgentSession) = (*v.AgentSession).Clone()
+	if value4, ok5 := v.Scroll.Get(); ok5 {
+		var cloned6 PaneScrollInfo
+		cloned6 = value4.Clone()
+		out.Scroll = Some(cloned6)
 	}
-	if v.Cwd != nil {
-		out.Cwd = new(string)
-		(*out.Cwd) = (*v.Cwd)
-	}
-	if v.DisplayAgent != nil {
-		out.DisplayAgent = new(string)
-		(*out.DisplayAgent) = (*v.DisplayAgent)
-	}
-	if v.ForegroundCwd != nil {
-		out.ForegroundCwd = new(string)
-		(*out.ForegroundCwd) = (*v.ForegroundCwd)
-	}
-	if v.Label != nil {
-		out.Label = new(string)
-		(*out.Label) = (*v.Label)
-	}
-	if v.Scroll != nil {
-		out.Scroll = new(PaneScrollInfo)
-		(*out.Scroll) = (*v.Scroll).Clone()
-	}
-	if v.StateLabels != nil {
-		out.StateLabels = make(map[string]string, len(v.StateLabels))
-		for key1, value2 := range v.StateLabels {
-			out.StateLabels[key1] = value2
+	if value7, ok8 := v.StateLabels.Get(); ok8 {
+		var cloned9 map[string]string
+		if value7 != nil {
+			cloned9 = make(map[string]string, len(value7))
+			for key10, value11 := range value7 {
+				cloned9[key10] = value11
+			}
 		}
+		out.StateLabels = Some(cloned9)
 	}
-	if v.TerminalTitle != nil {
-		out.TerminalTitle = new(string)
-		(*out.TerminalTitle) = (*v.TerminalTitle)
-	}
-	if v.TerminalTitleStripped != nil {
-		out.TerminalTitleStripped = new(string)
-		(*out.TerminalTitleStripped) = (*v.TerminalTitleStripped)
-	}
-	if v.Title != nil {
-		out.Title = new(string)
-		(*out.Title) = (*v.Title)
-	}
-	if v.Tokens != nil {
-		out.Tokens = make(map[string]string, len(v.Tokens))
-		for key3, value4 := range v.Tokens {
-			out.Tokens[key3] = value4
+	if value12, ok13 := v.Tokens.Get(); ok13 {
+		var cloned14 map[string]string
+		if value12 != nil {
+			cloned14 = make(map[string]string, len(value12))
+			for key15, value16 := range value12 {
+				cloned14[key15] = value16
+			}
 		}
+		out.Tokens = Some(cloned14)
 	}
 	return out
 }
@@ -2852,16 +2632,12 @@ func (v PaneLayoutPane) Clone() PaneLayoutPane {
 }
 
 type PaneLayoutParams struct {
-	PaneID *string `json:"pane_id,omitempty"`
+	PaneID Optional[string] `json:"pane_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneLayoutParams) Clone() PaneLayoutParams {
 	out := v
-	if v.PaneID != nil {
-		out.PaneID = new(string)
-		(*out.PaneID) = (*v.PaneID)
-	}
 	return out
 }
 
@@ -2922,38 +2698,26 @@ func (v PaneLayoutSplit) Clone() PaneLayoutSplit {
 }
 
 type PaneLinkActivateParams struct {
-	Col              uint16  `json:"col"`
-	ContentRevision  *uint64 `json:"content_revision,omitempty"`
-	OffsetFromBottom *uint64 `json:"offset_from_bottom,omitempty"`
-	PaneID           string  `json:"pane_id"`
-	ViewportRow      uint16  `json:"viewport_row"`
+	Col              uint16           `json:"col"`
+	ContentRevision  Optional[uint64] `json:"content_revision,omitzero"`
+	OffsetFromBottom Optional[uint64] `json:"offset_from_bottom,omitzero"`
+	PaneID           string           `json:"pane_id"`
+	ViewportRow      uint16           `json:"viewport_row"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneLinkActivateParams) Clone() PaneLinkActivateParams {
 	out := v
-	if v.ContentRevision != nil {
-		out.ContentRevision = new(uint64)
-		(*out.ContentRevision) = (*v.ContentRevision)
-	}
-	if v.OffsetFromBottom != nil {
-		out.OffsetFromBottom = new(uint64)
-		(*out.OffsetFromBottom) = (*v.OffsetFromBottom)
-	}
 	return out
 }
 
 type PaneListParams struct {
-	WorkspaceID *string `json:"workspace_id,omitempty"`
+	WorkspaceID Optional[string] `json:"workspace_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneListParams) Clone() PaneListParams {
 	out := v
-	if v.WorkspaceID != nil {
-		out.WorkspaceID = new(string)
-		(*out.WorkspaceID) = (*v.WorkspaceID)
-	}
 	return out
 }
 
@@ -3033,21 +2797,13 @@ func decodePaneMoveDestination(data []byte) (PaneMoveDestination, error) {
 // PaneMoveDestinationNewTab is the "new_tab" variant of
 // PaneMoveDestination.
 type PaneMoveDestinationNewTab struct {
-	Label       *string `json:"label,omitempty"`
-	WorkspaceID *string `json:"workspace_id,omitempty"`
+	Label       Optional[string] `json:"label,omitzero"`
+	WorkspaceID Optional[string] `json:"workspace_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneMoveDestinationNewTab) Clone() PaneMoveDestinationNewTab {
 	out := v
-	if v.Label != nil {
-		out.Label = new(string)
-		(*out.Label) = (*v.Label)
-	}
-	if v.WorkspaceID != nil {
-		out.WorkspaceID = new(string)
-		(*out.WorkspaceID) = (*v.WorkspaceID)
-	}
 	return out
 }
 
@@ -3065,21 +2821,13 @@ func (v PaneMoveDestinationNewTab) MarshalJSON() ([]byte, error) {
 // PaneMoveDestinationNewWorkspace is the "new_workspace" variant of
 // PaneMoveDestination.
 type PaneMoveDestinationNewWorkspace struct {
-	Label    *string `json:"label,omitempty"`
-	TabLabel *string `json:"tab_label,omitempty"`
+	Label    Optional[string] `json:"label,omitzero"`
+	TabLabel Optional[string] `json:"tab_label,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneMoveDestinationNewWorkspace) Clone() PaneMoveDestinationNewWorkspace {
 	out := v
-	if v.Label != nil {
-		out.Label = new(string)
-		(*out.Label) = (*v.Label)
-	}
-	if v.TabLabel != nil {
-		out.TabLabel = new(string)
-		(*out.TabLabel) = (*v.TabLabel)
-	}
 	return out
 }
 
@@ -3096,23 +2844,15 @@ func (v PaneMoveDestinationNewWorkspace) MarshalJSON() ([]byte, error) {
 
 // PaneMoveDestinationTab is the "tab" variant of PaneMoveDestination.
 type PaneMoveDestinationTab struct {
-	Ratio        *float64       `json:"ratio,omitempty"`
-	Split        SplitDirection `json:"split"`
-	TabID        string         `json:"tab_id"`
-	TargetPaneID *string        `json:"target_pane_id,omitempty"`
+	Ratio        Optional[float64] `json:"ratio,omitzero"`
+	Split        SplitDirection    `json:"split"`
+	TabID        string            `json:"tab_id"`
+	TargetPaneID Optional[string]  `json:"target_pane_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneMoveDestinationTab) Clone() PaneMoveDestinationTab {
 	out := v
-	if v.Ratio != nil {
-		out.Ratio = new(float64)
-		(*out.Ratio) = (*v.Ratio)
-	}
-	if v.TargetPaneID != nil {
-		out.TargetPaneID = new(string)
-		(*out.TargetPaneID) = (*v.TargetPaneID)
-	}
 	return out
 }
 
@@ -3129,7 +2869,7 @@ func (v PaneMoveDestinationTab) MarshalJSON() ([]byte, error) {
 
 type PaneMoveParams struct {
 	Destination PaneMoveDestination `json:"destination"`
-	Focus       *bool               `json:"focus,omitempty"`
+	Focus       Optional[bool]      `json:"focus,omitzero"`
 	PaneID      string              `json:"pane_id"`
 }
 
@@ -3137,10 +2877,6 @@ type PaneMoveParams struct {
 func (v PaneMoveParams) Clone() PaneMoveParams {
 	out := v
 	out.Destination = clonePaneMoveDestination(v.Destination)
-	if v.Focus != nil {
-		out.Focus = new(bool)
-		(*out.Focus) = (*v.Focus)
-	}
 	return out
 }
 
@@ -3174,48 +2910,39 @@ const (
 )
 
 type PaneMoveResult struct {
-	Changed             bool                `json:"changed"`
-	ClosedTabID         *string             `json:"closed_tab_id,omitempty"`
-	ClosedWorkspaceID   *string             `json:"closed_workspace_id,omitempty"`
-	CreatedTab          *TabInfo            `json:"created_tab,omitempty"`
-	CreatedWorkspace    *WorkspaceInfo      `json:"created_workspace,omitempty"`
-	FocusedPaneID       string              `json:"focused_pane_id"`
-	Pane                PaneInfo            `json:"pane"`
-	PreviousPaneID      string              `json:"previous_pane_id"`
-	PreviousTabID       string              `json:"previous_tab_id"`
-	PreviousWorkspaceID string              `json:"previous_workspace_id"`
-	Reason              *PaneMoveReason     `json:"reason,omitempty"`
-	SourceLayout        *PaneLayoutSnapshot `json:"source_layout,omitempty"`
-	TargetLayout        PaneLayoutSnapshot  `json:"target_layout"`
+	Changed             bool                         `json:"changed"`
+	ClosedTabID         Optional[string]             `json:"closed_tab_id,omitzero"`
+	ClosedWorkspaceID   Optional[string]             `json:"closed_workspace_id,omitzero"`
+	CreatedTab          Optional[TabInfo]            `json:"created_tab,omitzero"`
+	CreatedWorkspace    Optional[WorkspaceInfo]      `json:"created_workspace,omitzero"`
+	FocusedPaneID       string                       `json:"focused_pane_id"`
+	Pane                PaneInfo                     `json:"pane"`
+	PreviousPaneID      string                       `json:"previous_pane_id"`
+	PreviousTabID       string                       `json:"previous_tab_id"`
+	PreviousWorkspaceID string                       `json:"previous_workspace_id"`
+	Reason              Optional[PaneMoveReason]     `json:"reason,omitzero"`
+	SourceLayout        Optional[PaneLayoutSnapshot] `json:"source_layout,omitzero"`
+	TargetLayout        PaneLayoutSnapshot           `json:"target_layout"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneMoveResult) Clone() PaneMoveResult {
 	out := v
-	if v.ClosedTabID != nil {
-		out.ClosedTabID = new(string)
-		(*out.ClosedTabID) = (*v.ClosedTabID)
+	if value1, ok2 := v.CreatedTab.Get(); ok2 {
+		var cloned3 TabInfo
+		cloned3 = value1.Clone()
+		out.CreatedTab = Some(cloned3)
 	}
-	if v.ClosedWorkspaceID != nil {
-		out.ClosedWorkspaceID = new(string)
-		(*out.ClosedWorkspaceID) = (*v.ClosedWorkspaceID)
-	}
-	if v.CreatedTab != nil {
-		out.CreatedTab = new(TabInfo)
-		(*out.CreatedTab) = (*v.CreatedTab).Clone()
-	}
-	if v.CreatedWorkspace != nil {
-		out.CreatedWorkspace = new(WorkspaceInfo)
-		(*out.CreatedWorkspace) = (*v.CreatedWorkspace).Clone()
+	if value4, ok5 := v.CreatedWorkspace.Get(); ok5 {
+		var cloned6 WorkspaceInfo
+		cloned6 = value4.Clone()
+		out.CreatedWorkspace = Some(cloned6)
 	}
 	out.Pane = v.Pane.Clone()
-	if v.Reason != nil {
-		out.Reason = new(PaneMoveReason)
-		(*out.Reason) = (*v.Reason)
-	}
-	if v.SourceLayout != nil {
-		out.SourceLayout = new(PaneLayoutSnapshot)
-		(*out.SourceLayout) = (*v.SourceLayout).Clone()
+	if value7, ok8 := v.SourceLayout.Get(); ok8 {
+		var cloned9 PaneLayoutSnapshot
+		cloned9 = value7.Clone()
+		out.SourceLayout = Some(cloned9)
 	}
 	out.TargetLayout = v.TargetLayout.Clone()
 	return out
@@ -3242,24 +2969,20 @@ func (v PaneMovedSubscription) MarshalJSON() ([]byte, error) {
 }
 
 type PaneNeighborParams struct {
-	Direction PaneDirection `json:"direction"`
-	PaneID    *string       `json:"pane_id,omitempty"`
+	Direction PaneDirection    `json:"direction"`
+	PaneID    Optional[string] `json:"pane_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneNeighborParams) Clone() PaneNeighborParams {
 	out := v
-	if v.PaneID != nil {
-		out.PaneID = new(string)
-		(*out.PaneID) = (*v.PaneID)
-	}
 	return out
 }
 
 type PaneNeighborResult struct {
 	Direction      PaneDirection      `json:"direction"`
 	Layout         PaneLayoutSnapshot `json:"layout"`
-	NeighborPaneID *string            `json:"neighbor_pane_id,omitempty"`
+	NeighborPaneID Optional[string]   `json:"neighbor_pane_id,omitzero"`
 	PaneID         string             `json:"pane_id"`
 }
 
@@ -3267,35 +2990,23 @@ type PaneNeighborResult struct {
 func (v PaneNeighborResult) Clone() PaneNeighborResult {
 	out := v
 	out.Layout = v.Layout.Clone()
-	if v.NeighborPaneID != nil {
-		out.NeighborPaneID = new(string)
-		(*out.NeighborPaneID) = (*v.NeighborPaneID)
-	}
 	return out
 }
 
 // PaneOutputMatchedSubscription is the "pane.output_matched" variant of
 // Subscription.
 type PaneOutputMatchedSubscription struct {
-	Lines     *uint32     `json:"lines,omitempty"`
-	Match     OutputMatch `json:"match"`
-	PaneID    string      `json:"pane_id"`
-	Source    ReadSource  `json:"source"`
-	StripANSI *bool       `json:"strip_ansi,omitempty"`
+	Lines     Optional[uint32] `json:"lines,omitzero"`
+	Match     OutputMatch      `json:"match"`
+	PaneID    string           `json:"pane_id"`
+	Source    ReadSource       `json:"source"`
+	StripANSI Optional[bool]   `json:"strip_ansi,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneOutputMatchedSubscription) Clone() PaneOutputMatchedSubscription {
 	out := v
-	if v.Lines != nil {
-		out.Lines = new(uint32)
-		(*out.Lines) = (*v.Lines)
-	}
 	out.Match = cloneOutputMatch(v.Match)
-	if v.StripANSI != nil {
-		out.StripANSI = new(bool)
-		(*out.StripANSI) = (*v.StripANSI)
-	}
 	return out
 }
 
@@ -3332,101 +3043,73 @@ func (v *PaneOutputMatchedSubscription) UnmarshalJSON(data []byte) error {
 }
 
 type PaneProcessInfo struct {
-	ForegroundProcessGroupID *uint32                  `json:"foreground_process_group_id,omitempty"`
-	ForegroundProcesses      []PaneProcessInfoProcess `json:"foreground_processes,omitempty"`
-	PaneID                   string                   `json:"pane_id"`
-	ShellPID                 *uint32                  `json:"shell_pid,omitempty"`
-	TTY                      *string                  `json:"tty,omitempty"`
+	ForegroundProcessGroupID Optional[uint32]                   `json:"foreground_process_group_id,omitzero"`
+	ForegroundProcesses      Optional[[]PaneProcessInfoProcess] `json:"foreground_processes,omitzero"`
+	PaneID                   string                             `json:"pane_id"`
+	ShellPID                 Optional[uint32]                   `json:"shell_pid,omitzero"`
+	TTY                      Optional[string]                   `json:"tty,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneProcessInfo) Clone() PaneProcessInfo {
 	out := v
-	if v.ForegroundProcessGroupID != nil {
-		out.ForegroundProcessGroupID = new(uint32)
-		(*out.ForegroundProcessGroupID) = (*v.ForegroundProcessGroupID)
-	}
-	if v.ForegroundProcesses != nil {
-		out.ForegroundProcesses = make([]PaneProcessInfoProcess, len(v.ForegroundProcesses))
-		for i1 := range v.ForegroundProcesses {
-			out.ForegroundProcesses[i1] = v.ForegroundProcesses[i1].Clone()
+	if value1, ok2 := v.ForegroundProcesses.Get(); ok2 {
+		var cloned3 []PaneProcessInfoProcess
+		if value1 != nil {
+			cloned3 = make([]PaneProcessInfoProcess, len(value1))
+			for i4 := range value1 {
+				cloned3[i4] = value1[i4].Clone()
+			}
 		}
-	}
-	if v.ShellPID != nil {
-		out.ShellPID = new(uint32)
-		(*out.ShellPID) = (*v.ShellPID)
-	}
-	if v.TTY != nil {
-		out.TTY = new(string)
-		(*out.TTY) = (*v.TTY)
+		out.ForegroundProcesses = Some(cloned3)
 	}
 	return out
 }
 
 type PaneProcessInfoParams struct {
-	PaneID *string `json:"pane_id,omitempty"`
+	PaneID Optional[string] `json:"pane_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneProcessInfoParams) Clone() PaneProcessInfoParams {
 	out := v
-	if v.PaneID != nil {
-		out.PaneID = new(string)
-		(*out.PaneID) = (*v.PaneID)
-	}
 	return out
 }
 
 type PaneProcessInfoProcess struct {
-	Argv    []string `json:"argv,omitempty"`
-	Argv0   *string  `json:"argv0,omitempty"`
-	Cmdline *string  `json:"cmdline,omitempty"`
-	Cwd     *string  `json:"cwd,omitempty"`
-	Name    string   `json:"name"`
-	PID     uint32   `json:"pid"`
+	Argv    Optional[[]string] `json:"argv,omitzero"`
+	Argv0   Optional[string]   `json:"argv0,omitzero"`
+	Cmdline Optional[string]   `json:"cmdline,omitzero"`
+	Cwd     Optional[string]   `json:"cwd,omitzero"`
+	Name    string             `json:"name"`
+	PID     uint32             `json:"pid"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneProcessInfoProcess) Clone() PaneProcessInfoProcess {
 	out := v
-	if v.Argv != nil {
-		out.Argv = make([]string, len(v.Argv))
-		copy(out.Argv, v.Argv)
-	}
-	if v.Argv0 != nil {
-		out.Argv0 = new(string)
-		(*out.Argv0) = (*v.Argv0)
-	}
-	if v.Cmdline != nil {
-		out.Cmdline = new(string)
-		(*out.Cmdline) = (*v.Cmdline)
-	}
-	if v.Cwd != nil {
-		out.Cwd = new(string)
-		(*out.Cwd) = (*v.Cwd)
+	if value1, ok2 := v.Argv.Get(); ok2 {
+		var cloned3 []string
+		if value1 != nil {
+			cloned3 = make([]string, len(value1))
+			copy(cloned3, value1)
+		}
+		out.Argv = Some(cloned3)
 	}
 	return out
 }
 
 type PaneReadParams struct {
-	Format    ReadFormat `json:"format,omitempty"`
-	Lines     *uint32    `json:"lines,omitempty"`
-	PaneID    string     `json:"pane_id"`
-	Source    ReadSource `json:"source"`
-	StripANSI *bool      `json:"strip_ansi,omitempty"`
+	Format    Optional[ReadFormat] `json:"format,omitzero"`
+	Lines     Optional[uint32]     `json:"lines,omitzero"`
+	PaneID    string               `json:"pane_id"`
+	Source    ReadSource           `json:"source"`
+	StripANSI Optional[bool]       `json:"strip_ansi,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneReadParams) Clone() PaneReadParams {
 	out := v
-	if v.Lines != nil {
-		out.Lines = new(uint32)
-		(*out.Lines) = (*v.Lines)
-	}
-	if v.StripANSI != nil {
-		out.StripANSI = new(bool)
-		(*out.StripANSI) = (*v.StripANSI)
-	}
 	return out
 }
 
@@ -3448,194 +3131,118 @@ func (v PaneReadResult) Clone() PaneReadResult {
 }
 
 type PaneReleaseAgentParams struct {
-	Agent  string  `json:"agent"`
-	PaneID string  `json:"pane_id"`
-	Seq    *uint64 `json:"seq,omitempty"`
-	Source string  `json:"source"`
+	Agent  string           `json:"agent"`
+	PaneID string           `json:"pane_id"`
+	Seq    Optional[uint64] `json:"seq,omitzero"`
+	Source string           `json:"source"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneReleaseAgentParams) Clone() PaneReleaseAgentParams {
 	out := v
-	if v.Seq != nil {
-		out.Seq = new(uint64)
-		(*out.Seq) = (*v.Seq)
-	}
 	return out
 }
 
 type PaneRenameParams struct {
-	Label  *string `json:"label,omitempty"`
-	PaneID string  `json:"pane_id"`
+	Label  Optional[string] `json:"label,omitzero"`
+	PaneID string           `json:"pane_id"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneRenameParams) Clone() PaneRenameParams {
 	out := v
-	if v.Label != nil {
-		out.Label = new(string)
-		(*out.Label) = (*v.Label)
-	}
 	return out
 }
 
 type PaneReportAgentParams struct {
-	Agent            string         `json:"agent"`
-	AgentSessionID   *string        `json:"agent_session_id,omitempty"`
-	AgentSessionPath *string        `json:"agent_session_path,omitempty"`
-	Message          *string        `json:"message,omitempty"`
-	PaneID           string         `json:"pane_id"`
-	Seq              *uint64        `json:"seq,omitempty"`
-	Source           string         `json:"source"`
-	State            PaneAgentState `json:"state"`
+	Agent            string           `json:"agent"`
+	AgentSessionID   Optional[string] `json:"agent_session_id,omitzero"`
+	AgentSessionPath Optional[string] `json:"agent_session_path,omitzero"`
+	Message          Optional[string] `json:"message,omitzero"`
+	PaneID           string           `json:"pane_id"`
+	Seq              Optional[uint64] `json:"seq,omitzero"`
+	Source           string           `json:"source"`
+	State            PaneAgentState   `json:"state"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneReportAgentParams) Clone() PaneReportAgentParams {
 	out := v
-	if v.AgentSessionID != nil {
-		out.AgentSessionID = new(string)
-		(*out.AgentSessionID) = (*v.AgentSessionID)
-	}
-	if v.AgentSessionPath != nil {
-		out.AgentSessionPath = new(string)
-		(*out.AgentSessionPath) = (*v.AgentSessionPath)
-	}
-	if v.Message != nil {
-		out.Message = new(string)
-		(*out.Message) = (*v.Message)
-	}
-	if v.Seq != nil {
-		out.Seq = new(uint64)
-		(*out.Seq) = (*v.Seq)
-	}
 	return out
 }
 
 type PaneReportAgentSessionParams struct {
-	Agent              string  `json:"agent"`
-	AgentSessionID     *string `json:"agent_session_id,omitempty"`
-	AgentSessionPath   *string `json:"agent_session_path,omitempty"`
-	PaneID             string  `json:"pane_id"`
-	Seq                *uint64 `json:"seq,omitempty"`
-	SessionStartSource *string `json:"session_start_source,omitempty"`
-	Source             string  `json:"source"`
+	Agent              string           `json:"agent"`
+	AgentSessionID     Optional[string] `json:"agent_session_id,omitzero"`
+	AgentSessionPath   Optional[string] `json:"agent_session_path,omitzero"`
+	PaneID             string           `json:"pane_id"`
+	Seq                Optional[uint64] `json:"seq,omitzero"`
+	SessionStartSource Optional[string] `json:"session_start_source,omitzero"`
+	Source             string           `json:"source"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneReportAgentSessionParams) Clone() PaneReportAgentSessionParams {
 	out := v
-	if v.AgentSessionID != nil {
-		out.AgentSessionID = new(string)
-		(*out.AgentSessionID) = (*v.AgentSessionID)
-	}
-	if v.AgentSessionPath != nil {
-		out.AgentSessionPath = new(string)
-		(*out.AgentSessionPath) = (*v.AgentSessionPath)
-	}
-	if v.Seq != nil {
-		out.Seq = new(uint64)
-		(*out.Seq) = (*v.Seq)
-	}
-	if v.SessionStartSource != nil {
-		out.SessionStartSource = new(string)
-		(*out.SessionStartSource) = (*v.SessionStartSource)
-	}
 	return out
 }
 
 type PaneReportMetadataParams struct {
-	Agent             *string            `json:"agent,omitempty"`
-	AppliesToSource   *string            `json:"applies_to_source,omitempty"`
-	ClearDisplayAgent *bool              `json:"clear_display_agent,omitempty"`
-	ClearStateLabels  *bool              `json:"clear_state_labels,omitempty"`
-	ClearTitle        *bool              `json:"clear_title,omitempty"`
-	DisplayAgent      *string            `json:"display_agent,omitempty"`
-	PaneID            string             `json:"pane_id"`
-	Seq               *uint64            `json:"seq,omitempty"`
-	Source            string             `json:"source"`
-	StateLabels       map[string]string  `json:"state_labels,omitempty"`
-	Title             *string            `json:"title,omitempty"`
-	Tokens            map[string]*string `json:"tokens,omitempty"`
-	TTLMs             *uint64            `json:"ttl_ms,omitempty"`
+	Agent             Optional[string]             `json:"agent,omitzero"`
+	AppliesToSource   Optional[string]             `json:"applies_to_source,omitzero"`
+	ClearDisplayAgent Optional[bool]               `json:"clear_display_agent,omitzero"`
+	ClearStateLabels  Optional[bool]               `json:"clear_state_labels,omitzero"`
+	ClearTitle        Optional[bool]               `json:"clear_title,omitzero"`
+	DisplayAgent      Optional[string]             `json:"display_agent,omitzero"`
+	PaneID            string                       `json:"pane_id"`
+	Seq               Optional[uint64]             `json:"seq,omitzero"`
+	Source            string                       `json:"source"`
+	StateLabels       Optional[map[string]string]  `json:"state_labels,omitzero"`
+	Title             Optional[string]             `json:"title,omitzero"`
+	Tokens            Optional[map[string]*string] `json:"tokens,omitzero"`
+	TTLMs             Optional[uint64]             `json:"ttl_ms,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneReportMetadataParams) Clone() PaneReportMetadataParams {
 	out := v
-	if v.Agent != nil {
-		out.Agent = new(string)
-		(*out.Agent) = (*v.Agent)
-	}
-	if v.AppliesToSource != nil {
-		out.AppliesToSource = new(string)
-		(*out.AppliesToSource) = (*v.AppliesToSource)
-	}
-	if v.ClearDisplayAgent != nil {
-		out.ClearDisplayAgent = new(bool)
-		(*out.ClearDisplayAgent) = (*v.ClearDisplayAgent)
-	}
-	if v.ClearStateLabels != nil {
-		out.ClearStateLabels = new(bool)
-		(*out.ClearStateLabels) = (*v.ClearStateLabels)
-	}
-	if v.ClearTitle != nil {
-		out.ClearTitle = new(bool)
-		(*out.ClearTitle) = (*v.ClearTitle)
-	}
-	if v.DisplayAgent != nil {
-		out.DisplayAgent = new(string)
-		(*out.DisplayAgent) = (*v.DisplayAgent)
-	}
-	if v.Seq != nil {
-		out.Seq = new(uint64)
-		(*out.Seq) = (*v.Seq)
-	}
-	if v.StateLabels != nil {
-		out.StateLabels = make(map[string]string, len(v.StateLabels))
-		for key1, value2 := range v.StateLabels {
-			out.StateLabels[key1] = value2
-		}
-	}
-	if v.Title != nil {
-		out.Title = new(string)
-		(*out.Title) = (*v.Title)
-	}
-	if v.Tokens != nil {
-		out.Tokens = make(map[string]*string, len(v.Tokens))
-		for key3, value4 := range v.Tokens {
-			var cloned5 *string
-			if value4 != nil {
-				cloned5 = new(string)
-				(*cloned5) = (*value4)
+	if value1, ok2 := v.StateLabels.Get(); ok2 {
+		var cloned3 map[string]string
+		if value1 != nil {
+			cloned3 = make(map[string]string, len(value1))
+			for key4, value5 := range value1 {
+				cloned3[key4] = value5
 			}
-			out.Tokens[key3] = cloned5
 		}
+		out.StateLabels = Some(cloned3)
 	}
-	if v.TTLMs != nil {
-		out.TTLMs = new(uint64)
-		(*out.TTLMs) = (*v.TTLMs)
+	if value6, ok7 := v.Tokens.Get(); ok7 {
+		var cloned8 map[string]*string
+		if value6 != nil {
+			cloned8 = make(map[string]*string, len(value6))
+			for key9, value10 := range value6 {
+				var cloned11 *string
+				if value10 != nil {
+					cloned11 = new(string)
+					(*cloned11) = (*value10)
+				}
+				cloned8[key9] = cloned11
+			}
+		}
+		out.Tokens = Some(cloned8)
 	}
 	return out
 }
 
 type PaneResizeParams struct {
-	Amount    *float64      `json:"amount,omitempty"`
-	Direction PaneDirection `json:"direction"`
-	PaneID    *string       `json:"pane_id,omitempty"`
+	Amount    Optional[float64] `json:"amount,omitzero"`
+	Direction PaneDirection     `json:"direction"`
+	PaneID    Optional[string]  `json:"pane_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneResizeParams) Clone() PaneResizeParams {
 	out := v
-	if v.Amount != nil {
-		out.Amount = new(float64)
-		(*out.Amount) = (*v.Amount)
-	}
-	if v.PaneID != nil {
-		out.PaneID = new(string)
-		(*out.PaneID) = (*v.PaneID)
-	}
 	return out
 }
 
@@ -3647,21 +3254,17 @@ const (
 )
 
 type PaneResizeResult struct {
-	Changed       bool               `json:"changed"`
-	FocusedPaneID string             `json:"focused_pane_id"`
-	Layout        PaneLayoutSnapshot `json:"layout"`
-	PaneID        string             `json:"pane_id"`
-	Reason        *PaneResizeReason  `json:"reason,omitempty"`
+	Changed       bool                       `json:"changed"`
+	FocusedPaneID string                     `json:"focused_pane_id"`
+	Layout        PaneLayoutSnapshot         `json:"layout"`
+	PaneID        string                     `json:"pane_id"`
+	Reason        Optional[PaneResizeReason] `json:"reason,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneResizeResult) Clone() PaneResizeResult {
 	out := v
 	out.Layout = v.Layout.Clone()
-	if v.Reason != nil {
-		out.Reason = new(PaneResizeReason)
-		(*out.Reason) = (*v.Reason)
-	}
 	return out
 }
 
@@ -3720,36 +3323,36 @@ func (v PaneScrollParams) Clone() PaneScrollParams {
 }
 
 type PaneSelectionReadParams struct {
-	Anchor          PaneTextPoint `json:"anchor"`
-	ContentRevision *uint64       `json:"content_revision,omitempty"`
-	Cursor          PaneTextPoint `json:"cursor"`
-	PaneID          string        `json:"pane_id"`
+	Anchor          PaneTextPoint    `json:"anchor"`
+	ContentRevision Optional[uint64] `json:"content_revision,omitzero"`
+	Cursor          PaneTextPoint    `json:"cursor"`
+	PaneID          string           `json:"pane_id"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneSelectionReadParams) Clone() PaneSelectionReadParams {
 	out := v
 	out.Anchor = v.Anchor.Clone()
-	if v.ContentRevision != nil {
-		out.ContentRevision = new(uint64)
-		(*out.ContentRevision) = (*v.ContentRevision)
-	}
 	out.Cursor = v.Cursor.Clone()
 	return out
 }
 
 type PaneSendInputParams struct {
-	Keys   []string `json:"keys,omitempty"`
-	PaneID string   `json:"pane_id"`
-	Text   string   `json:"text,omitempty"`
+	Keys   Optional[[]string] `json:"keys,omitzero"`
+	PaneID string             `json:"pane_id"`
+	Text   Optional[string]   `json:"text,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneSendInputParams) Clone() PaneSendInputParams {
 	out := v
-	if v.Keys != nil {
-		out.Keys = make([]string, len(v.Keys))
-		copy(out.Keys, v.Keys)
+	if value1, ok2 := v.Keys.Get(); ok2 {
+		var cloned3 []string
+		if value1 != nil {
+			cloned3 = make([]string, len(value1))
+			copy(cloned3, value1)
+		}
+		out.Keys = Some(cloned3)
 	}
 	return out
 }
@@ -3781,74 +3384,42 @@ func (v PaneSendTextParams) Clone() PaneSendTextParams {
 }
 
 type PaneSplitParams struct {
-	Cwd          *string              `json:"cwd,omitempty"`
-	Direction    SplitDirection       `json:"direction"`
-	Env          map[string]string    `json:"env,omitempty"`
-	Focus        *bool                `json:"focus,omitempty"`
-	Ratio        *float64             `json:"ratio,omitempty"`
-	RightClick   PaneRightClickTarget `json:"right_click,omitempty"`
-	TargetPaneID *string              `json:"target_pane_id,omitempty"`
-	WorkspaceID  *string              `json:"workspace_id,omitempty"`
+	Cwd          Optional[string]               `json:"cwd,omitzero"`
+	Direction    SplitDirection                 `json:"direction"`
+	Env          Optional[map[string]string]    `json:"env,omitzero"`
+	Focus        Optional[bool]                 `json:"focus,omitzero"`
+	Ratio        Optional[float64]              `json:"ratio,omitzero"`
+	RightClick   Optional[PaneRightClickTarget] `json:"right_click,omitzero"`
+	TargetPaneID Optional[string]               `json:"target_pane_id,omitzero"`
+	WorkspaceID  Optional[string]               `json:"workspace_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneSplitParams) Clone() PaneSplitParams {
 	out := v
-	if v.Cwd != nil {
-		out.Cwd = new(string)
-		(*out.Cwd) = (*v.Cwd)
-	}
-	if v.Env != nil {
-		out.Env = make(map[string]string, len(v.Env))
-		for key1, value2 := range v.Env {
-			out.Env[key1] = value2
+	if value1, ok2 := v.Env.Get(); ok2 {
+		var cloned3 map[string]string
+		if value1 != nil {
+			cloned3 = make(map[string]string, len(value1))
+			for key4, value5 := range value1 {
+				cloned3[key4] = value5
+			}
 		}
-	}
-	if v.Focus != nil {
-		out.Focus = new(bool)
-		(*out.Focus) = (*v.Focus)
-	}
-	if v.Ratio != nil {
-		out.Ratio = new(float64)
-		(*out.Ratio) = (*v.Ratio)
-	}
-	if v.TargetPaneID != nil {
-		out.TargetPaneID = new(string)
-		(*out.TargetPaneID) = (*v.TargetPaneID)
-	}
-	if v.WorkspaceID != nil {
-		out.WorkspaceID = new(string)
-		(*out.WorkspaceID) = (*v.WorkspaceID)
+		out.Env = Some(cloned3)
 	}
 	return out
 }
 
 type PaneSwapParams struct {
-	Direction    *PaneDirection `json:"direction,omitempty"`
-	PaneID       *string        `json:"pane_id,omitempty"`
-	SourcePaneID *string        `json:"source_pane_id,omitempty"`
-	TargetPaneID *string        `json:"target_pane_id,omitempty"`
+	Direction    Optional[PaneDirection] `json:"direction,omitzero"`
+	PaneID       Optional[string]        `json:"pane_id,omitzero"`
+	SourcePaneID Optional[string]        `json:"source_pane_id,omitzero"`
+	TargetPaneID Optional[string]        `json:"target_pane_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneSwapParams) Clone() PaneSwapParams {
 	out := v
-	if v.Direction != nil {
-		out.Direction = new(PaneDirection)
-		(*out.Direction) = (*v.Direction)
-	}
-	if v.PaneID != nil {
-		out.PaneID = new(string)
-		(*out.PaneID) = (*v.PaneID)
-	}
-	if v.SourcePaneID != nil {
-		out.SourcePaneID = new(string)
-		(*out.SourcePaneID) = (*v.SourcePaneID)
-	}
-	if v.TargetPaneID != nil {
-		out.TargetPaneID = new(string)
-		(*out.TargetPaneID) = (*v.TargetPaneID)
-	}
 	return out
 }
 
@@ -3863,26 +3434,18 @@ const (
 )
 
 type PaneSwapResult struct {
-	Changed       bool               `json:"changed"`
-	FocusedPaneID string             `json:"focused_pane_id"`
-	Layout        PaneLayoutSnapshot `json:"layout"`
-	Reason        *PaneSwapReason    `json:"reason,omitempty"`
-	SourcePaneID  string             `json:"source_pane_id"`
-	TargetPaneID  *string            `json:"target_pane_id,omitempty"`
+	Changed       bool                     `json:"changed"`
+	FocusedPaneID string                   `json:"focused_pane_id"`
+	Layout        PaneLayoutSnapshot       `json:"layout"`
+	Reason        Optional[PaneSwapReason] `json:"reason,omitzero"`
+	SourcePaneID  string                   `json:"source_pane_id"`
+	TargetPaneID  Optional[string]         `json:"target_pane_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneSwapResult) Clone() PaneSwapResult {
 	out := v
 	out.Layout = v.Layout.Clone()
-	if v.Reason != nil {
-		out.Reason = new(PaneSwapReason)
-		(*out.Reason) = (*v.Reason)
-	}
-	if v.TargetPaneID != nil {
-		out.TargetPaneID = new(string)
-		(*out.TargetPaneID) = (*v.TargetPaneID)
-	}
 	return out
 }
 
@@ -3941,30 +3504,18 @@ func (v PaneUpdatedSubscription) MarshalJSON() ([]byte, error) {
 }
 
 type PaneWaitForOutputParams struct {
-	Lines     *uint32     `json:"lines,omitempty"`
-	Match     OutputMatch `json:"match"`
-	PaneID    string      `json:"pane_id"`
-	Source    ReadSource  `json:"source"`
-	StripANSI *bool       `json:"strip_ansi,omitempty"`
-	TimeoutMs *uint64     `json:"timeout_ms,omitempty"`
+	Lines     Optional[uint32] `json:"lines,omitzero"`
+	Match     OutputMatch      `json:"match"`
+	PaneID    string           `json:"pane_id"`
+	Source    ReadSource       `json:"source"`
+	StripANSI Optional[bool]   `json:"strip_ansi,omitzero"`
+	TimeoutMs Optional[uint64] `json:"timeout_ms,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneWaitForOutputParams) Clone() PaneWaitForOutputParams {
 	out := v
-	if v.Lines != nil {
-		out.Lines = new(uint32)
-		(*out.Lines) = (*v.Lines)
-	}
 	out.Match = cloneOutputMatch(v.Match)
-	if v.StripANSI != nil {
-		out.StripANSI = new(bool)
-		(*out.StripANSI) = (*v.StripANSI)
-	}
-	if v.TimeoutMs != nil {
-		out.TimeoutMs = new(uint64)
-		(*out.TimeoutMs) = (*v.TimeoutMs)
-	}
 	return out
 }
 
@@ -3999,17 +3550,13 @@ const (
 )
 
 type PaneZoomParams struct {
-	Mode   PaneZoomMode `json:"mode,omitempty"`
-	PaneID *string      `json:"pane_id,omitempty"`
+	Mode   Optional[PaneZoomMode] `json:"mode,omitzero"`
+	PaneID Optional[string]       `json:"pane_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneZoomParams) Clone() PaneZoomParams {
 	out := v
-	if v.PaneID != nil {
-		out.PaneID = new(string)
-		(*out.PaneID) = (*v.PaneID)
-	}
 	return out
 }
 
@@ -4023,24 +3570,20 @@ const (
 )
 
 type PaneZoomResult struct {
-	Changed       bool               `json:"changed"`
-	FocusChanged  bool               `json:"focus_changed"`
-	FocusedPaneID string             `json:"focused_pane_id"`
-	Layout        PaneLayoutSnapshot `json:"layout"`
-	PaneID        string             `json:"pane_id"`
-	Reason        *PaneZoomReason    `json:"reason,omitempty"`
-	ZoomChanged   bool               `json:"zoom_changed"`
-	Zoomed        bool               `json:"zoomed"`
+	Changed       bool                     `json:"changed"`
+	FocusChanged  bool                     `json:"focus_changed"`
+	FocusedPaneID string                   `json:"focused_pane_id"`
+	Layout        PaneLayoutSnapshot       `json:"layout"`
+	PaneID        string                   `json:"pane_id"`
+	Reason        Optional[PaneZoomReason] `json:"reason,omitzero"`
+	ZoomChanged   bool                     `json:"zoom_changed"`
+	Zoomed        bool                     `json:"zoomed"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneZoomResult) Clone() PaneZoomResult {
 	out := v
 	out.Layout = v.Layout.Clone()
-	if v.Reason != nil {
-		out.Reason = new(PaneZoomReason)
-		(*out.Reason) = (*v.Reason)
-	}
 	return out
 }
 
@@ -4064,13 +3607,13 @@ const (
 )
 
 type PluginActionInfo struct {
-	ActionID    string                `json:"action_id"`
-	Command     []string              `json:"command"`
-	Contexts    []PluginActionContext `json:"contexts,omitempty"`
-	Description *string               `json:"description,omitempty"`
-	Platforms   []PluginPlatform      `json:"platforms,omitempty"`
-	PluginID    string                `json:"plugin_id"`
-	Title       string                `json:"title"`
+	ActionID    string                          `json:"action_id"`
+	Command     []string                        `json:"command"`
+	Contexts    Optional[[]PluginActionContext] `json:"contexts,omitzero"`
+	Description Optional[string]                `json:"description,omitzero"`
+	Platforms   Optional[[]PluginPlatform]      `json:"platforms,omitzero"`
+	PluginID    string                          `json:"plugin_id"`
+	Title       string                          `json:"title"`
 }
 
 // Clone returns a deep copy of v.
@@ -4080,104 +3623,73 @@ func (v PluginActionInfo) Clone() PluginActionInfo {
 		out.Command = make([]string, len(v.Command))
 		copy(out.Command, v.Command)
 	}
-	if v.Contexts != nil {
-		out.Contexts = make([]PluginActionContext, len(v.Contexts))
-		copy(out.Contexts, v.Contexts)
+	if value1, ok2 := v.Contexts.Get(); ok2 {
+		var cloned3 []PluginActionContext
+		if value1 != nil {
+			cloned3 = make([]PluginActionContext, len(value1))
+			copy(cloned3, value1)
+		}
+		out.Contexts = Some(cloned3)
 	}
-	if v.Description != nil {
-		out.Description = new(string)
-		(*out.Description) = (*v.Description)
-	}
-	if v.Platforms != nil {
-		out.Platforms = make([]PluginPlatform, len(v.Platforms))
-		copy(out.Platforms, v.Platforms)
+	if value4, ok5 := v.Platforms.Get(); ok5 {
+		var cloned6 []PluginPlatform
+		if value4 != nil {
+			cloned6 = make([]PluginPlatform, len(value4))
+			copy(cloned6, value4)
+		}
+		out.Platforms = Some(cloned6)
 	}
 	return out
 }
 
 type PluginActionInvokeParams struct {
-	ActionID string                   `json:"action_id"`
-	Context  *PluginInvocationContext `json:"context,omitempty"`
-	PluginID *string                  `json:"plugin_id,omitempty"`
+	ActionID string                            `json:"action_id"`
+	Context  Optional[PluginInvocationContext] `json:"context,omitzero"`
+	PluginID Optional[string]                  `json:"plugin_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PluginActionInvokeParams) Clone() PluginActionInvokeParams {
 	out := v
-	if v.Context != nil {
-		out.Context = new(PluginInvocationContext)
-		(*out.Context) = (*v.Context).Clone()
-	}
-	if v.PluginID != nil {
-		out.PluginID = new(string)
-		(*out.PluginID) = (*v.PluginID)
+	if value1, ok2 := v.Context.Get(); ok2 {
+		var cloned3 PluginInvocationContext
+		cloned3 = value1.Clone()
+		out.Context = Some(cloned3)
 	}
 	return out
 }
 
 type PluginActionListParams struct {
-	PluginID *string `json:"plugin_id,omitempty"`
+	PluginID Optional[string] `json:"plugin_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PluginActionListParams) Clone() PluginActionListParams {
 	out := v
-	if v.PluginID != nil {
-		out.PluginID = new(string)
-		(*out.PluginID) = (*v.PluginID)
-	}
 	return out
 }
 
 type PluginCommandLogInfo struct {
-	ActionID       *string             `json:"action_id,omitempty"`
+	ActionID       Optional[string]    `json:"action_id,omitzero"`
 	Command        []string            `json:"command"`
-	Error          *string             `json:"error,omitempty"`
-	Event          *string             `json:"event,omitempty"`
-	ExitCode       *int32              `json:"exit_code,omitempty"`
-	FinishedUnixMs *uint64             `json:"finished_unix_ms,omitempty"`
+	Error          Optional[string]    `json:"error,omitzero"`
+	Event          Optional[string]    `json:"event,omitzero"`
+	ExitCode       Optional[int32]     `json:"exit_code,omitzero"`
+	FinishedUnixMs Optional[uint64]    `json:"finished_unix_ms,omitzero"`
 	LogID          string              `json:"log_id"`
 	PluginID       string              `json:"plugin_id"`
 	StartedUnixMs  uint64              `json:"started_unix_ms"`
 	Status         PluginCommandStatus `json:"status"`
-	Stderr         *string             `json:"stderr,omitempty"`
-	Stdout         *string             `json:"stdout,omitempty"`
+	Stderr         Optional[string]    `json:"stderr,omitzero"`
+	Stdout         Optional[string]    `json:"stdout,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PluginCommandLogInfo) Clone() PluginCommandLogInfo {
 	out := v
-	if v.ActionID != nil {
-		out.ActionID = new(string)
-		(*out.ActionID) = (*v.ActionID)
-	}
 	if v.Command != nil {
 		out.Command = make([]string, len(v.Command))
 		copy(out.Command, v.Command)
-	}
-	if v.Error != nil {
-		out.Error = new(string)
-		(*out.Error) = (*v.Error)
-	}
-	if v.Event != nil {
-		out.Event = new(string)
-		(*out.Event) = (*v.Event)
-	}
-	if v.ExitCode != nil {
-		out.ExitCode = new(int32)
-		(*out.ExitCode) = (*v.ExitCode)
-	}
-	if v.FinishedUnixMs != nil {
-		out.FinishedUnixMs = new(uint64)
-		(*out.FinishedUnixMs) = (*v.FinishedUnixMs)
-	}
-	if v.Stderr != nil {
-		out.Stderr = new(string)
-		(*out.Stderr) = (*v.Stderr)
-	}
-	if v.Stdout != nil {
-		out.Stdout = new(string)
-		(*out.Stdout) = (*v.Stdout)
 	}
 	return out
 }
@@ -4192,149 +3704,79 @@ const (
 )
 
 type PluginInvocationContext struct {
-	ClickedURL        *string                `json:"clicked_url,omitempty"`
-	CorrelationID     *string                `json:"correlation_id,omitempty"`
-	FocusedPaneAgent  *string                `json:"focused_pane_agent,omitempty"`
-	FocusedPaneCwd    *string                `json:"focused_pane_cwd,omitempty"`
-	FocusedPaneID     *string                `json:"focused_pane_id,omitempty"`
-	FocusedPaneStatus *AgentStatus           `json:"focused_pane_status,omitempty"`
-	InvocationSource  *string                `json:"invocation_source,omitempty"`
-	LinkHandlerID     *string                `json:"link_handler_id,omitempty"`
-	SelectedText      *string                `json:"selected_text,omitempty"`
-	TabID             *string                `json:"tab_id,omitempty"`
-	TabLabel          *string                `json:"tab_label,omitempty"`
-	WorkspaceCwd      *string                `json:"workspace_cwd,omitempty"`
-	WorkspaceID       *string                `json:"workspace_id,omitempty"`
-	WorkspaceLabel    *string                `json:"workspace_label,omitempty"`
-	Worktree          *WorkspaceWorktreeInfo `json:"worktree,omitempty"`
+	ClickedURL        Optional[string]                `json:"clicked_url,omitzero"`
+	CorrelationID     Optional[string]                `json:"correlation_id,omitzero"`
+	FocusedPaneAgent  Optional[string]                `json:"focused_pane_agent,omitzero"`
+	FocusedPaneCwd    Optional[string]                `json:"focused_pane_cwd,omitzero"`
+	FocusedPaneID     Optional[string]                `json:"focused_pane_id,omitzero"`
+	FocusedPaneStatus Optional[AgentStatus]           `json:"focused_pane_status,omitzero"`
+	InvocationSource  Optional[string]                `json:"invocation_source,omitzero"`
+	LinkHandlerID     Optional[string]                `json:"link_handler_id,omitzero"`
+	SelectedText      Optional[string]                `json:"selected_text,omitzero"`
+	TabID             Optional[string]                `json:"tab_id,omitzero"`
+	TabLabel          Optional[string]                `json:"tab_label,omitzero"`
+	WorkspaceCwd      Optional[string]                `json:"workspace_cwd,omitzero"`
+	WorkspaceID       Optional[string]                `json:"workspace_id,omitzero"`
+	WorkspaceLabel    Optional[string]                `json:"workspace_label,omitzero"`
+	Worktree          Optional[WorkspaceWorktreeInfo] `json:"worktree,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PluginInvocationContext) Clone() PluginInvocationContext {
 	out := v
-	if v.ClickedURL != nil {
-		out.ClickedURL = new(string)
-		(*out.ClickedURL) = (*v.ClickedURL)
-	}
-	if v.CorrelationID != nil {
-		out.CorrelationID = new(string)
-		(*out.CorrelationID) = (*v.CorrelationID)
-	}
-	if v.FocusedPaneAgent != nil {
-		out.FocusedPaneAgent = new(string)
-		(*out.FocusedPaneAgent) = (*v.FocusedPaneAgent)
-	}
-	if v.FocusedPaneCwd != nil {
-		out.FocusedPaneCwd = new(string)
-		(*out.FocusedPaneCwd) = (*v.FocusedPaneCwd)
-	}
-	if v.FocusedPaneID != nil {
-		out.FocusedPaneID = new(string)
-		(*out.FocusedPaneID) = (*v.FocusedPaneID)
-	}
-	if v.FocusedPaneStatus != nil {
-		out.FocusedPaneStatus = new(AgentStatus)
-		(*out.FocusedPaneStatus) = (*v.FocusedPaneStatus)
-	}
-	if v.InvocationSource != nil {
-		out.InvocationSource = new(string)
-		(*out.InvocationSource) = (*v.InvocationSource)
-	}
-	if v.LinkHandlerID != nil {
-		out.LinkHandlerID = new(string)
-		(*out.LinkHandlerID) = (*v.LinkHandlerID)
-	}
-	if v.SelectedText != nil {
-		out.SelectedText = new(string)
-		(*out.SelectedText) = (*v.SelectedText)
-	}
-	if v.TabID != nil {
-		out.TabID = new(string)
-		(*out.TabID) = (*v.TabID)
-	}
-	if v.TabLabel != nil {
-		out.TabLabel = new(string)
-		(*out.TabLabel) = (*v.TabLabel)
-	}
-	if v.WorkspaceCwd != nil {
-		out.WorkspaceCwd = new(string)
-		(*out.WorkspaceCwd) = (*v.WorkspaceCwd)
-	}
-	if v.WorkspaceID != nil {
-		out.WorkspaceID = new(string)
-		(*out.WorkspaceID) = (*v.WorkspaceID)
-	}
-	if v.WorkspaceLabel != nil {
-		out.WorkspaceLabel = new(string)
-		(*out.WorkspaceLabel) = (*v.WorkspaceLabel)
-	}
-	if v.Worktree != nil {
-		out.Worktree = new(WorkspaceWorktreeInfo)
-		(*out.Worktree) = (*v.Worktree).Clone()
+	if value1, ok2 := v.Worktree.Get(); ok2 {
+		var cloned3 WorkspaceWorktreeInfo
+		cloned3 = value1.Clone()
+		out.Worktree = Some(cloned3)
 	}
 	return out
 }
 
 type PluginLinkParams struct {
-	Enabled *bool             `json:"enabled,omitempty"`
-	Path    string            `json:"path"`
-	Source  *PluginSourceInfo `json:"source,omitempty"`
+	Enabled Optional[bool]             `json:"enabled,omitzero"`
+	Path    string                     `json:"path"`
+	Source  Optional[PluginSourceInfo] `json:"source,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PluginLinkParams) Clone() PluginLinkParams {
 	out := v
-	if v.Enabled != nil {
-		out.Enabled = new(bool)
-		(*out.Enabled) = (*v.Enabled)
-	}
-	if v.Source != nil {
-		out.Source = new(PluginSourceInfo)
-		(*out.Source) = (*v.Source).Clone()
+	if value1, ok2 := v.Source.Get(); ok2 {
+		var cloned3 PluginSourceInfo
+		cloned3 = value1.Clone()
+		out.Source = Some(cloned3)
 	}
 	return out
 }
 
 type PluginListParams struct {
-	PluginID *string `json:"plugin_id,omitempty"`
+	PluginID Optional[string] `json:"plugin_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PluginListParams) Clone() PluginListParams {
 	out := v
-	if v.PluginID != nil {
-		out.PluginID = new(string)
-		(*out.PluginID) = (*v.PluginID)
-	}
 	return out
 }
 
 type PluginLogListParams struct {
-	Limit    *uint64 `json:"limit,omitempty"`
-	PluginID *string `json:"plugin_id,omitempty"`
+	Limit    Optional[uint64] `json:"limit,omitzero"`
+	PluginID Optional[string] `json:"plugin_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PluginLogListParams) Clone() PluginLogListParams {
 	out := v
-	if v.Limit != nil {
-		out.Limit = new(uint64)
-		(*out.Limit) = (*v.Limit)
-	}
-	if v.PluginID != nil {
-		out.PluginID = new(string)
-		(*out.PluginID) = (*v.PluginID)
-	}
 	return out
 }
 
 type PluginManifestAction struct {
-	Command     []string              `json:"command"`
-	Contexts    []PluginActionContext `json:"contexts,omitempty"`
-	Description *string               `json:"description,omitempty"`
-	ID          string                `json:"id"`
-	Platforms   []PluginPlatform      `json:"platforms,omitempty"`
-	Title       string                `json:"title"`
+	Command     []string                        `json:"command"`
+	Contexts    Optional[[]PluginActionContext] `json:"contexts,omitzero"`
+	Description Optional[string]                `json:"description,omitzero"`
+	ID          string                          `json:"id"`
+	Platforms   Optional[[]PluginPlatform]      `json:"platforms,omitzero"`
+	Title       string                          `json:"title"`
 }
 
 // Clone returns a deep copy of v.
@@ -4344,24 +3786,28 @@ func (v PluginManifestAction) Clone() PluginManifestAction {
 		out.Command = make([]string, len(v.Command))
 		copy(out.Command, v.Command)
 	}
-	if v.Contexts != nil {
-		out.Contexts = make([]PluginActionContext, len(v.Contexts))
-		copy(out.Contexts, v.Contexts)
+	if value1, ok2 := v.Contexts.Get(); ok2 {
+		var cloned3 []PluginActionContext
+		if value1 != nil {
+			cloned3 = make([]PluginActionContext, len(value1))
+			copy(cloned3, value1)
+		}
+		out.Contexts = Some(cloned3)
 	}
-	if v.Description != nil {
-		out.Description = new(string)
-		(*out.Description) = (*v.Description)
-	}
-	if v.Platforms != nil {
-		out.Platforms = make([]PluginPlatform, len(v.Platforms))
-		copy(out.Platforms, v.Platforms)
+	if value4, ok5 := v.Platforms.Get(); ok5 {
+		var cloned6 []PluginPlatform
+		if value4 != nil {
+			cloned6 = make([]PluginPlatform, len(value4))
+			copy(cloned6, value4)
+		}
+		out.Platforms = Some(cloned6)
 	}
 	return out
 }
 
 type PluginManifestBuild struct {
-	Command   []string         `json:"command"`
-	Platforms []PluginPlatform `json:"platforms,omitempty"`
+	Command   []string                   `json:"command"`
+	Platforms Optional[[]PluginPlatform] `json:"platforms,omitzero"`
 }
 
 // Clone returns a deep copy of v.
@@ -4371,17 +3817,21 @@ func (v PluginManifestBuild) Clone() PluginManifestBuild {
 		out.Command = make([]string, len(v.Command))
 		copy(out.Command, v.Command)
 	}
-	if v.Platforms != nil {
-		out.Platforms = make([]PluginPlatform, len(v.Platforms))
-		copy(out.Platforms, v.Platforms)
+	if value1, ok2 := v.Platforms.Get(); ok2 {
+		var cloned3 []PluginPlatform
+		if value1 != nil {
+			cloned3 = make([]PluginPlatform, len(value1))
+			copy(cloned3, value1)
+		}
+		out.Platforms = Some(cloned3)
 	}
 	return out
 }
 
 type PluginManifestEventHook struct {
-	Command   []string         `json:"command"`
-	On        string           `json:"on"`
-	Platforms []PluginPlatform `json:"platforms,omitempty"`
+	Command   []string                   `json:"command"`
+	On        string                     `json:"on"`
+	Platforms Optional[[]PluginPlatform] `json:"platforms,omitzero"`
 }
 
 // Clone returns a deep copy of v.
@@ -4391,40 +3841,48 @@ func (v PluginManifestEventHook) Clone() PluginManifestEventHook {
 		out.Command = make([]string, len(v.Command))
 		copy(out.Command, v.Command)
 	}
-	if v.Platforms != nil {
-		out.Platforms = make([]PluginPlatform, len(v.Platforms))
-		copy(out.Platforms, v.Platforms)
+	if value1, ok2 := v.Platforms.Get(); ok2 {
+		var cloned3 []PluginPlatform
+		if value1 != nil {
+			cloned3 = make([]PluginPlatform, len(value1))
+			copy(cloned3, value1)
+		}
+		out.Platforms = Some(cloned3)
 	}
 	return out
 }
 
 type PluginManifestLinkHandler struct {
-	Action    string           `json:"action"`
-	ID        string           `json:"id"`
-	Pattern   string           `json:"pattern"`
-	Platforms []PluginPlatform `json:"platforms,omitempty"`
-	Title     string           `json:"title"`
+	Action    string                     `json:"action"`
+	ID        string                     `json:"id"`
+	Pattern   string                     `json:"pattern"`
+	Platforms Optional[[]PluginPlatform] `json:"platforms,omitzero"`
+	Title     string                     `json:"title"`
 }
 
 // Clone returns a deep copy of v.
 func (v PluginManifestLinkHandler) Clone() PluginManifestLinkHandler {
 	out := v
-	if v.Platforms != nil {
-		out.Platforms = make([]PluginPlatform, len(v.Platforms))
-		copy(out.Platforms, v.Platforms)
+	if value1, ok2 := v.Platforms.Get(); ok2 {
+		var cloned3 []PluginPlatform
+		if value1 != nil {
+			cloned3 = make([]PluginPlatform, len(value1))
+			copy(cloned3, value1)
+		}
+		out.Platforms = Some(cloned3)
 	}
 	return out
 }
 
 type PluginManifestPane struct {
-	Command     []string            `json:"command"`
-	Description *string             `json:"description,omitempty"`
-	Height      *PopupSize          `json:"height,omitempty"`
-	ID          string              `json:"id"`
-	Placement   PluginPanePlacement `json:"placement,omitempty"`
-	Platforms   []PluginPlatform    `json:"platforms,omitempty"`
-	Title       string              `json:"title"`
-	Width       *PopupSize          `json:"width,omitempty"`
+	Command     []string                      `json:"command"`
+	Description Optional[string]              `json:"description,omitzero"`
+	Height      Optional[PopupSize]           `json:"height,omitzero"`
+	ID          string                        `json:"id"`
+	Placement   Optional[PluginPanePlacement] `json:"placement,omitzero"`
+	Platforms   Optional[[]PluginPlatform]    `json:"platforms,omitzero"`
+	Title       string                        `json:"title"`
+	Width       Optional[PopupSize]           `json:"width,omitzero"`
 }
 
 // Clone returns a deep copy of v.
@@ -4434,28 +3892,30 @@ func (v PluginManifestPane) Clone() PluginManifestPane {
 		out.Command = make([]string, len(v.Command))
 		copy(out.Command, v.Command)
 	}
-	if v.Description != nil {
-		out.Description = new(string)
-		(*out.Description) = (*v.Description)
+	if value1, ok2 := v.Height.Get(); ok2 {
+		var cloned3 PopupSize
+		cloned3 = value1.Clone()
+		out.Height = Some(cloned3)
 	}
-	if v.Height != nil {
-		out.Height = new(PopupSize)
-		(*out.Height) = (*v.Height).Clone()
+	if value4, ok5 := v.Platforms.Get(); ok5 {
+		var cloned6 []PluginPlatform
+		if value4 != nil {
+			cloned6 = make([]PluginPlatform, len(value4))
+			copy(cloned6, value4)
+		}
+		out.Platforms = Some(cloned6)
 	}
-	if v.Platforms != nil {
-		out.Platforms = make([]PluginPlatform, len(v.Platforms))
-		copy(out.Platforms, v.Platforms)
-	}
-	if v.Width != nil {
-		out.Width = new(PopupSize)
-		(*out.Width) = (*v.Width).Clone()
+	if value7, ok8 := v.Width.Get(); ok8 {
+		var cloned9 PopupSize
+		cloned9 = value7.Clone()
+		out.Width = Some(cloned9)
 	}
 	return out
 }
 
 type PluginManifestStartup struct {
-	Command   []string         `json:"command"`
-	Platforms []PluginPlatform `json:"platforms,omitempty"`
+	Command   []string                   `json:"command"`
+	Platforms Optional[[]PluginPlatform] `json:"platforms,omitzero"`
 }
 
 // Clone returns a deep copy of v.
@@ -4465,9 +3925,13 @@ func (v PluginManifestStartup) Clone() PluginManifestStartup {
 		out.Command = make([]string, len(v.Command))
 		copy(out.Command, v.Command)
 	}
-	if v.Platforms != nil {
-		out.Platforms = make([]PluginPlatform, len(v.Platforms))
-		copy(out.Platforms, v.Platforms)
+	if value1, ok2 := v.Platforms.Get(); ok2 {
+		var cloned3 []PluginPlatform
+		if value1 != nil {
+			cloned3 = make([]PluginPlatform, len(value1))
+			copy(cloned3, value1)
+		}
+		out.Platforms = Some(cloned3)
 	}
 	return out
 }
@@ -4506,59 +3970,41 @@ func (v PluginPaneInfo) Clone() PluginPaneInfo {
 }
 
 type PluginPaneOpenParams struct {
-	Cwd          *string              `json:"cwd,omitempty"`
-	Direction    *SplitDirection      `json:"direction,omitempty"`
-	Entrypoint   string               `json:"entrypoint"`
-	Env          map[string]string    `json:"env,omitempty"`
-	Focus        *bool                `json:"focus,omitempty"`
-	Height       *PopupSize           `json:"height,omitempty"`
-	Placement    *PluginPanePlacement `json:"placement,omitempty"`
-	PluginID     string               `json:"plugin_id"`
-	TargetPaneID *string              `json:"target_pane_id,omitempty"`
-	Width        *PopupSize           `json:"width,omitempty"`
-	WorkspaceID  *string              `json:"workspace_id,omitempty"`
+	Cwd          Optional[string]              `json:"cwd,omitzero"`
+	Direction    Optional[SplitDirection]      `json:"direction,omitzero"`
+	Entrypoint   string                        `json:"entrypoint"`
+	Env          Optional[map[string]string]   `json:"env,omitzero"`
+	Focus        Optional[bool]                `json:"focus,omitzero"`
+	Height       Optional[PopupSize]           `json:"height,omitzero"`
+	Placement    Optional[PluginPanePlacement] `json:"placement,omitzero"`
+	PluginID     string                        `json:"plugin_id"`
+	TargetPaneID Optional[string]              `json:"target_pane_id,omitzero"`
+	Width        Optional[PopupSize]           `json:"width,omitzero"`
+	WorkspaceID  Optional[string]              `json:"workspace_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PluginPaneOpenParams) Clone() PluginPaneOpenParams {
 	out := v
-	if v.Cwd != nil {
-		out.Cwd = new(string)
-		(*out.Cwd) = (*v.Cwd)
-	}
-	if v.Direction != nil {
-		out.Direction = new(SplitDirection)
-		(*out.Direction) = (*v.Direction)
-	}
-	if v.Env != nil {
-		out.Env = make(map[string]string, len(v.Env))
-		for key1, value2 := range v.Env {
-			out.Env[key1] = value2
+	if value1, ok2 := v.Env.Get(); ok2 {
+		var cloned3 map[string]string
+		if value1 != nil {
+			cloned3 = make(map[string]string, len(value1))
+			for key4, value5 := range value1 {
+				cloned3[key4] = value5
+			}
 		}
+		out.Env = Some(cloned3)
 	}
-	if v.Focus != nil {
-		out.Focus = new(bool)
-		(*out.Focus) = (*v.Focus)
+	if value6, ok7 := v.Height.Get(); ok7 {
+		var cloned8 PopupSize
+		cloned8 = value6.Clone()
+		out.Height = Some(cloned8)
 	}
-	if v.Height != nil {
-		out.Height = new(PopupSize)
-		(*out.Height) = (*v.Height).Clone()
-	}
-	if v.Placement != nil {
-		out.Placement = new(PluginPanePlacement)
-		(*out.Placement) = (*v.Placement)
-	}
-	if v.TargetPaneID != nil {
-		out.TargetPaneID = new(string)
-		(*out.TargetPaneID) = (*v.TargetPaneID)
-	}
-	if v.Width != nil {
-		out.Width = new(PopupSize)
-		(*out.Width) = (*v.Width).Clone()
-	}
-	if v.WorkspaceID != nil {
-		out.WorkspaceID = new(string)
-		(*out.WorkspaceID) = (*v.WorkspaceID)
+	if value9, ok10 := v.Width.Get(); ok10 {
+		var cloned11 PopupSize
+		cloned11 = value9.Clone()
+		out.Width = Some(cloned11)
 	}
 	return out
 }
@@ -4594,47 +4040,19 @@ func (v PluginSetEnabledParams) Clone() PluginSetEnabledParams {
 }
 
 type PluginSourceInfo struct {
-	InstalledUnixMs *uint64          `json:"installed_unix_ms,omitempty"`
-	Kind            PluginSourceKind `json:"kind,omitempty"`
-	ManagedPath     *string          `json:"managed_path,omitempty"`
-	Owner           *string          `json:"owner,omitempty"`
-	Repo            *string          `json:"repo,omitempty"`
-	RequestedRef    *string          `json:"requested_ref,omitempty"`
-	ResolvedCommit  *string          `json:"resolved_commit,omitempty"`
-	Subdir          *string          `json:"subdir,omitempty"`
+	InstalledUnixMs Optional[uint64]           `json:"installed_unix_ms,omitzero"`
+	Kind            Optional[PluginSourceKind] `json:"kind,omitzero"`
+	ManagedPath     Optional[string]           `json:"managed_path,omitzero"`
+	Owner           Optional[string]           `json:"owner,omitzero"`
+	Repo            Optional[string]           `json:"repo,omitzero"`
+	RequestedRef    Optional[string]           `json:"requested_ref,omitzero"`
+	ResolvedCommit  Optional[string]           `json:"resolved_commit,omitzero"`
+	Subdir          Optional[string]           `json:"subdir,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v PluginSourceInfo) Clone() PluginSourceInfo {
 	out := v
-	if v.InstalledUnixMs != nil {
-		out.InstalledUnixMs = new(uint64)
-		(*out.InstalledUnixMs) = (*v.InstalledUnixMs)
-	}
-	if v.ManagedPath != nil {
-		out.ManagedPath = new(string)
-		(*out.ManagedPath) = (*v.ManagedPath)
-	}
-	if v.Owner != nil {
-		out.Owner = new(string)
-		(*out.Owner) = (*v.Owner)
-	}
-	if v.Repo != nil {
-		out.Repo = new(string)
-		(*out.Repo) = (*v.Repo)
-	}
-	if v.RequestedRef != nil {
-		out.RequestedRef = new(string)
-		(*out.RequestedRef) = (*v.RequestedRef)
-	}
-	if v.ResolvedCommit != nil {
-		out.ResolvedCommit = new(string)
-		(*out.ResolvedCommit) = (*v.ResolvedCommit)
-	}
-	if v.Subdir != nil {
-		out.Subdir = new(string)
-		(*out.Subdir) = (*v.Subdir)
-	}
 	return out
 }
 
@@ -4696,70 +4114,42 @@ func (v ReleaseNotesDismissParams) Clone() ReleaseNotesDismissParams {
 }
 
 type ServerCapabilities struct {
-	DetachedServerDaemon *bool `json:"detached_server_daemon,omitempty"`
+	DetachedServerDaemon Optional[bool] `json:"detached_server_daemon,omitzero"`
 
 	// Stable client-owned endpoint generation supported by this server.
-	EndpointProtocolGeneration *uint32 `json:"endpoint_protocol_generation,omitempty"`
+	EndpointProtocolGeneration Optional[uint32] `json:"endpoint_protocol_generation,omitzero"`
 
 	// Whether this server supports endpoint health probes.
-	HealthCheck *bool `json:"health_check,omitempty"`
-	LiveHandoff bool  `json:"live_handoff"`
+	HealthCheck Optional[bool] `json:"health_check,omitzero"`
+	LiveHandoff bool           `json:"live_handoff"`
 
 	// Whether this server supports explicit client-shell surface interest.
-	SurfaceInterest *bool `json:"surface_interest,omitempty"`
+	SurfaceInterest Optional[bool] `json:"surface_interest,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v ServerCapabilities) Clone() ServerCapabilities {
 	out := v
-	if v.DetachedServerDaemon != nil {
-		out.DetachedServerDaemon = new(bool)
-		(*out.DetachedServerDaemon) = (*v.DetachedServerDaemon)
-	}
-	if v.EndpointProtocolGeneration != nil {
-		out.EndpointProtocolGeneration = new(uint32)
-		(*out.EndpointProtocolGeneration) = (*v.EndpointProtocolGeneration)
-	}
-	if v.HealthCheck != nil {
-		out.HealthCheck = new(bool)
-		(*out.HealthCheck) = (*v.HealthCheck)
-	}
-	if v.SurfaceInterest != nil {
-		out.SurfaceInterest = new(bool)
-		(*out.SurfaceInterest) = (*v.SurfaceInterest)
-	}
 	return out
 }
 
 type ServerLiveHandoffParams struct {
-	ExpectedProtocol *uint32 `json:"expected_protocol,omitempty"`
-	ExpectedVersion  *string `json:"expected_version,omitempty"`
-	ImportExe        *string `json:"import_exe,omitempty"`
+	ExpectedProtocol Optional[uint32] `json:"expected_protocol,omitzero"`
+	ExpectedVersion  Optional[string] `json:"expected_version,omitzero"`
+	ImportExe        Optional[string] `json:"import_exe,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v ServerLiveHandoffParams) Clone() ServerLiveHandoffParams {
 	out := v
-	if v.ExpectedProtocol != nil {
-		out.ExpectedProtocol = new(uint32)
-		(*out.ExpectedProtocol) = (*v.ExpectedProtocol)
-	}
-	if v.ExpectedVersion != nil {
-		out.ExpectedVersion = new(string)
-		(*out.ExpectedVersion) = (*v.ExpectedVersion)
-	}
-	if v.ImportExe != nil {
-		out.ImportExe = new(string)
-		(*out.ImportExe) = (*v.ImportExe)
-	}
 	return out
 }
 
 type SessionSnapshot struct {
 	Agents             []AgentInfo          `json:"agents"`
-	FocusedPaneID      *string              `json:"focused_pane_id,omitempty"`
-	FocusedTabID       *string              `json:"focused_tab_id,omitempty"`
-	FocusedWorkspaceID *string              `json:"focused_workspace_id,omitempty"`
+	FocusedPaneID      Optional[string]     `json:"focused_pane_id,omitzero"`
+	FocusedTabID       Optional[string]     `json:"focused_tab_id,omitzero"`
+	FocusedWorkspaceID Optional[string]     `json:"focused_workspace_id,omitzero"`
 	Layouts            []PaneLayoutSnapshot `json:"layouts"`
 	Panes              []PaneInfo           `json:"panes"`
 	Protocol           uint32               `json:"protocol"`
@@ -4776,18 +4166,6 @@ func (v SessionSnapshot) Clone() SessionSnapshot {
 		for i1 := range v.Agents {
 			out.Agents[i1] = v.Agents[i1].Clone()
 		}
-	}
-	if v.FocusedPaneID != nil {
-		out.FocusedPaneID = new(string)
-		(*out.FocusedPaneID) = (*v.FocusedPaneID)
-	}
-	if v.FocusedTabID != nil {
-		out.FocusedTabID = new(string)
-		(*out.FocusedTabID) = (*v.FocusedTabID)
-	}
-	if v.FocusedWorkspaceID != nil {
-		out.FocusedWorkspaceID = new(string)
-		(*out.FocusedWorkspaceID) = (*v.FocusedWorkspaceID)
 	}
 	if v.Layouts != nil {
 		out.Layouts = make([]PaneLayoutSnapshot, len(v.Layouts))
@@ -5254,37 +4632,25 @@ func (v TabClosedSubscription) MarshalJSON() ([]byte, error) {
 }
 
 type TabCreateParams struct {
-	Cwd         *string           `json:"cwd,omitempty"`
-	Env         map[string]string `json:"env,omitempty"`
-	Focus       *bool             `json:"focus,omitempty"`
-	Label       *string           `json:"label,omitempty"`
-	WorkspaceID *string           `json:"workspace_id,omitempty"`
+	Cwd         Optional[string]            `json:"cwd,omitzero"`
+	Env         Optional[map[string]string] `json:"env,omitzero"`
+	Focus       Optional[bool]              `json:"focus,omitzero"`
+	Label       Optional[string]            `json:"label,omitzero"`
+	WorkspaceID Optional[string]            `json:"workspace_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v TabCreateParams) Clone() TabCreateParams {
 	out := v
-	if v.Cwd != nil {
-		out.Cwd = new(string)
-		(*out.Cwd) = (*v.Cwd)
-	}
-	if v.Env != nil {
-		out.Env = make(map[string]string, len(v.Env))
-		for key1, value2 := range v.Env {
-			out.Env[key1] = value2
+	if value1, ok2 := v.Env.Get(); ok2 {
+		var cloned3 map[string]string
+		if value1 != nil {
+			cloned3 = make(map[string]string, len(value1))
+			for key4, value5 := range value1 {
+				cloned3[key4] = value5
+			}
 		}
-	}
-	if v.Focus != nil {
-		out.Focus = new(bool)
-		(*out.Focus) = (*v.Focus)
-	}
-	if v.Label != nil {
-		out.Label = new(string)
-		(*out.Label) = (*v.Label)
-	}
-	if v.WorkspaceID != nil {
-		out.WorkspaceID = new(string)
-		(*out.WorkspaceID) = (*v.WorkspaceID)
+		out.Env = Some(cloned3)
 	}
 	return out
 }
@@ -5346,16 +4712,12 @@ func (v TabInfo) Clone() TabInfo {
 }
 
 type TabListParams struct {
-	WorkspaceID *string `json:"workspace_id,omitempty"`
+	WorkspaceID Optional[string] `json:"workspace_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v TabListParams) Clone() TabListParams {
 	out := v
-	if v.WorkspaceID != nil {
-		out.WorkspaceID = new(string)
-		(*out.WorkspaceID) = (*v.WorkspaceID)
-	}
 	return out
 }
 
@@ -5442,17 +4804,13 @@ const (
 )
 
 type WorkspaceCloseParams struct {
-	CloseGroup  *bool  `json:"close_group,omitempty"`
-	WorkspaceID string `json:"workspace_id"`
+	CloseGroup  Optional[bool] `json:"close_group,omitzero"`
+	WorkspaceID string         `json:"workspace_id"`
 }
 
 // Clone returns a deep copy of v.
 func (v WorkspaceCloseParams) Clone() WorkspaceCloseParams {
 	out := v
-	if v.CloseGroup != nil {
-		out.CloseGroup = new(bool)
-		(*out.CloseGroup) = (*v.CloseGroup)
-	}
 	return out
 }
 
@@ -5478,39 +4836,27 @@ func (v WorkspaceClosedSubscription) MarshalJSON() ([]byte, error) {
 }
 
 type WorkspaceCreateParams struct {
-	Cwd   *string           `json:"cwd,omitempty"`
-	Env   map[string]string `json:"env,omitempty"`
-	Focus *bool             `json:"focus,omitempty"`
-	Label *string           `json:"label,omitempty"`
+	Cwd   Optional[string]            `json:"cwd,omitzero"`
+	Env   Optional[map[string]string] `json:"env,omitzero"`
+	Focus Optional[bool]              `json:"focus,omitzero"`
+	Label Optional[string]            `json:"label,omitzero"`
 
 	// Workspace whose focused pane supplies the `follow` cwd policy.
-	SourceWorkspaceID *string `json:"source_workspace_id,omitempty"`
+	SourceWorkspaceID Optional[string] `json:"source_workspace_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v WorkspaceCreateParams) Clone() WorkspaceCreateParams {
 	out := v
-	if v.Cwd != nil {
-		out.Cwd = new(string)
-		(*out.Cwd) = (*v.Cwd)
-	}
-	if v.Env != nil {
-		out.Env = make(map[string]string, len(v.Env))
-		for key1, value2 := range v.Env {
-			out.Env[key1] = value2
+	if value1, ok2 := v.Env.Get(); ok2 {
+		var cloned3 map[string]string
+		if value1 != nil {
+			cloned3 = make(map[string]string, len(value1))
+			for key4, value5 := range value1 {
+				cloned3[key4] = value5
+			}
 		}
-	}
-	if v.Focus != nil {
-		out.Focus = new(bool)
-		(*out.Focus) = (*v.Focus)
-	}
-	if v.Label != nil {
-		out.Label = new(string)
-		(*out.Label) = (*v.Label)
-	}
-	if v.SourceWorkspaceID != nil {
-		out.SourceWorkspaceID = new(string)
-		(*out.SourceWorkspaceID) = (*v.SourceWorkspaceID)
+		out.Env = Some(cloned3)
 	}
 	return out
 }
@@ -5558,30 +4904,35 @@ func (v WorkspaceFocusedSubscription) MarshalJSON() ([]byte, error) {
 }
 
 type WorkspaceInfo struct {
-	ActiveTabID string                 `json:"active_tab_id"`
-	AgentStatus AgentStatus            `json:"agent_status"`
-	Focused     bool                   `json:"focused"`
-	Label       string                 `json:"label"`
-	Number      uint64                 `json:"number"`
-	PaneCount   uint64                 `json:"pane_count"`
-	TabCount    uint64                 `json:"tab_count"`
-	Tokens      map[string]string      `json:"tokens,omitempty"`
-	WorkspaceID string                 `json:"workspace_id"`
-	Worktree    *WorkspaceWorktreeInfo `json:"worktree,omitempty"`
+	ActiveTabID string                          `json:"active_tab_id"`
+	AgentStatus AgentStatus                     `json:"agent_status"`
+	Focused     bool                            `json:"focused"`
+	Label       string                          `json:"label"`
+	Number      uint64                          `json:"number"`
+	PaneCount   uint64                          `json:"pane_count"`
+	TabCount    uint64                          `json:"tab_count"`
+	Tokens      Optional[map[string]string]     `json:"tokens,omitzero"`
+	WorkspaceID string                          `json:"workspace_id"`
+	Worktree    Optional[WorkspaceWorktreeInfo] `json:"worktree,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v WorkspaceInfo) Clone() WorkspaceInfo {
 	out := v
-	if v.Tokens != nil {
-		out.Tokens = make(map[string]string, len(v.Tokens))
-		for key1, value2 := range v.Tokens {
-			out.Tokens[key1] = value2
+	if value1, ok2 := v.Tokens.Get(); ok2 {
+		var cloned3 map[string]string
+		if value1 != nil {
+			cloned3 = make(map[string]string, len(value1))
+			for key4, value5 := range value1 {
+				cloned3[key4] = value5
+			}
 		}
+		out.Tokens = Some(cloned3)
 	}
-	if v.Worktree != nil {
-		out.Worktree = new(WorkspaceWorktreeInfo)
-		(*out.Worktree) = (*v.Worktree).Clone()
+	if value6, ok7 := v.Worktree.Get(); ok7 {
+		var cloned8 WorkspaceWorktreeInfo
+		cloned8 = value6.Clone()
+		out.Worktree = Some(cloned8)
 	}
 	return out
 }
@@ -5608,17 +4959,13 @@ func (v WorkspaceMetadataUpdatedSubscription) MarshalJSON() ([]byte, error) {
 }
 
 type WorkspaceMoveBlockParams struct {
-	BeforeWorkspaceID *string  `json:"before_workspace_id,omitempty"`
-	WorkspaceIds      []string `json:"workspace_ids"`
+	BeforeWorkspaceID Optional[string] `json:"before_workspace_id,omitzero"`
+	WorkspaceIds      []string         `json:"workspace_ids"`
 }
 
 // Clone returns a deep copy of v.
 func (v WorkspaceMoveBlockParams) Clone() WorkspaceMoveBlockParams {
 	out := v
-	if v.BeforeWorkspaceID != nil {
-		out.BeforeWorkspaceID = new(string)
-		(*out.BeforeWorkspaceID) = (*v.BeforeWorkspaceID)
-	}
 	if v.WorkspaceIds != nil {
 		out.WorkspaceIds = make([]string, len(v.WorkspaceIds))
 		copy(out.WorkspaceIds, v.WorkspaceIds)
@@ -5712,20 +5059,16 @@ func (v WorkspaceReorderedSubscription) MarshalJSON() ([]byte, error) {
 }
 
 type WorkspaceReportMetadataParams struct {
-	Seq         *uint64            `json:"seq,omitempty"`
+	Seq         Optional[uint64]   `json:"seq,omitzero"`
 	Source      string             `json:"source"`
 	Tokens      map[string]*string `json:"tokens"`
-	TTLMs       *uint64            `json:"ttl_ms,omitempty"`
+	TTLMs       Optional[uint64]   `json:"ttl_ms,omitzero"`
 	WorkspaceID string             `json:"workspace_id"`
 }
 
 // Clone returns a deep copy of v.
 func (v WorkspaceReportMetadataParams) Clone() WorkspaceReportMetadataParams {
 	out := v
-	if v.Seq != nil {
-		out.Seq = new(uint64)
-		(*out.Seq) = (*v.Seq)
-	}
 	if v.Tokens != nil {
 		out.Tokens = make(map[string]*string, len(v.Tokens))
 		for key1, value2 := range v.Tokens {
@@ -5736,10 +5079,6 @@ func (v WorkspaceReportMetadataParams) Clone() WorkspaceReportMetadataParams {
 			}
 			out.Tokens[key1] = cloned3
 		}
-	}
-	if v.TTLMs != nil {
-		out.TTLMs = new(uint64)
-		(*out.TTLMs) = (*v.TTLMs)
 	}
 	return out
 }
@@ -5790,51 +5129,19 @@ func (v WorkspaceWorktreeInfo) Clone() WorkspaceWorktreeInfo {
 }
 
 type WorktreeCreateParams struct {
-	Base            *string `json:"base,omitempty"`
-	Branch          *string `json:"branch,omitempty"`
-	Cwd             *string `json:"cwd,omitempty"`
-	Focus           *bool   `json:"focus,omitempty"`
-	Label           *string `json:"label,omitempty"`
-	Path            *string `json:"path,omitempty"`
-	TrustRepository *bool   `json:"trust_repository,omitempty"`
-	WorkspaceID     *string `json:"workspace_id,omitempty"`
+	Base            Optional[string] `json:"base,omitzero"`
+	Branch          Optional[string] `json:"branch,omitzero"`
+	Cwd             Optional[string] `json:"cwd,omitzero"`
+	Focus           Optional[bool]   `json:"focus,omitzero"`
+	Label           Optional[string] `json:"label,omitzero"`
+	Path            Optional[string] `json:"path,omitzero"`
+	TrustRepository Optional[bool]   `json:"trust_repository,omitzero"`
+	WorkspaceID     Optional[string] `json:"workspace_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v WorktreeCreateParams) Clone() WorktreeCreateParams {
 	out := v
-	if v.Base != nil {
-		out.Base = new(string)
-		(*out.Base) = (*v.Base)
-	}
-	if v.Branch != nil {
-		out.Branch = new(string)
-		(*out.Branch) = (*v.Branch)
-	}
-	if v.Cwd != nil {
-		out.Cwd = new(string)
-		(*out.Cwd) = (*v.Cwd)
-	}
-	if v.Focus != nil {
-		out.Focus = new(bool)
-		(*out.Focus) = (*v.Focus)
-	}
-	if v.Label != nil {
-		out.Label = new(string)
-		(*out.Label) = (*v.Label)
-	}
-	if v.Path != nil {
-		out.Path = new(string)
-		(*out.Path) = (*v.Path)
-	}
-	if v.TrustRepository != nil {
-		out.TrustRepository = new(bool)
-		(*out.TrustRepository) = (*v.TrustRepository)
-	}
-	if v.WorkspaceID != nil {
-		out.WorkspaceID = new(string)
-		(*out.WorkspaceID) = (*v.WorkspaceID)
-	}
 	return out
 }
 
@@ -5860,95 +5167,47 @@ func (v WorktreeCreatedSubscription) MarshalJSON() ([]byte, error) {
 }
 
 type WorktreeInfo struct {
-	Branch           *string `json:"branch,omitempty"`
-	IsBare           bool    `json:"is_bare"`
-	IsDetached       bool    `json:"is_detached"`
-	IsLinkedWorktree bool    `json:"is_linked_worktree"`
-	IsPrunable       bool    `json:"is_prunable"`
-	Label            string  `json:"label"`
-	OpenWorkspaceID  *string `json:"open_workspace_id,omitempty"`
-	Path             string  `json:"path"`
+	Branch           Optional[string] `json:"branch,omitzero"`
+	IsBare           bool             `json:"is_bare"`
+	IsDetached       bool             `json:"is_detached"`
+	IsLinkedWorktree bool             `json:"is_linked_worktree"`
+	IsPrunable       bool             `json:"is_prunable"`
+	Label            string           `json:"label"`
+	OpenWorkspaceID  Optional[string] `json:"open_workspace_id,omitzero"`
+	Path             string           `json:"path"`
 }
 
 // Clone returns a deep copy of v.
 func (v WorktreeInfo) Clone() WorktreeInfo {
 	out := v
-	if v.Branch != nil {
-		out.Branch = new(string)
-		(*out.Branch) = (*v.Branch)
-	}
-	if v.OpenWorkspaceID != nil {
-		out.OpenWorkspaceID = new(string)
-		(*out.OpenWorkspaceID) = (*v.OpenWorkspaceID)
-	}
 	return out
 }
 
 type WorktreeListParams struct {
-	Cwd             *string `json:"cwd,omitempty"`
-	TrustRepository *bool   `json:"trust_repository,omitempty"`
-	WorkspaceID     *string `json:"workspace_id,omitempty"`
+	Cwd             Optional[string] `json:"cwd,omitzero"`
+	TrustRepository Optional[bool]   `json:"trust_repository,omitzero"`
+	WorkspaceID     Optional[string] `json:"workspace_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v WorktreeListParams) Clone() WorktreeListParams {
 	out := v
-	if v.Cwd != nil {
-		out.Cwd = new(string)
-		(*out.Cwd) = (*v.Cwd)
-	}
-	if v.TrustRepository != nil {
-		out.TrustRepository = new(bool)
-		(*out.TrustRepository) = (*v.TrustRepository)
-	}
-	if v.WorkspaceID != nil {
-		out.WorkspaceID = new(string)
-		(*out.WorkspaceID) = (*v.WorkspaceID)
-	}
 	return out
 }
 
 type WorktreeOpenParams struct {
-	Branch          *string `json:"branch,omitempty"`
-	Cwd             *string `json:"cwd,omitempty"`
-	Focus           *bool   `json:"focus,omitempty"`
-	Label           *string `json:"label,omitempty"`
-	Path            *string `json:"path,omitempty"`
-	TrustRepository *bool   `json:"trust_repository,omitempty"`
-	WorkspaceID     *string `json:"workspace_id,omitempty"`
+	Branch          Optional[string] `json:"branch,omitzero"`
+	Cwd             Optional[string] `json:"cwd,omitzero"`
+	Focus           Optional[bool]   `json:"focus,omitzero"`
+	Label           Optional[string] `json:"label,omitzero"`
+	Path            Optional[string] `json:"path,omitzero"`
+	TrustRepository Optional[bool]   `json:"trust_repository,omitzero"`
+	WorkspaceID     Optional[string] `json:"workspace_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v WorktreeOpenParams) Clone() WorktreeOpenParams {
 	out := v
-	if v.Branch != nil {
-		out.Branch = new(string)
-		(*out.Branch) = (*v.Branch)
-	}
-	if v.Cwd != nil {
-		out.Cwd = new(string)
-		(*out.Cwd) = (*v.Cwd)
-	}
-	if v.Focus != nil {
-		out.Focus = new(bool)
-		(*out.Focus) = (*v.Focus)
-	}
-	if v.Label != nil {
-		out.Label = new(string)
-		(*out.Label) = (*v.Label)
-	}
-	if v.Path != nil {
-		out.Path = new(string)
-		(*out.Path) = (*v.Path)
-	}
-	if v.TrustRepository != nil {
-		out.TrustRepository = new(bool)
-		(*out.TrustRepository) = (*v.TrustRepository)
-	}
-	if v.WorkspaceID != nil {
-		out.WorkspaceID = new(string)
-		(*out.WorkspaceID) = (*v.WorkspaceID)
-	}
 	return out
 }
 
@@ -5974,22 +5233,14 @@ func (v WorktreeOpenedSubscription) MarshalJSON() ([]byte, error) {
 }
 
 type WorktreeRemoveParams struct {
-	Force           *bool  `json:"force,omitempty"`
-	TrustRepository *bool  `json:"trust_repository,omitempty"`
-	WorkspaceID     string `json:"workspace_id"`
+	Force           Optional[bool] `json:"force,omitzero"`
+	TrustRepository Optional[bool] `json:"trust_repository,omitzero"`
+	WorkspaceID     string         `json:"workspace_id"`
 }
 
 // Clone returns a deep copy of v.
 func (v WorktreeRemoveParams) Clone() WorktreeRemoveParams {
 	out := v
-	if v.Force != nil {
-		out.Force = new(bool)
-		(*out.Force) = (*v.Force)
-	}
-	if v.TrustRepository != nil {
-		out.TrustRepository = new(bool)
-		(*out.TrustRepository) = (*v.TrustRepository)
-	}
 	return out
 }
 
@@ -6015,19 +5266,15 @@ func (v WorktreeRemovedSubscription) MarshalJSON() ([]byte, error) {
 }
 
 type WorktreeSourceInfo struct {
-	RepoKey            string  `json:"repo_key"`
-	RepoName           string  `json:"repo_name"`
-	RepoRoot           string  `json:"repo_root"`
-	SourceCheckoutPath string  `json:"source_checkout_path"`
-	SourceWorkspaceID  *string `json:"source_workspace_id,omitempty"`
+	RepoKey            string           `json:"repo_key"`
+	RepoName           string           `json:"repo_name"`
+	RepoRoot           string           `json:"repo_root"`
+	SourceCheckoutPath string           `json:"source_checkout_path"`
+	SourceWorkspaceID  Optional[string] `json:"source_workspace_id,omitzero"`
 }
 
 // Clone returns a deep copy of v.
 func (v WorktreeSourceInfo) Clone() WorktreeSourceInfo {
 	out := v
-	if v.SourceWorkspaceID != nil {
-		out.SourceWorkspaceID = new(string)
-		(*out.SourceWorkspaceID) = (*v.SourceWorkspaceID)
-	}
 	return out
 }

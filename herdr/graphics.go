@@ -30,9 +30,9 @@ const PaneGraphicsStreamMaxBytes = 16 << 20
 // The owner field the herdr struct carries is not part of the wire form: the
 // server assigns it per connection.
 type PaneGraphicsStreamParams struct {
-	LayerID *string `json:"layer_id,omitempty"`
-	PaneID  string  `json:"pane_id"`
-	ZIndex  *int32  `json:"z_index,omitempty"`
+	LayerID Optional[string] `json:"layer_id,omitzero"`
+	PaneID  string           `json:"pane_id"`
+	ZIndex  Optional[int32]  `json:"z_index,omitzero"`
 }
 
 // GraphicsFrame is one inline frame: a JSON header followed by exactly
@@ -46,7 +46,7 @@ type GraphicsFrame struct {
 	ImageWidth  uint32
 	ImageHeight uint32
 	Data        []byte
-	Placement   *PaneGraphicsPlacementParams
+	Placement   Optional[PaneGraphicsPlacementParams]
 }
 
 // GraphicsFileFrame is one frame whose pixels the server reads from a file
@@ -63,19 +63,19 @@ type GraphicsFileFrame struct {
 	Path        string
 	Sequence    uint64
 	Revision    uint64
-	Placement   *PaneGraphicsPlacementParams
+	Placement   Optional[PaneGraphicsPlacementParams]
 }
 
 // graphicsFrameHeader is the JSON line that precedes a frame.
 type graphicsFrameHeader struct {
-	Format      PaneGraphicsFormat           `json:"format"`
-	ImageWidth  uint32                       `json:"image_width"`
-	ImageHeight uint32                       `json:"image_height"`
-	DataLength  *int                         `json:"data_length,omitempty"`
-	File        *graphicsFrameFile           `json:"file,omitempty"`
-	Sequence    uint64                       `json:"sequence,omitempty"`
-	Revision    uint64                       `json:"revision,omitempty"`
-	Placement   *PaneGraphicsPlacementParams `json:"placement,omitempty"`
+	Format      PaneGraphicsFormat                    `json:"format"`
+	ImageWidth  uint32                                `json:"image_width"`
+	ImageHeight uint32                                `json:"image_height"`
+	DataLength  Optional[int]                         `json:"data_length,omitzero"`
+	File        Optional[graphicsFrameFile]           `json:"file,omitzero"`
+	Sequence    uint64                                `json:"sequence,omitzero"`
+	Revision    uint64                                `json:"revision,omitzero"`
+	Placement   Optional[PaneGraphicsPlacementParams] `json:"placement,omitzero"`
 }
 
 type graphicsFrameFile struct {
@@ -241,7 +241,7 @@ func (s *GraphicsStream) SendFrame(ctx context.Context, frame GraphicsFrame) err
 		Format:      frame.Format,
 		ImageWidth:  frame.ImageWidth,
 		ImageHeight: frame.ImageHeight,
-		DataLength:  &length,
+		DataLength:  Some(length),
 		Placement:   frame.Placement,
 	}
 	_, err := s.send(ctx, header, frame.Data, false)
@@ -265,7 +265,7 @@ func (s *GraphicsStream) SendFileFrame(ctx context.Context, frame GraphicsFileFr
 		Format:      frame.Format,
 		ImageWidth:  frame.ImageWidth,
 		ImageHeight: frame.ImageHeight,
-		File:        &graphicsFrameFile{Path: frame.Path},
+		File:        Some(graphicsFrameFile{Path: frame.Path}),
 		Sequence:    frame.Sequence,
 		Revision:    frame.Revision,
 		Placement:   frame.Placement,

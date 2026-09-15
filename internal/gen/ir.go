@@ -30,10 +30,16 @@ type EnumValue struct {
 
 // Field is one struct field.
 type Field struct {
-	Name      string
-	JSON      string
-	Type      string
+	Name string
+	JSON string
+	Type string
+	// ValueType is the schema value type before an optional object property is
+	// wrapped in Optional. It equals Type for required and synthetic fields.
+	ValueType string
 	Doc       string
+	Required  bool
+	Nullable  bool
+	Optional  bool
 	OmitEmpty bool
 	// Union names the sealed interface the field decodes through, empty when
 	// the field is decoded by encoding/json alone.
@@ -206,6 +212,9 @@ func Build(doc *Document, table *MethodTable, pkgName string) (*Package, error) 
 	if err := b.buildRemaining(); err != nil {
 		return nil, err
 	}
+	if err := breakOptionalStructCycles(b.order); err != nil {
+		return nil, err
+	}
 	methods, err := b.buildMethods(table)
 	if err != nil {
 		return nil, err
@@ -222,11 +231,90 @@ func Build(doc *Document, table *MethodTable, pkgName string) (*Package, error) 
 		{Name: "Event", Kind: KindUnion, Variants: pkg.TypesIn(fileEvents)},
 		{Name: "Result", Kind: KindUnion, Variants: pkg.TypesIn(fileResults)},
 		{Name: "EventEnvelope", Kind: KindStruct, Doc: "EventEnvelope is one event line pushed on a subscription connection.", Fields: []*Field{
-			{Name: "Event", Type: "EventKind", JSON: "event"}, {Name: "Data", Type: "Event", JSON: "data"},
+			{Name: "Event", Type: "EventKind", ValueType: "EventKind", JSON: "event", Required: true},
+			{Name: "Data", Type: "Event", ValueType: "Event", JSON: "data", Required: true},
 		}},
 	}
 	sort.Slice(pkg.Types, func(i, j int) bool { return pkg.Types[i].Name < pkg.Types[j].Name })
 	return pkg, nil
+}
+
+// breakOptionalStructCycles retains value semantics for ordinary optional
+// structs, but uses a pointer inside Optional when a direct struct reference
+// would otherwise give a generated Go type infinite size.
+func breakOptionalStructCycles(types []*Type) error {
+	structs := make(map[string]*Type)
+	for _, typ := range types {
+		if typ.Kind == KindStruct {
+			structs[typ.Name] = typ
+		}
+	}
+
+	edges := func() map[string][]string {
+		out := make(map[string][]string)
+		for _, typ := range structs {
+			for _, field := range typ.Fields {
+				if _, ok := structs[field.ValueType]; ok {
+					out[typ.Name] = append(out[typ.Name], field.ValueType)
+				}
+			}
+		}
+		return out
+	}
+	reaches := func(graph map[string][]string, from, want string) bool {
+		seen := make(map[string]bool)
+		var visit func(string) bool
+		visit = func(name string) bool {
+			if name == want {
+				return true
+			}
+			if seen[name] {
+				return false
+			}
+			seen[name] = true
+			for _, next := range graph[name] {
+				if visit(next) {
+					return true
+				}
+			}
+			return false
+		}
+		return visit(from)
+	}
+
+	for {
+		graph := edges()
+		changed := false
+		for _, typ := range types {
+			for _, field := range typ.Fields {
+				if !field.Optional {
+					continue
+				}
+				target, ok := structs[field.ValueType]
+				if !ok || !reaches(graph, target.Name, typ.Name) {
+					continue
+				}
+				field.ValueType = "*" + field.ValueType
+				field.Type = "Optional[" + field.ValueType + "]"
+				changed = true
+				break
+			}
+			if changed {
+				break
+			}
+		}
+		if !changed {
+			graph = edges()
+			for owner, targets := range graph {
+				for _, target := range targets {
+					if reaches(graph, target, owner) {
+						return fmt.Errorf("generated structs %s and %s form a required value cycle", owner, target)
+					}
+				}
+			}
+			return nil
+		}
+	}
 }
 
 // collectDefs merges the $defs of every section. A name used in more than one
@@ -519,33 +607,35 @@ func (b *builder) field(owner *Node, name string) (*Field, error) {
 		return nil, fmt.Errorf("%s: %w", name, err)
 	}
 	required := owner.IsRequired(name)
-	f := &Field{Name: pascal(name), JSON: name, Doc: node.Description}
+	f := &Field{
+		Name:      pascal(name),
+		JSON:      name,
+		Doc:       node.Description,
+		Required:  required,
+		Nullable:  res.Nullable,
+		Optional:  !required,
+		ValueType: res.Go,
+	}
 	switch res.Cat {
 	case catUnion:
 		f.Type = res.Go
 		f.Union = res.Union
-		f.OmitEmpty = !required
 	case catSlice:
 		f.Type = res.Go
 		f.Union = res.ElemUnion
 		f.UnionSlice = res.ElemUnion != ""
-		f.OmitEmpty = !required
 	case catMap, catRaw:
 		f.Type = res.Go
-		f.OmitEmpty = !required
 	default:
-		switch {
-		case required && res.Nullable:
+		if required && res.Nullable {
 			f.Type = "*" + res.Go
-		case required:
+			f.ValueType = f.Type
+		} else {
 			f.Type = res.Go
-		case !res.Nullable && (res.Cat == catString || res.Cat == catEnum):
-			f.Type = res.Go
-			f.OmitEmpty = true
-		default:
-			f.Type = "*" + res.Go
-			f.OmitEmpty = true
 		}
+	}
+	if f.Optional {
+		f.Type = "Optional[" + f.ValueType + "]"
 	}
 	return f, nil
 }
@@ -736,7 +826,9 @@ func sameFields(a, b []*Field) bool {
 	}
 	for i := range a {
 		if a[i].Name != b[i].Name || a[i].JSON != b[i].JSON ||
-			a[i].Type != b[i].Type || a[i].OmitEmpty != b[i].OmitEmpty ||
+			a[i].Type != b[i].Type || a[i].ValueType != b[i].ValueType ||
+			a[i].Required != b[i].Required || a[i].Nullable != b[i].Nullable ||
+			a[i].Optional != b[i].Optional || a[i].OmitEmpty != b[i].OmitEmpty ||
 			a[i].Union != b[i].Union || a[i].UnionSlice != b[i].UnionSlice {
 			return false
 		}

@@ -100,7 +100,7 @@ func TestBootstrapCallsInOrder(t *testing.T) {
 		Reply(herdr.MethodWorktreeCreate, herdr.WorktreeCreatedResponse{
 			Workspace: herdr.WorkspaceInfo{WorkspaceID: "w9"},
 			Tab:       herdr.TabInfo{TabID: "w9:t1", WorkspaceID: "w9"},
-			Worktree:  herdr.WorktreeInfo{Path: "/checkouts/issue-7", Branch: herdr.Ptr("issue-7")},
+			Worktree:  herdr.WorktreeInfo{Path: "/checkouts/issue-7", Branch: herdr.Some("issue-7")},
 		}).
 		Reply(herdr.MethodWorkspaceReportMetadata, herdr.OKResponse{}).
 		Reply(herdr.MethodLayoutApply, herdr.LayoutApplyResponse{
@@ -110,8 +110,8 @@ func TestBootstrapCallsInOrder(t *testing.T) {
 				Root: herdr.LayoutNodeSplit{
 					Direction: herdr.SplitDirectionRight,
 					Ratio:     0.6,
-					First:     herdr.LayoutNodePane{Label: herdr.Ptr("shell"), PaneID: herdr.Ptr("w9:p2")},
-					Second:    herdr.LayoutNodePane{Label: herdr.Ptr("issue-7"), PaneID: herdr.Ptr(agentPane.PaneID)},
+					First:     herdr.LayoutNodePane{Label: herdr.Some("shell"), PaneID: herdr.Some("w9:p2")},
+					Second:    herdr.LayoutNodePane{Label: herdr.Some("issue-7"), PaneID: herdr.Some(agentPane.PaneID)},
 				},
 			},
 		}).
@@ -144,7 +144,7 @@ func TestBootstrapCallsInOrder(t *testing.T) {
 
 	var worktree herdr.WorktreeCreateParams
 	decode(t, calls[0].Params, &worktree)
-	if herdr.Value(worktree.Branch) != "issue-7" || herdr.Value(worktree.WorkspaceID) != "ws-1" {
+	if worktree.Branch.ValueOrZero() != "issue-7" || worktree.WorkspaceID.ValueOrZero() != "ws-1" {
 		t.Errorf("worktree.create asked for %+v, want branch issue-7 in the invoking workspace", worktree)
 	}
 
@@ -156,8 +156,8 @@ func TestBootstrapCallsInOrder(t *testing.T) {
 
 	var layout herdr.LayoutApplyParams
 	decode(t, calls[2].Params, &layout)
-	if herdr.Value(layout.TabID) != "w9:t1" {
-		t.Errorf("layout.apply targeted %q, want the tab the worktree opened", herdr.Value(layout.TabID))
+	if layout.TabID.ValueOrZero() != "w9:t1" {
+		t.Errorf("layout.apply targeted %q, want the tab the worktree opened", layout.TabID.ValueOrZero())
 	}
 
 	// The agent starts in the pane carrying the label the layout asked for,

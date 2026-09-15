@@ -17,15 +17,15 @@ const testTimeout = 5 * time.Second
 
 func TestServerFixedAndDynamicResponses(t *testing.T) {
 	server := NewServer(t)
-	capabilities := &herdr.ServerCapabilities{LiveHandoff: true}
-	server.Reply(herdr.MethodPing, herdr.PongResponse{
-		Capabilities: capabilities,
+	response := &herdr.PongResponse{
+		Capabilities: herdr.Some(herdr.ServerCapabilities{LiveHandoff: true}),
 		Protocol:     22,
 		Version:      "fixed",
-	})
-	// Reply captures the result when it is registered, including pointed-to
-	// data that the test might reuse and mutate later.
-	capabilities.LiveHandoff = false
+	}
+	server.Reply(herdr.MethodPing, response)
+	// Reply captures the pointed-to result at registration, so the test may
+	// reuse and mutate it without changing the scripted response.
+	response.Capabilities = herdr.Some(herdr.ServerCapabilities{LiveHandoff: false})
 
 	ctx, cancel := context.WithTimeout(t.Context(), testTimeout)
 	defer cancel()
@@ -36,7 +36,7 @@ func TestServerFixedAndDynamicResponses(t *testing.T) {
 	if pong.Version != "fixed" || pong.Protocol != 22 {
 		t.Errorf("pong = %+v", pong)
 	}
-	if pong.Capabilities == nil || !pong.Capabilities.LiveHandoff {
+	if capabilities, ok := pong.Capabilities.Get(); !ok || !capabilities.LiveHandoff {
 		t.Errorf("capabilities = %+v, want captured live_handoff=true", pong.Capabilities)
 	}
 

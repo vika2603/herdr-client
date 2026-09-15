@@ -89,7 +89,9 @@ func wrap(text string, width int) []string {
 // tag renders the struct tag of a field.
 func (f *Field) tag() string {
 	name := f.JSON
-	if f.OmitEmpty {
+	if f.Optional {
+		name += ",omitzero"
+	} else if f.OmitEmpty {
 		name += ",omitempty"
 	}
 	return "`json:" + strconv.Quote(name) + "`"
@@ -252,7 +254,7 @@ func emitUnmarshal(c *code, t *Type) {
 			continue
 		}
 		raw := "json.RawMessage"
-		if f.UnionSlice {
+		if f.UnionSlice && !f.Optional {
 			raw = "[]json.RawMessage"
 		}
 		c.printf("\t\t%s %s %s\n", f.Name, raw, f.tag())
@@ -264,6 +266,36 @@ func emitUnmarshal(c *code, t *Type) {
 	c.printf("\t*v = %s(aux.alias)\n", t.Name)
 	for _, f := range t.Fields {
 		if f.Union == "" {
+			continue
+		}
+		if f.Optional {
+			c.printf("\tif len(aux.%s) > 0 {\n", f.Name)
+			c.printf("\t\tif string(aux.%s) == \"null\" {\n", f.Name)
+			c.printf("\t\t\tv.%s = Null[%s]()\n", f.Name, f.ValueType)
+			c.line("\t\t} else {")
+			if f.UnionSlice {
+				c.line("\t\t\tvar items []json.RawMessage")
+				c.printf("\t\t\tif err := json.Unmarshal(aux.%s, &items); err != nil {\n", f.Name)
+				c.line("\t\t\t\treturn err")
+				c.line("\t\t\t}")
+				c.printf("\t\t\tdecodedItems := make(%s, 0, len(items))\n", f.ValueType)
+				c.line("\t\t\tfor _, item := range items {")
+				c.printf("\t\t\t\tdecoded, err := decode%s(item)\n", f.Union)
+				c.line("\t\t\t\tif err != nil {")
+				c.line("\t\t\t\t\treturn err")
+				c.line("\t\t\t\t}")
+				c.line("\t\t\t\tdecodedItems = append(decodedItems, decoded)")
+				c.line("\t\t\t}")
+				c.printf("\t\t\tv.%s = Some(decodedItems)\n", f.Name)
+			} else {
+				c.printf("\t\t\tdecoded, err := decode%s(aux.%s)\n", f.Union, f.Name)
+				c.line("\t\t\tif err != nil {")
+				c.line("\t\t\t\treturn err")
+				c.line("\t\t\t}")
+				c.printf("\t\t\tv.%s = Some(decoded)\n", f.Name)
+			}
+			c.line("\t\t}")
+			c.line("\t}")
 			continue
 		}
 		if f.UnionSlice {

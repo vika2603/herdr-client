@@ -72,7 +72,7 @@ func onOpen(ctx context.Context, env *plugin.Env) error {
 	_, err := env.Client().PluginPaneOpen(ctx, herdr.PluginPaneOpenParams{
 		PluginID:   env.PluginID,
 		Entrypoint: paneBoard,
-		Focus:      herdr.Ptr(true),
+		Focus:      herdr.Some(true),
 	})
 	return err
 }
@@ -136,7 +136,7 @@ func reportTitle(ctx context.Context, client *herdr.Client, env *plugin.Env) err
 	_, err := client.PaneReportMetadata(ctx, herdr.PaneReportMetadataParams{
 		PaneID: env.PaneID,
 		Source: env.PluginID,
-		Title:  herdr.Ptr(boardTitle),
+		Title:  herdr.Some(boardTitle),
 	})
 	return err
 }
@@ -193,7 +193,7 @@ func (b board) paneLabel(paneID string) string {
 	if !ok {
 		return paneID
 	}
-	return cmp.Or(herdr.Value(pane.Label), paneID)
+	return cmp.Or(pane.Label.ValueOrZero(), paneID)
 }
 
 // render draws one frame. It reads nothing but the frame, so the whole layout
@@ -250,5 +250,5 @@ func mark(focused bool) string {
 // agentName prefers the name the user gave the agent, then the label Herdr
 // displays, then the detected agent id.
 func agentName(agent herdr.AgentInfo) string {
-	return cmp.Or(herdr.Value(agent.Name), herdr.Value(agent.DisplayAgent), herdr.Value(agent.Agent), "agent")
+	return cmp.Or(agent.Name.ValueOrZero(), agent.DisplayAgent.ValueOrZero(), agent.Agent.ValueOrZero(), "agent")
 }

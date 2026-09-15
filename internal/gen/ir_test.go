@@ -55,28 +55,30 @@ func TestFieldOptionalAndNullableMapping(t *testing.T) {
 	cases := []struct {
 		property  string
 		goType    string
-		omitEmpty bool
+		valueType string
+		required  bool
+		nullable  bool
 		union     string
 		slice     bool
 	}{
-		{property: "required_string", goType: "string"},
-		{property: "required_null", goType: "*string"},
-		{property: "required_bool", goType: "bool"},
-		{property: "required_enum", goType: "AgentStatus"},
-		{property: "optional_string", goType: "string", omitEmpty: true},
-		{property: "optional_enum", goType: "AgentStatus", omitEmpty: true},
-		{property: "optional_bool", goType: "*bool", omitEmpty: true},
-		{property: "optional_int", goType: "*uint64", omitEmpty: true},
-		{property: "optional_struct", goType: "*PaneInfo", omitEmpty: true},
-		{property: "optional_manual", goType: "*PopupSize", omitEmpty: true},
-		{property: "optional_null", goType: "*string", omitEmpty: true},
-		{property: "optional_array", goType: "[]string", omitEmpty: true},
-		{property: "optional_nullable_array", goType: "[]string", omitEmpty: true},
-		{property: "optional_map", goType: "map[string]string", omitEmpty: true},
-		{property: "optional_null_map", goType: "map[string]*string", omitEmpty: true},
-		{property: "raw", goType: "json.RawMessage"},
-		{property: "union", goType: "LayoutNode", union: "LayoutNode"},
-		{property: "union_list", goType: "[]LayoutNode", omitEmpty: true, union: "LayoutNode", slice: true},
+		{property: "required_string", goType: "string", valueType: "string", required: true},
+		{property: "required_null", goType: "*string", valueType: "*string", required: true, nullable: true},
+		{property: "required_bool", goType: "bool", valueType: "bool", required: true},
+		{property: "required_enum", goType: "AgentStatus", valueType: "AgentStatus", required: true},
+		{property: "optional_string", goType: "Optional[string]", valueType: "string"},
+		{property: "optional_enum", goType: "Optional[AgentStatus]", valueType: "AgentStatus"},
+		{property: "optional_bool", goType: "Optional[bool]", valueType: "bool"},
+		{property: "optional_int", goType: "Optional[uint64]", valueType: "uint64"},
+		{property: "optional_struct", goType: "Optional[PaneInfo]", valueType: "PaneInfo"},
+		{property: "optional_manual", goType: "Optional[PopupSize]", valueType: "PopupSize", nullable: true},
+		{property: "optional_null", goType: "Optional[string]", valueType: "string", nullable: true},
+		{property: "optional_array", goType: "Optional[[]string]", valueType: "[]string"},
+		{property: "optional_nullable_array", goType: "Optional[[]string]", valueType: "[]string", nullable: true},
+		{property: "optional_map", goType: "Optional[map[string]string]", valueType: "map[string]string"},
+		{property: "optional_null_map", goType: "Optional[map[string]*string]", valueType: "map[string]*string"},
+		{property: "raw", goType: "json.RawMessage", valueType: "json.RawMessage", required: true},
+		{property: "union", goType: "LayoutNode", valueType: "LayoutNode", required: true, union: "LayoutNode"},
+		{property: "union_list", goType: "Optional[[]LayoutNode]", valueType: "[]LayoutNode", union: "LayoutNode", slice: true},
 	}
 	b := testBuilder()
 	for _, c := range cases {
@@ -88,8 +90,11 @@ func TestFieldOptionalAndNullableMapping(t *testing.T) {
 		if field.Type != c.goType {
 			t.Errorf("%s: type = %q, want %q", c.property, field.Type, c.goType)
 		}
-		if field.OmitEmpty != c.omitEmpty {
-			t.Errorf("%s: omitempty = %t, want %t", c.property, field.OmitEmpty, c.omitEmpty)
+		if field.ValueType != c.valueType || field.Required != c.required || field.Optional == c.required || field.Nullable != c.nullable {
+			t.Errorf("%s: metadata = value %q required %t optional %t nullable %t", c.property, field.ValueType, field.Required, field.Optional, field.Nullable)
+		}
+		if field.OmitEmpty {
+			t.Errorf("%s: schema field unexpectedly uses omitempty", c.property)
 		}
 		if field.Union != c.union || field.UnionSlice != c.slice {
 			t.Errorf("%s: union = %q/%t, want %q/%t", c.property, field.Union, field.UnionSlice, c.union, c.slice)
@@ -108,6 +113,36 @@ func TestFieldNameAndTag(t *testing.T) {
 	}
 	if got, want := field.tag(), "`json:\"pane_id\"`"; got != want {
 		t.Errorf("tag = %s, want %s", got, want)
+	}
+}
+
+func TestOptionalFieldTag(t *testing.T) {
+	owner := mustParseNode(t, `{"type":"object","properties":{"focus":{"type":"boolean"}}}`)
+	field, err := testBuilder().field(owner, "focus")
+	if err != nil {
+		t.Fatalf("field: %v", err)
+	}
+	if got, want := field.tag(), "`json:\"focus,omitzero\"`"; got != want {
+		t.Errorf("tag = %s, want %s", got, want)
+	}
+}
+
+func TestOptionalStructCycleUsesPointerValue(t *testing.T) {
+	node := &Type{Name: "Node", Kind: KindStruct, Fields: []*Field{{
+		Name: "Next", Type: "Optional[Node]", ValueType: "Node", Optional: true,
+	}}}
+	if err := breakOptionalStructCycles([]*Type{node}); err != nil {
+		t.Fatal(err)
+	}
+	if got, want := node.Fields[0].Type, "Optional[*Node]"; got != want {
+		t.Fatalf("recursive field type = %q, want %q", got, want)
+	}
+
+	required := &Type{Name: "Required", Kind: KindStruct, Fields: []*Field{{
+		Name: "Next", Type: "Required", ValueType: "Required", Required: true,
+	}}}
+	if err := breakOptionalStructCycles([]*Type{required}); err == nil {
+		t.Fatal("required value cycle was accepted")
 	}
 }
 

@@ -77,12 +77,14 @@ func (g *graphicsServer) serveFrames(s *fakeSession) {
 		}
 
 		var data []byte
-		if header.File == nil {
-			if header.DataLength == nil || *header.DataLength == 0 {
+		_, fileFrame := header.File.Get()
+		if !fileFrame {
+			dataLength, ok := header.DataLength.Get()
+			if !ok || dataLength == 0 {
 				failFrame(s, s.request().ID, "invalid_frame", "frame requires data_length or file")
 				return
 			}
-			data = make([]byte, *header.DataLength)
+			data = make([]byte, dataLength)
 			if _, readErr := io.ReadFull(s.reader, data); readErr != nil {
 				return
 			}
@@ -97,14 +99,14 @@ func (g *graphicsServer) serveFrames(s *fakeSession) {
 		// herdr answers a file frame under the id it dispatched it with, and
 		// an inline frame only when the app refused it.
 		id := fmt.Sprintf("%s:frame:%d", s.request().ID, inline)
-		if header.File != nil {
+		if fileFrame {
 			id = fmt.Sprintf("%s:file:%d", s.request().ID, header.Sequence)
 		}
 		if g.cfg.frameErrorAt == frames && g.cfg.frameError != "" {
 			failFrame(s, id, g.cfg.frameError, "refused")
 			return
 		}
-		if header.File != nil {
+		if fileFrame {
 			s.writeJSON(map[string]any{"id": id, "result": map[string]any{
 				"type":     "pane_graphics_frame_ack",
 				"sequence": header.Sequence,

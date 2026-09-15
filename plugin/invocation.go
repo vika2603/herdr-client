@@ -2,12 +2,12 @@ package plugin
 
 import "github.com/vika2603/herdr-client/herdr"
 
-// Invocation is the invocation context Herdr passed, with its optional fields
-// flattened to values: a field Herdr did not send reads as the empty string
-// rather than as a nil pointer.
+// Invocation is the invocation context Herdr passed, with its optional scalar
+// fields flattened to values: a field Herdr did not send reads as its zero
+// value.
 //
 // A plugin reading its own invocation context almost never needs to tell an
-// absent field from an empty one; the pointer form stays available through
+// absent field from an empty one; the optional form stays available through
 // Env.Context.
 type Invocation struct {
 	// WorkspaceID, WorkspaceLabel and WorkspaceCwd describe the workspace the
@@ -34,10 +34,8 @@ type Invocation struct {
 	// CorrelationID ties the run to the API request that caused it.
 	InvocationSource string
 	CorrelationID    string
-	// Worktree is the git worktree behind the workspace, nil when the
-	// workspace is not one. It keeps its pointer form because a struct has no
-	// useful empty value here.
-	Worktree *herdr.WorkspaceWorktreeInfo
+	// Worktree is the git worktree behind the workspace when it has one.
+	Worktree herdr.Optional[herdr.WorkspaceWorktreeInfo]
 }
 
 // Invocation decodes the invocation context, reporting every field Herdr did
@@ -53,20 +51,20 @@ func (e *Env) Invocation() Invocation {
 		return Invocation{}
 	}
 	return Invocation{
-		WorkspaceID:       herdr.Value(context.WorkspaceID),
-		WorkspaceLabel:    herdr.Value(context.WorkspaceLabel),
-		WorkspaceCwd:      herdr.Value(context.WorkspaceCwd),
-		TabID:             herdr.Value(context.TabID),
-		TabLabel:          herdr.Value(context.TabLabel),
-		FocusedPaneID:     herdr.Value(context.FocusedPaneID),
-		FocusedPaneAgent:  herdr.Value(context.FocusedPaneAgent),
-		FocusedPaneCwd:    herdr.Value(context.FocusedPaneCwd),
-		FocusedPaneStatus: herdr.Value(context.FocusedPaneStatus),
-		SelectedText:      herdr.Value(context.SelectedText),
-		ClickedURL:        herdr.Value(context.ClickedURL),
-		LinkHandlerID:     herdr.Value(context.LinkHandlerID),
-		InvocationSource:  herdr.Value(context.InvocationSource),
-		CorrelationID:     herdr.Value(context.CorrelationID),
+		WorkspaceID:       context.WorkspaceID.ValueOrZero(),
+		WorkspaceLabel:    context.WorkspaceLabel.ValueOrZero(),
+		WorkspaceCwd:      context.WorkspaceCwd.ValueOrZero(),
+		TabID:             context.TabID.ValueOrZero(),
+		TabLabel:          context.TabLabel.ValueOrZero(),
+		FocusedPaneID:     context.FocusedPaneID.ValueOrZero(),
+		FocusedPaneAgent:  context.FocusedPaneAgent.ValueOrZero(),
+		FocusedPaneCwd:    context.FocusedPaneCwd.ValueOrZero(),
+		FocusedPaneStatus: context.FocusedPaneStatus.ValueOrZero(),
+		SelectedText:      context.SelectedText.ValueOrZero(),
+		ClickedURL:        context.ClickedURL.ValueOrZero(),
+		LinkHandlerID:     context.LinkHandlerID.ValueOrZero(),
+		InvocationSource:  context.InvocationSource.ValueOrZero(),
+		CorrelationID:     context.CorrelationID.ValueOrZero(),
 		Worktree:          context.Worktree,
 	}
 }
