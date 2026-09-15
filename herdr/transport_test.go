@@ -58,7 +58,14 @@ func (d *transportDialer) dial(_ context.Context, address string) (io.ReadWriteC
 			d.mu.Unlock()
 		}()
 		if err := d.serve(server); err != nil {
-			d.t.Errorf("serve injected connection: %v", err)
+			d.mu.Lock()
+			stopping := d.stopping
+			d.mu.Unlock()
+			// Cleanup may close this end before a peer-close read observes
+			// EOF. That expected local interruption is not a protocol failure.
+			if !stopping || !errors.Is(err, io.ErrClosedPipe) {
+				d.t.Errorf("serve injected connection: %v", err)
+			}
 		}
 	}()
 	return observed, nil

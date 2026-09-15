@@ -60,7 +60,9 @@ that carry no discriminator.
 | Path | Contents | Written by |
 | --- | --- | --- |
 | `herdr/client.go` `stream.go` `dial.go` `dial_*.go` `socketpath.go` `errors.go` `ptr.go` | Transport, error codes, pointer helpers | hand |
-| `herdr/subscribe.go` `session.go` | Typed event stream, live session mirror | hand |
+| `herdr/subscribe.go` `session.go` `session_bootstrap.go` | Typed event stream and session connection lifecycle | hand |
+| `herdr/session_state.go` `session_cache.go` `ordered_collection.go` | Synchronized state access and pure ordered event reduction | hand |
+| `herdr/session_clone.go` | Snapshot record ownership and deep copies | hand |
 | `herdr/graphics.go` | The `pane.graphics.stream` frame stream | hand |
 | `herdr/layout.go` | Walking an applied layout to its panes | hand |
 | `herdr/unions_manual.go` | The four unions without a discriminator | hand |
@@ -381,8 +383,26 @@ that to work, which it is because every handler assigns state rather than
 adjusting it.
 
 The cache advances only as `Next` delivers, so reading an accessor after
-`Next` shows the state that event produced. Accessors copy what they return
-and the mirror is safe for concurrent readers.
+`Next` shows the state that event produced. `Session` owns the connection,
+backoff, queued events and resync marker; bootstrap collection is kept in
+`session_bootstrap.go`. A separate `sessionState` owns the cache lock and
+replacement, and `sessionCache` applies events without I/O or synchronization.
+The ordered collections keep the existing event ordering and cascade rules.
+
+The state owner returns fully independent values, including nested pointers,
+maps and slices. Bootstrap records and references retained from events are
+also cloned at ingestion, so an event returned by `Next` cannot mutate cached
+state. Nested nil pointers/maps/slices remain nil and nonnil empty collections
+remain nonnil. Top-level mirror lists continue to normalize absent entries to
+nonnil empty slices. Cache records may share internal references with each other, but no
+such reference crosses the ownership boundary. `session_clone.go` spells out
+the reference fields of the current snapshot records without reflection or a
+JSON round trip.
+
+`BenchmarkSessionSnapshot` exercises populated snapshots at 1, 15 and 100 panes.
+Deep copying necessarily adds allocations compared with borrowing pointers;
+the benchmark measures that tradeoff independently of socket or rendering
+costs. It does not establish UI latency or production throughput.
 
 Each accessor takes the lock on its own, which is enough while the mirror is
 only advanced by `Next`, but leaves no way to read one consistent frame under

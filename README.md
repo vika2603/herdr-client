@@ -256,7 +256,22 @@ for {
 ```
 
 The cache is updated before `Next` returns, so reading it afterwards shows the
-state that event produced. `Snapshot` reads the whole mirror under one lock,
+state that event produced. Accessors and `Snapshot` return fully independent
+data, including nested pointers, maps and slices. Modifying a returned record,
+an older snapshot, or an event returned by `Next` cannot change the mirror.
+The cache also detaches data it retains from bootstrap snapshots and events.
+Nested copies preserve nil versus empty collections. Top-level mirror lists
+keep their existing behavior of returning nonnil empty slices. Copying adds
+allocations in exchange for removing the caller's previous read-only pointer
+restriction.
+
+`Session` owns connection and reconnect behavior, while a separate state owner
+synchronizes the cache and a pure reducer applies events. State still advances
+only when `Next` delivers an event. Run `go test ./herdr -run '^$' -bench
+'^BenchmarkSessionSnapshot$' -benchmem` to measure copying costs for 1, 15 and
+100 populated panes on the current machine.
+
+`Snapshot` reads the whole mirror under one lock,
 for a caller that wants one consistent frame rather than a field at a time.
 `LayoutPanes` walks a layout tree to its pane leaves, which is how a plugin
 learns the ids `layout.apply` assigned. A server restart, which happens on live handoff,
