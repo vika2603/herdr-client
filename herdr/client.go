@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-// Client sends requests to a Herdr server over its local socket.
+// Client sends requests to a Herdr server over local IPC or an injected dialer.
 //
 // The server reads exactly one request per connection and closes the
 // connection after writing the response, so every Call dials a fresh
@@ -23,6 +23,7 @@ import (
 type Client struct {
 	socketPath  string
 	dialTimeout time.Duration
+	dialer      DialFunc
 	nextID      func() string
 	sequence    atomic.Uint64
 }
@@ -30,7 +31,9 @@ type Client struct {
 // Option configures a Client.
 type Option func(*Client)
 
-// WithDialTimeout bounds the time spent connecting to the socket.
+// WithDialTimeout bounds connection establishment, including an injected
+// dialer. It does not bound the request exchange or a returned stream's lifetime.
+// A non-positive duration adds no deadline beyond the caller's context.
 func WithDialTimeout(d time.Duration) Option {
 	return func(c *Client) { c.dialTimeout = d }
 }
@@ -40,7 +43,8 @@ func WithRequestIDs(next func() string) Option {
 	return func(c *Client) { c.nextID = next }
 }
 
-// New returns a Client that dials socketPath. It performs no I/O.
+// New returns a Client that dials socketPath. It performs no I/O. WithDialer
+// passes socketPath unchanged to the injected dialer as its address.
 func New(socketPath string, opts ...Option) *Client {
 	c := &Client{socketPath: socketPath}
 	for _, opt := range opts {
@@ -60,7 +64,7 @@ func NewFromEnv(opts ...Option) (*Client, error) {
 	return New(path, opts...), nil
 }
 
-// SocketPath returns the path the Client dials.
+// SocketPath returns the configured address, also passed to an injected dialer.
 func (c *Client) SocketPath() string { return c.socketPath }
 
 // Call sends one request and decodes the response's result object into
@@ -84,26 +88,12 @@ func (c *Client) Call(ctx context.Context, method string, params, result any) er
 
 // CallRaw sends one request and returns the raw result object.
 func (c *Client) CallRaw(ctx context.Context, method string, params any) (json.RawMessage, error) {
-	request, err := requestLine(c.requestID(), method, params)
-	if err != nil {
-		return nil, requestError(ctx, method, "cannot send request", err)
-	}
-	conn, err := dialSocket(ctx, c.socketPath, c.dialTimeout)
+	opened, err := c.open(ctx, method, params)
 	if err != nil {
 		return nil, err
 	}
-	defer func() { _ = conn.Close() }()
-	stopWatch := watchContext(ctx, conn)
-	defer stopWatch()
-
-	if _, err := conn.Write(request); err != nil {
-		return nil, requestError(ctx, method, "cannot send request", err)
-	}
-	line, err := readLine(bufio.NewReader(conn))
-	if err != nil {
-		return nil, requestError(ctx, method, "cannot read response", err)
-	}
-	return decodeResponseLine(method, line)
+	defer func() { _ = opened.conn.Close() }()
+	return opened.result, nil
 }
 
 // OpenStream sends one request, reads its acknowledging response, and keeps
@@ -113,33 +103,63 @@ func (c *Client) CallRaw(ctx context.Context, method string, params any) (json.R
 // ctx bounds the opening request only. Once the Stream exists it lives until
 // Close; each Next takes its own context.
 func (c *Client) OpenStream(ctx context.Context, method string, params any) (*Stream, error) {
+	opened, err := c.open(ctx, method, params)
+	if err != nil {
+		return nil, err
+	}
+	return newStream(method, opened.conn, opened.reader, opened.result), nil
+}
+
+// openedConnection transfers a successful exchange and its buffered reader to
+// the caller. The caller closes it or gives it to a stream; failed exchanges
+// never transfer ownership.
+type openedConnection struct {
+	conn   io.ReadWriteCloser
+	reader *bufio.Reader
+	result json.RawMessage
+}
+
+// open is the shared first exchange for ordinary requests and both stream
+// protocols. The request is ready before dialing, and the opening context is
+// detached before ownership transfers. Any bytes read beyond the response
+// remain in reader for the stream to consume.
+func (c *Client) open(ctx context.Context, method string, params any) (*openedConnection, error) {
 	request, err := requestLine(c.requestID(), method, params)
 	if err != nil {
 		return nil, requestError(ctx, method, "cannot send request", err)
 	}
-	conn, err := dialSocket(ctx, c.socketPath, c.dialTimeout)
+	conn, err := c.dial(ctx)
 	if err != nil {
 		return nil, err
 	}
-	stopWatch := watchContext(ctx, conn)
-	reader := bufio.NewReader(conn)
-
-	ack, err := func() (json.RawMessage, error) {
-		if _, err := conn.Write(request); err != nil {
-			return nil, requestError(ctx, method, "cannot send request", err)
+	transferred := false
+	defer func() {
+		if !transferred {
+			_ = conn.Close()
 		}
-		line, err := readLine(reader)
-		if err != nil {
-			return nil, requestError(ctx, method, "cannot read response", err)
-		}
-		return decodeResponseLine(method, line)
 	}()
-	stopWatch()
+	stopWatch := watchContext(ctx, conn)
+	defer stopWatch()
+	reader := bufio.NewReader(conn)
+	if err := writeAll(conn, request); err != nil {
+		return nil, requestError(ctx, method, "cannot send request", err)
+	}
+	line, err := readLine(reader)
 	if err != nil {
-		_ = conn.Close()
+		return nil, requestError(ctx, method, "cannot read response", err)
+	}
+	result, err := decodeResponseLine(method, line)
+	// Stopping also joins a cancellation already in progress. It must not be
+	// possible for this watcher to close a successfully returned stream later.
+	stopWatch()
+	if ctxErr := ctx.Err(); ctxErr != nil {
+		return nil, ctxErr
+	}
+	if err != nil {
 		return nil, err
 	}
-	return newStream(method, conn, reader, ack), nil
+	transferred = true
+	return &openedConnection{conn: conn, reader: reader, result: result}, nil
 }
 
 // requestID returns the id of the next request.
@@ -232,17 +252,36 @@ func requestError(ctx context.Context, method, what string, err error) error {
 // returned function stops the watch and must run before conn outlives the
 // call.
 func watchContext(ctx context.Context, conn io.Closer) func() {
-	done := ctx.Done()
-	if done == nil {
+	if ctx.Done() == nil {
 		return func() {}
 	}
-	stop := make(chan struct{})
-	go func() {
-		select {
-		case <-done:
-			_ = conn.Close()
-		case <-stop:
+	finished := make(chan struct{})
+	stop := context.AfterFunc(ctx, func() {
+		defer close(finished)
+		_ = conn.Close()
+	})
+	return sync.OnceFunc(func() {
+		if !stop() {
+			<-finished
 		}
-	}()
-	return sync.OnceFunc(func() { close(stop) })
+	})
+}
+
+// writeAll writes each complete protocol segment or reports a short write.
+// A dialer may return any io.ReadWriteCloser, so a short write must not be
+// mistaken for a successfully transmitted request or frame.
+func writeAll(w io.Writer, parts ...[]byte) error {
+	for _, part := range parts {
+		if len(part) == 0 {
+			continue
+		}
+		n, err := w.Write(part)
+		if err != nil {
+			return err
+		}
+		if n != len(part) {
+			return io.ErrShortWrite
+		}
+	}
+	return nil
 }

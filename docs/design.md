@@ -59,7 +59,7 @@ that carry no discriminator.
 
 | Path | Contents | Written by |
 | --- | --- | --- |
-| `herdr/client.go` `stream.go` `dial_*.go` `socketpath.go` `errors.go` `ptr.go` | Transport, error codes, pointer helpers | hand |
+| `herdr/client.go` `stream.go` `dial.go` `dial_*.go` `socketpath.go` `errors.go` `ptr.go` | Transport, error codes, pointer helpers | hand |
 | `herdr/subscribe.go` `session.go` | Typed event stream, live session mirror | hand |
 | `herdr/graphics.go` | The `pane.graphics.stream` frame stream | hand |
 | `herdr/layout.go` | Walking an applied layout to its panes | hand |
@@ -83,6 +83,8 @@ that carry no discriminator.
 func New(socketPath string, opts ...Option) *Client          // no I/O
 func NewFromEnv(opts ...Option) (*Client, error)
 func ResolveSocketPath(session string) (string, error)
+type DialFunc func(context.Context, string) (io.ReadWriteCloser, error)
+func WithDialer(dialer DialFunc) Option
 func WithDialTimeout(d time.Duration) Option
 func WithRequestIDs(next func() string) Option
 
@@ -104,6 +106,28 @@ opens. The server's first read decides whether the call is answered
 immediately or a poll interval later, which is enough time to encode a request
 in but not enough to encode one after. An encoding failure therefore surfaces
 without a connection having been made.
+
+Connection establishment is injectable through `WithDialer`. A `DialFunc`
+receives the configured address unchanged and returns an exclusively owned
+`io.ReadWriteCloser`; nil restores the platform dialer. The function must
+honor its context and support concurrent invocations. `WithDialTimeout` adds
+a deadline only around dialing, for both built-in and custom dialers. The
+dial context is not a connection lifetime: a successful connection must survive
+its cancellation. A nil connection without an error is rejected, and a
+connection returned with an error or after cancellation is closed. Successful
+dials are wrapped in a private once-closer, so cancellation, failed handshakes
+and stream cleanup never invoke the underlying Close more than once.
+
+Ordinary calls, subscriptions and graphics streams use one `open` exchange:
+encode before dial, watch the request context, write the complete request,
+read and decode the response, then transfer the connection and its existing
+buffered reader. Failed exchanges close the connection. The watcher is stopped
+and any cancellation callback already running is joined before ownership
+transfers, so a completed opening context cannot later close a returned stream.
+Both request and frame writes reject a short write with `io.ErrShortWrite`.
+A failed frame write closes the graphics stream because a partial header or
+body cannot be followed safely by another frame. This changes no wire framing
+and introduces no connection pool or retries.
 
 `OpenStream` keeps the connection and hands back a `*Stream` whose `Next`
 decodes each pushed line into a `RawEvent`; `Ack` holds the result of the
@@ -316,9 +340,11 @@ method returns, which is consistent with it belonging here. Closing the
 connection clears the layer, and the server ends the stream on an error
 response or on a frame that stalls.
 
-`OpenStream` cannot serve this: it hands the connection to a reader goroutine
-that never writes, and a frame stream has to keep writing. The open sequence
-is therefore repeated in `graphics.go` over the same package helpers.
+`OpenStream` hands the connection to a reader goroutine that never writes,
+whereas a graphics stream keeps writing frames. Their first exchange shares
+`open`, including connection injection, context ownership, and the buffered
+reader. After its `ok` acknowledgement is validated, `GraphicsStream` takes
+over the connection and retains its own framing and acknowledgement reader.
 
 What the fake server proves is the framing: two frames in sequence parse only
 if the first body was consumed whole. Against a live server only the entry

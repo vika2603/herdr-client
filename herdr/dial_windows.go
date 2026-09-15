@@ -8,7 +8,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"time"
 )
 
 // pipePrefix is prepended to the socket path to form the named pipe that the
@@ -16,13 +15,7 @@ import (
 const pipePrefix = `\\.\pipe\`
 
 // dialSocket opens the named pipe that corresponds to path.
-func dialSocket(ctx context.Context, path string, timeout time.Duration) (io.ReadWriteCloser, error) {
-	if timeout > 0 {
-		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, timeout)
-		defer cancel()
-	}
-
+func dialSocket(ctx context.Context, path string) (io.ReadWriteCloser, error) {
 	name := pipePrefix + path
 	type opened struct {
 		file *os.File

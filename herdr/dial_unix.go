@@ -8,12 +8,11 @@ import (
 	"net"
 	"os"
 	"path/filepath"
-	"time"
 )
 
 // dialSocket connects to the Unix domain socket at path.
-func dialSocket(ctx context.Context, path string, timeout time.Duration) (io.ReadWriteCloser, error) {
-	dialer := net.Dialer{Timeout: timeout}
+func dialSocket(ctx context.Context, path string) (io.ReadWriteCloser, error) {
+	var dialer net.Dialer
 	return dialer.DialContext(ctx, "unix", path)
 }
 

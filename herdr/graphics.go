@@ -119,43 +119,22 @@ type GraphicsStream struct {
 // off, pane_not_found for an unknown pane, stream_conflict when the layer
 // already has a stream, and layer_limit when the pane has no room for one.
 func (c *Client) PaneGraphicsStream(ctx context.Context, params PaneGraphicsStreamParams) (*GraphicsStream, error) {
-	request, err := requestLine(c.requestID(), MethodPaneGraphicsStream, params)
-	if err != nil {
-		return nil, requestError(ctx, MethodPaneGraphicsStream, "cannot send request", err)
-	}
-	conn, err := dialSocket(ctx, c.socketPath, c.dialTimeout)
+	opened, err := c.open(ctx, MethodPaneGraphicsStream, params)
 	if err != nil {
 		return nil, err
 	}
-	stopWatch := watchContext(ctx, conn)
-	reader := bufio.NewReader(conn)
-
-	ack, err := func() (json.RawMessage, error) {
-		if _, err := conn.Write(request); err != nil {
-			return nil, requestError(ctx, MethodPaneGraphicsStream, "cannot send request", err)
-		}
-		line, err := readLine(reader)
-		if err != nil {
-			return nil, requestError(ctx, MethodPaneGraphicsStream, "cannot read response", err)
-		}
-		return decodeResponseLine(MethodPaneGraphicsStream, line)
-	}()
-	stopWatch()
-	if err == nil {
-		err = expectOKResult(MethodPaneGraphicsStream, ack)
-	}
-	if err != nil {
-		_ = conn.Close()
+	if err := expectOKResult(MethodPaneGraphicsStream, opened.result); err != nil {
+		_ = opened.conn.Close()
 		return nil, err
 	}
 
 	s := &GraphicsStream{
-		conn:   conn,
+		conn:   opened.conn,
 		acks:   make(chan *PaneGraphicsFrameAckResponse),
 		ended:  make(chan struct{}),
 		closed: make(chan struct{}),
 	}
-	go s.read(reader)
+	go s.read(opened.reader)
 	return s, nil
 }
 
@@ -339,6 +318,9 @@ func (s *GraphicsStream) send(ctx context.Context, header graphicsFrameHeader, b
 	defer watchContext(ctx, s.conn)()
 
 	if err := writeAll(s.conn, line, body); err != nil {
+		// A partial header or body loses the frame boundary. No later frame
+		// can safely reuse the connection, even if its writer accepts more data.
+		_ = s.Close()
 		return nil, requestError(ctx, MethodPaneGraphicsStream, "cannot send frame", err)
 	}
 	if !wantAck {
@@ -355,18 +337,6 @@ func (s *GraphicsStream) send(ctx context.Context, header graphicsFrameHeader, b
 	case <-s.closed:
 		return nil, ErrStreamClosed
 	}
-}
-
-func writeAll(w io.Writer, parts ...[]byte) error {
-	for _, part := range parts {
-		if len(part) == 0 {
-			continue
-		}
-		if _, err := w.Write(part); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 // Wait blocks until the server ends the stream and reports why: the *Error it

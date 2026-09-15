@@ -88,6 +88,47 @@ call dials a fresh connection. A `Client` is safe for concurrent use, performs
 no I/O until its first call, and cancels an in-flight call when its context is
 done.
 
+## Supplying a connection
+
+`WithDialer` replaces only connection establishment. Its function receives the
+address passed to `New` and returns a fresh `io.ReadWriteCloser` for each
+request, including subscription opens, graphics streams and session reconnects:
+
+```go
+// dial has the signature herdr.DialFunc:
+// func(context.Context, string) (io.ReadWriteCloser, error)
+client := herdr.New(address,
+    herdr.WithDialer(dial),
+    herdr.WithDialTimeout(2*time.Second),
+)
+```
+
+The dialer can connect a caller-managed transport or an in-memory test peer;
+the generated methods, JSON encoding, response decoding and event handling
+remain the real client's. `New` performs no I/O, and `WithDialer(nil)` restores
+the default local IPC dialer. `SocketPath()` returns the configured address,
+which a custom dialer receives unchanged.
+
+`WithDialTimeout` bounds dialing only. The request's context bounds the
+subsequent handshake; once a stream has opened, that context no longer owns
+its lifetime. A dialer must honor cancellation, support concurrent calls, and
+return a connection that remains usable after the dial context ends. The
+client does not wrap a blocking dialer in a detached goroutine or retry it.
+
+The client owns every returned connection and closes the underlying object at
+most once, even when cancellation and stream closure overlap. It closes
+ordinary calls when they finish and closes failed handshakes, including a
+connection returned together with a dial error or after cancellation.
+Successful streams own their
+connections until closed. Reads and writes must work concurrently, and `Close`
+must safely interrupt both; deadline methods are not required. Returning the
+same connection to multiple calls is unsupported because Herdr accepts only
+one request per connection.
+
+The injected-connection tests use `net.Pipe`, so they need neither a local IPC
+listener nor a Herdr process. The `herdrtest` server's existing Unix-socket
+listener and its Windows skip policy are unchanged.
+
 ## Errors
 
 The server answers a failed request with a code and a message, which arrive as
