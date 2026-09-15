@@ -18,7 +18,7 @@ type EventStream struct {
 // push an event.
 func (c *Client) Subscribe(ctx context.Context, subs ...Subscription) (*EventStream, error) {
 	if len(subs) == 0 {
-		return nil, errors.New("herdr: " + MethodEventsSubscribe + ": no subscriptions")
+		return nil, opError(MethodEventsSubscribe, OpValidate, errors.New("no subscriptions"))
 	}
 	stream, err := c.EventsSubscribe(ctx, EventsSubscribeParams{Subscriptions: subs})
 	if err != nil {
@@ -33,29 +33,31 @@ func (c *Client) Subscribe(ctx context.Context, subs ...Subscription) (*EventStr
 
 // Next blocks until the server pushes the next event, the stream is closed,
 // or ctx is done. The errors of (*Stream).Next are returned unchanged: a
-// closed stream reports ErrStreamClosed, a done context reports ctx.Err() and
-// leaves the stream usable. An event that is not in the schema the code was
-// generated from is reported as *UnknownEventError.
+// read errors match ErrStreamClosed or ctx.Err() through errors.Is, and a
+// canceled read leaves the stream usable. Payload decoding errors carry
+// OpDecode; an unknown event remains available as *UnknownEventError through
+// errors.As.
 func (s *EventStream) Next(ctx context.Context) (Event, error) {
 	return s.stream.NextEvent(ctx)
 }
 
-// Close closes the connection. A blocked Next returns ErrStreamClosed.
+// Close closes the connection. A blocked Next matches ErrStreamClosed through
+// errors.Is; a connection close failure carries OpClose.
 func (s *EventStream) Close() error { return s.stream.Close() }
 
 // checkSubscriptionAck rejects an opening response that is not the
 // subscription_started result the method is documented to return.
 func checkSubscriptionAck(stream *Stream) error {
-	result, err := DecodeResult(stream.Ack())
+	result, err := decodeResult(MethodEventsSubscribe, stream.Ack())
 	if err != nil {
 		return err
 	}
 	if _, ok := result.(*SubscriptionStartedResponse); !ok {
-		return &UnexpectedResultError{
+		return opError(MethodEventsSubscribe, OpDecode, &UnexpectedResultError{
 			Method: MethodEventsSubscribe,
 			Want:   "subscription_started",
 			Got:    result.ResultType(),
-		}
+		})
 	}
 	return nil
 }

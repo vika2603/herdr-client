@@ -1,6 +1,61 @@
 package herdr
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
+
+// Op identifies the client operation that failed or was canceled. It does not
+// establish whether the server received or executed the request, or whether
+// retrying it is safe.
+type Op string
+
+const (
+	// OpValidate checks local request or frame arguments before encoding.
+	OpValidate Op = "validate"
+	// OpEncode serializes a request or graphics frame header.
+	OpEncode Op = "encode"
+	// OpDial establishes a connection.
+	OpDial Op = "dial"
+	// OpWrite sends a request or graphics frame.
+	OpWrite Op = "write"
+	// OpRead waits for a response, event, or frame acknowledgement.
+	OpRead Op = "read"
+	// OpDecode decodes or checks a response or event payload.
+	OpDecode Op = "decode"
+	// OpClose closes a stream's connection explicitly.
+	OpClose Op = "close"
+)
+
+// OpError describes a client-side failure in a Herdr protocol operation.
+// Method is the wire method, such as "pane.get" or "events.subscribe".
+// Err retains the cause for errors.Is and errors.As, including cancellation,
+// network and JSON errors, and unknown or unexpected protocol types.
+//
+// An error response from Herdr remains *Error instead. Context-free helpers
+// such as DecodeResult and DecodeEvent return their own decoding errors.
+type OpError struct {
+	Method string
+	Op     Op
+	Err    error
+}
+
+func (e *OpError) Error() string {
+	if e.Method == "" {
+		return fmt.Sprintf("herdr: %s: %v", e.Op, e.Err)
+	}
+	return fmt.Sprintf("herdr: %s: %s: %v", e.Method, e.Op, e.Err)
+}
+
+// Unwrap exposes the cause without requiring callers to parse error messages.
+func (e *OpError) Unwrap() error { return e.Err }
+
+func opError(method string, op Op, err error) error {
+	if err == nil {
+		return nil
+	}
+	return &OpError{Method: method, Op: op, Err: err}
+}
 
 // Error codes reported by the server in an error response. Comparing a
 // Code against a plain string stays valid; these constants only save the

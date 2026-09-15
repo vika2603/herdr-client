@@ -8,8 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net"
-	"os"
 	"sync"
 )
 
@@ -141,12 +139,12 @@ func (c *Client) PaneGraphicsStream(ctx context.Context, params PaneGraphicsStre
 // expectOKResult checks that raw is the "ok" result the server acknowledges a
 // stream with.
 func expectOKResult(method string, raw json.RawMessage) error {
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(method, raw)
 	if err != nil {
-		return fmt.Errorf("herdr: %s: cannot decode result: %w", method, err)
+		return err
 	}
 	if _, ok := result.(*OKResponse); !ok {
-		return &UnexpectedResultError{Method: method, Want: "ok", Got: result.ResultType()}
+		return opError(method, OpDecode, &UnexpectedResultError{Method: method, Want: "ok", Got: result.ResultType()})
 	}
 	return nil
 }
@@ -172,7 +170,7 @@ func (s *GraphicsStream) read(r *bufio.Reader) {
 			}
 		}
 		if err != nil {
-			s.setDone(endOfStreamErr(err))
+			s.setDone(streamReadError(MethodPaneGraphicsStream, err))
 			return
 		}
 	}
@@ -185,33 +183,19 @@ func decodeFrameAck(line []byte) (*PaneGraphicsFrameAckResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneGraphicsStream, raw)
 	if err != nil {
-		return nil, fmt.Errorf("herdr: %s: cannot decode result: %w", MethodPaneGraphicsStream, err)
+		return nil, err
 	}
 	ack, ok := result.(*PaneGraphicsFrameAckResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{
+		return nil, opError(MethodPaneGraphicsStream, OpDecode, &UnexpectedResultError{
 			Method: MethodPaneGraphicsStream,
 			Want:   "pane_graphics_frame_ack",
 			Got:    result.ResultType(),
-		}
+		})
 	}
 	return ack, nil
-}
-
-// endOfStreamErr keeps a read error worth reporting and discards the ones
-// that only say the connection went away.
-func endOfStreamErr(err error) error {
-	switch {
-	case errors.Is(err, io.EOF),
-		errors.Is(err, io.ErrUnexpectedEOF),
-		errors.Is(err, net.ErrClosed),
-		errors.Is(err, os.ErrClosed):
-		return nil
-	default:
-		return fmt.Errorf("%w: %w", ErrStreamClosed, err)
-	}
 }
 
 func (s *GraphicsStream) setDone(err error) {
@@ -224,13 +208,16 @@ func (s *GraphicsStream) setDone(err error) {
 
 // endErr reports why the stream ended, falling back to ErrStreamClosed when
 // the server simply closed the connection.
-func (s *GraphicsStream) endErr() error {
+func (s *GraphicsStream) endErr(ctx context.Context) error {
+	if err := ctx.Err(); err != nil {
+		return opError(MethodPaneGraphicsStream, OpRead, err)
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.done != nil {
 		return s.done
 	}
-	return ErrStreamClosed
+	return streamReadError(MethodPaneGraphicsStream, nil)
 }
 
 // SendFrame writes one inline frame.
@@ -245,10 +232,9 @@ func (s *GraphicsStream) endErr() error {
 func (s *GraphicsStream) SendFrame(ctx context.Context, frame GraphicsFrame) error {
 	switch {
 	case len(frame.Data) == 0:
-		return fmt.Errorf("herdr: %s: frame carries no data", MethodPaneGraphicsStream)
+		return opError(MethodPaneGraphicsStream, OpValidate, errors.New("frame carries no data"))
 	case len(frame.Data) > PaneGraphicsStreamMaxBytes:
-		return fmt.Errorf("herdr: %s: frame is %d bytes, over the %d byte limit",
-			MethodPaneGraphicsStream, len(frame.Data), PaneGraphicsStreamMaxBytes)
+		return opError(MethodPaneGraphicsStream, OpValidate, fmt.Errorf("frame is %d bytes, over the %d byte limit", len(frame.Data), PaneGraphicsStreamMaxBytes))
 	}
 	length := len(frame.Data)
 	header := graphicsFrameHeader{
@@ -271,10 +257,9 @@ func (s *GraphicsStream) SendFrame(ctx context.Context, frame GraphicsFrame) err
 func (s *GraphicsStream) SendFileFrame(ctx context.Context, frame GraphicsFileFrame) (*PaneGraphicsFrameAckResponse, error) {
 	switch {
 	case frame.Path == "":
-		return nil, fmt.Errorf("herdr: %s: file frame carries no path", MethodPaneGraphicsStream)
+		return nil, opError(MethodPaneGraphicsStream, OpValidate, errors.New("file frame carries no path"))
 	case frame.Format != PaneGraphicsFormatRgba && frame.Format != PaneGraphicsFormatBgra:
-		return nil, fmt.Errorf("herdr: %s: file frames require rgba or bgra, got %q",
-			MethodPaneGraphicsStream, frame.Format)
+		return nil, opError(MethodPaneGraphicsStream, OpValidate, fmt.Errorf("file frames require rgba or bgra, got %q", frame.Format))
 	}
 	header := graphicsFrameHeader{
 		Format:      frame.Format,
@@ -294,7 +279,7 @@ func (s *GraphicsStream) SendFileFrame(ctx context.Context, frame GraphicsFileFr
 func (s *GraphicsStream) send(ctx context.Context, header graphicsFrameHeader, body []byte, wantAck bool) (*PaneGraphicsFrameAckResponse, error) {
 	line, err := json.Marshal(header)
 	if err != nil {
-		return nil, fmt.Errorf("herdr: %s: cannot encode frame header: %w", MethodPaneGraphicsStream, err)
+		return nil, opError(MethodPaneGraphicsStream, OpEncode, err)
 	}
 	line = append(line, '\n')
 
@@ -302,13 +287,13 @@ func (s *GraphicsStream) send(ctx context.Context, header graphicsFrameHeader, b
 	defer s.writeMu.Unlock()
 
 	if err := ctx.Err(); err != nil {
-		return nil, err
+		return nil, opError(MethodPaneGraphicsStream, OpWrite, err)
 	}
 	select {
 	case <-s.closed:
-		return nil, ErrStreamClosed
+		return nil, requestError(ctx, MethodPaneGraphicsStream, OpWrite, ErrStreamClosed)
 	case <-s.ended:
-		return nil, s.endErr()
+		return nil, s.endErr(ctx)
 	default:
 	}
 
@@ -321,7 +306,7 @@ func (s *GraphicsStream) send(ctx context.Context, header graphicsFrameHeader, b
 		// A partial header or body loses the frame boundary. No later frame
 		// can safely reuse the connection, even if its writer accepts more data.
 		_ = s.Close()
-		return nil, requestError(ctx, MethodPaneGraphicsStream, "cannot send frame", err)
+		return nil, requestError(ctx, MethodPaneGraphicsStream, OpWrite, err)
 	}
 	if !wantAck {
 		return nil, nil
@@ -329,39 +314,41 @@ func (s *GraphicsStream) send(ctx context.Context, header graphicsFrameHeader, b
 
 	select {
 	case <-ctx.Done():
-		return nil, ctx.Err()
+		return nil, opError(MethodPaneGraphicsStream, OpRead, ctx.Err())
 	case ack := <-s.acks:
 		return ack, nil
 	case <-s.ended:
-		return nil, s.endErr()
+		return nil, s.endErr(ctx)
 	case <-s.closed:
-		return nil, ErrStreamClosed
+		return nil, requestError(ctx, MethodPaneGraphicsStream, OpRead, ErrStreamClosed)
 	}
 }
 
 // Wait blocks until the server ends the stream and reports why: the *Error it
-// sent, or ErrStreamClosed when it closed without one. It is the only way to
+// sent, or an OpError matching ErrStreamClosed when it closed without one.
+// Cancellation matches ctx.Err() through errors.Is. Wait is the only way to
 // learn that an inline frame was refused, because those are not acknowledged.
 func (s *GraphicsStream) Wait(ctx context.Context) error {
 	if err := ctx.Err(); err != nil {
-		return err
+		return opError(MethodPaneGraphicsStream, OpRead, err)
 	}
 	select {
 	case <-ctx.Done():
-		return ctx.Err()
+		return opError(MethodPaneGraphicsStream, OpRead, ctx.Err())
 	case <-s.ended:
-		return s.endErr()
+		return s.endErr(ctx)
 	case <-s.closed:
-		return ErrStreamClosed
+		return requestError(ctx, MethodPaneGraphicsStream, OpRead, ErrStreamClosed)
 	}
 }
 
 // Close closes the connection, which makes the server drop the layer the
-// stream owned. A blocked send or Wait returns ErrStreamClosed.
+// stream owned. A blocked send or Wait matches ErrStreamClosed through
+// errors.Is; a connection close failure carries OpClose.
 func (s *GraphicsStream) Close() error {
 	s.closeOnce.Do(func() {
 		close(s.closed)
-		s.closeErr = s.conn.Close()
+		s.closeErr = opError(MethodPaneGraphicsStream, OpClose, s.conn.Close())
 	})
 	return s.closeErr
 }

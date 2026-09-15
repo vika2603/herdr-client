@@ -149,6 +149,54 @@ if errors.As(err, &apiErr) {
 The codes herdr reports are available as `ErrCode*` constants, and comparing
 `Code` against a plain string keeps working for codes a newer server adds.
 
+### Client operation errors
+
+Client-side failures carry `*herdr.OpError` with the wire method, the failed
+operation and its cause. These fields are available for ordinary calls,
+generated methods, event streams and graphics streams:
+
+```go
+var opErr *herdr.OpError
+if errors.As(err, &opErr) {
+    log.Printf("%s failed during %s: %v", opErr.Method, opErr.Op, opErr.Err)
+}
+if errors.Is(err, context.DeadlineExceeded) {
+    // The request or read was canceled by its deadline.
+}
+```
+
+| Operation | Meaning |
+| --- | --- |
+| `OpValidate` | Local subscription or frame argument validation |
+| `OpEncode` | Request or frame-header serialization |
+| `OpDial` | Connection establishment, including custom dialers |
+| `OpWrite` | Request or frame transmission |
+| `OpRead` | Waiting for a response, event or frame acknowledgement |
+| `OpDecode` | Response/event JSON decoding or result-type checking |
+| `OpClose` | An explicit stream close failed |
+
+`Unwrap` preserves `errors.Is` and `errors.As`: callers can inspect network
+errors, JSON errors, `UnknownResultError`, `UnexpectedResultError` and
+`UnknownEventError` without parsing text. Stream read failures also match
+`ErrStreamClosed`; when the peer closes normally, the original `io.EOF` remains
+available. A canceled operation prioritizes its context error, as before.
+Canceling one event-stream read still leaves the stream usable.
+
+An error response from Herdr continues to arrive as `*herdr.Error` with its
+code and message; it is not labeled as a local decoding failure. Standalone
+`DecodeResult`/`DecodeEvent` calls have no wire method and keep their existing
+error types. Session-local outcomes, such as closing a mirror or canceling a
+reconnect backoff, likewise retain their existing sentinel/context errors;
+protocol failures forwarded by the mirror carry operation context.
+
+This changes the outer type and text of client-side errors. Use `errors.Is`
+for context and stream-closed sentinels and `errors.As` for concrete causes,
+instead of direct equality, type assertions or matching error strings.
+
+The operation describes where a call failed or was canceled, not whether the
+server executed it. In particular, a write or read failure does not make a
+mutation safe to repeat. The error model adds no automatic retry policy.
+
 ## Events
 
 `events.subscribe` is the one method that keeps its connection open. It

@@ -98,7 +98,7 @@ func (c *Client) OpenStream(ctx context.Context, method string, params any) (*St
 response line and close, because that is all the server allows. A `nil`
 `params` is sent as `{}`. An error response becomes `*Error` carrying the
 method. Cancelling the context closes the connection, which is the only way to
-unblock a read on every platform, and the call reports `ctx.Err()`.
+unblock a read on every platform, and the call wraps `ctx.Err()` in an `OpError`.
 
 The request line is encoded before the dial, here as in `OpenStream` and
 `PaneGraphicsStream`, so that it is ready to write the moment the connection
@@ -134,7 +134,7 @@ decodes each pushed line into a `RawEvent`; `Ack` holds the result of the
 response that opened it. Nothing is ever written to that connection again,
 because the server closes a streaming connection as soon as the client sends
 anything else. `Close` unblocks a waiting `Next`, which then reports
-`ErrStreamClosed`.
+`ErrStreamClosed` through `errors.Is`.
 
 `ResolveSocketPath` follows herdr: an explicit session name wins, then
 `HERDR_SOCKET_PATH`, then `HERDR_SESSION`, then the default session. The
@@ -475,13 +475,40 @@ hook for them, so naming one is a warning here too.
 `github.com/BurntSushi/toml` is the module's only third-party dependency, and
 only this package uses it.
 
-## Error codes
+## Errors
 
 `errors.go` names the 35 codes seen so far: those read out of `encode_error`
 callers in the herdr sources, and 13 more that `internal/e2e` met while
 exercising the methods that report them. `IsCode` matches through wrapping,
 and comparing `Code` against a plain string keeps working for a code a newer
 server adds.
+
+Client boundaries add `OpError{Method, Op, Err}` to local failures. Operations
+are `validate`, `encode`, `dial`, `write`, `read`, `decode` and `close`.
+`Unwrap` preserves cause inspection; a decoded server error envelope remains
+`*Error` without an operation wrapper. Cancellation prioritizes `ctx.Err()` and
+is inspected through `errors.Is`, including when closing the connection wakes
+a read concurrently with the context signal.
+
+The result decoder itself stays context-free. Generated methods call the
+handwritten `decodeResult(method, raw)` boundary and wrap unexpected result
+types with `OpDecode`. The generated `Stream.NextEvent` and the mirror's
+`deliver` path add the subscription method to payload-decoding failures.
+These are template call-site changes, not new schema facts or metadata.
+`DecodeResult` and `DecodeEvent` remain useful independently of a connection.
+
+A stream read error retains `ErrStreamClosed` and its original I/O cause;
+explicit close failures carry `OpClose`. Graphics acknowledgement failures
+retain their original API/decode/read classification when reported by a send
+or `Wait`. Validation fails before transmission, while a partial frame write
+still closes the stream as before. The model does not change connection
+ownership, reconnect policy, or whether canceling an event read keeps it open.
+
+Session-local lifecycle outcomes remain sentinel/context errors when no wire
+operation is in progress. Its existing `errors.As` and `errors.Is` decisions
+continue to see wrapped API, unexpected-result and stream-closed causes.
+Operation metadata must not be interpreted as proof of server execution or as
+a retry-safety classification.
 
 ## Testing
 

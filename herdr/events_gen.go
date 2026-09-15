@@ -290,13 +290,15 @@ func (e *UnknownEventError) Error() string {
 }
 
 // NextEvent reads the next line the server pushes and decodes its payload.
-// The errors of Next are returned unchanged.
+// The errors of Next are returned unchanged; payload decoding failures
+// carry OpDecode.
 func (s *Stream) NextEvent(ctx context.Context) (Event, error) {
 	raw, err := s.Next(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return DecodeEvent(raw.Event, raw.Data)
+	event, err := DecodeEvent(raw.Event, raw.Data)
+	return event, opError(s.method, OpDecode, err)
 }
 
 // LayoutUpdatedEvent is the "layout.updated" event payload.

@@ -68,7 +68,9 @@ func TestDispatchRunsBoardThroughSnapshotEventsResyncAndCancellation(t *testing.
 	}
 	resynced := output.waitFor(t,
 		"workspaces 1  agents 0  events 0",
-		"resynced from a new snapshot after herdr: stream closed",
+		"resynced from a new snapshot after",
+		"events.subscribe: read",
+		herdr.ErrStreamClosed.Error(),
 		"after reconnect",
 	)
 	if strings.Contains(resynced, "initial") || strings.Contains(resynced, "from event") {

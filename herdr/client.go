@@ -71,7 +71,7 @@ func (c *Client) SocketPath() string { return c.socketPath }
 // result, which may be nil. A server error response is returned as *Error.
 //
 // Cancelling ctx or reaching its deadline closes the connection and the call
-// reports ctx.Err().
+// wraps ctx.Err() in an OpError.
 func (c *Client) Call(ctx context.Context, method string, params, result any) error {
 	raw, err := c.CallRaw(ctx, method, params)
 	if err != nil {
@@ -81,7 +81,7 @@ func (c *Client) Call(ctx context.Context, method string, params, result any) er
 		return nil
 	}
 	if err := json.Unmarshal(raw, result); err != nil {
-		return fmt.Errorf("herdr: %s: cannot decode result: %w", method, err)
+		return opError(method, OpDecode, err)
 	}
 	return nil
 }
@@ -126,11 +126,11 @@ type openedConnection struct {
 func (c *Client) open(ctx context.Context, method string, params any) (*openedConnection, error) {
 	request, err := requestLine(c.requestID(), method, params)
 	if err != nil {
-		return nil, requestError(ctx, method, "cannot send request", err)
+		return nil, requestError(ctx, method, OpEncode, err)
 	}
 	conn, err := c.dial(ctx)
 	if err != nil {
-		return nil, err
+		return nil, opError(method, OpDial, err)
 	}
 	transferred := false
 	defer func() {
@@ -142,18 +142,18 @@ func (c *Client) open(ctx context.Context, method string, params any) (*openedCo
 	defer stopWatch()
 	reader := bufio.NewReader(conn)
 	if err := writeAll(conn, request); err != nil {
-		return nil, requestError(ctx, method, "cannot send request", err)
+		return nil, requestError(ctx, method, OpWrite, err)
 	}
 	line, err := readLine(reader)
 	if err != nil {
-		return nil, requestError(ctx, method, "cannot read response", err)
+		return nil, requestError(ctx, method, OpRead, err)
 	}
 	result, err := decodeResponseLine(method, line)
 	// Stopping also joins a cancellation already in progress. It must not be
 	// possible for this watcher to close a successfully returned stream later.
 	stopWatch()
 	if ctxErr := ctx.Err(); ctxErr != nil {
-		return nil, ctxErr
+		return nil, opError(method, OpRead, ctxErr)
 	}
 	if err != nil {
 		return nil, err
@@ -211,13 +211,13 @@ func requestLine(id, method string, params any) ([]byte, error) {
 func decodeResponseLine(method string, line []byte) (json.RawMessage, error) {
 	var response wireResponse
 	if err := json.Unmarshal(line, &response); err != nil {
-		return nil, fmt.Errorf("herdr: %s: invalid response: %w", method, err)
+		return nil, opError(method, OpDecode, err)
 	}
 	if response.Error != nil {
 		return nil, &Error{Method: method, Code: response.Error.Code, Message: response.Error.Message}
 	}
 	if len(response.Result) == 0 {
-		return nil, fmt.Errorf("herdr: %s: response carries neither result nor error", method)
+		return nil, opError(method, OpDecode, fmt.Errorf("response carries neither result nor error"))
 	}
 	return response.Result, nil
 }
@@ -240,11 +240,18 @@ func readLine(r *bufio.Reader) ([]byte, error) {
 
 // requestError reports a failed exchange, preferring the context error when
 // the connection was closed because ctx was done.
-func requestError(ctx context.Context, method, what string, err error) error {
+func requestError(ctx context.Context, method string, op Op, err error) error {
 	if ctxErr := ctx.Err(); ctxErr != nil {
-		return ctxErr
+		err = ctxErr
 	}
-	return fmt.Errorf("herdr: %s: %s: %w", method, what, err)
+	return opError(method, op, err)
+}
+
+// decodeResult adds method context at the client boundary. DecodeResult itself
+// remains usable for standalone JSON decoding without inventing a method.
+func decodeResult(method string, raw json.RawMessage) (Result, error) {
+	result, err := DecodeResult(raw)
+	return result, opError(method, OpDecode, err)
 }
 
 // watchContext closes conn once ctx is done, which is the only way to unblock

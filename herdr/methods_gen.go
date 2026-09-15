@@ -116,13 +116,13 @@ func (c *Client) AgentExplain(ctx context.Context, params AgentTarget) (*AgentEx
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodAgentExplain, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*AgentExplainResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodAgentExplain, Want: "agent_explain", Got: result.ResultType()}
+		return nil, opError(MethodAgentExplain, OpDecode, &UnexpectedResultError{Method: MethodAgentExplain, Want: "agent_explain", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -133,13 +133,13 @@ func (c *Client) AgentFocus(ctx context.Context, params AgentTarget) (*AgentInfo
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodAgentFocus, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*AgentInfoResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodAgentFocus, Want: "agent_info", Got: result.ResultType()}
+		return nil, opError(MethodAgentFocus, OpDecode, &UnexpectedResultError{Method: MethodAgentFocus, Want: "agent_info", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -150,13 +150,13 @@ func (c *Client) AgentGet(ctx context.Context, params AgentTarget) (*AgentInfoRe
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodAgentGet, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*AgentInfoResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodAgentGet, Want: "agent_info", Got: result.ResultType()}
+		return nil, opError(MethodAgentGet, OpDecode, &UnexpectedResultError{Method: MethodAgentGet, Want: "agent_info", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -167,13 +167,13 @@ func (c *Client) AgentList(ctx context.Context) (*AgentListResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodAgentList, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*AgentListResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodAgentList, Want: "agent_list", Got: result.ResultType()}
+		return nil, opError(MethodAgentList, OpDecode, &UnexpectedResultError{Method: MethodAgentList, Want: "agent_list", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -184,13 +184,13 @@ func (c *Client) AgentPrompt(ctx context.Context, params AgentPromptParams) (*Ag
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodAgentPrompt, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*AgentPromptedResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodAgentPrompt, Want: "agent_prompted", Got: result.ResultType()}
+		return nil, opError(MethodAgentPrompt, OpDecode, &UnexpectedResultError{Method: MethodAgentPrompt, Want: "agent_prompted", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -201,13 +201,13 @@ func (c *Client) AgentRead(ctx context.Context, params AgentReadParams) (*PaneRe
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodAgentRead, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PaneReadResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodAgentRead, Want: "pane_read", Got: result.ResultType()}
+		return nil, opError(MethodAgentRead, OpDecode, &UnexpectedResultError{Method: MethodAgentRead, Want: "pane_read", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -218,13 +218,13 @@ func (c *Client) AgentRename(ctx context.Context, params AgentRenameParams) (*Ag
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodAgentRename, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*AgentInfoResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodAgentRename, Want: "agent_info", Got: result.ResultType()}
+		return nil, opError(MethodAgentRename, OpDecode, &UnexpectedResultError{Method: MethodAgentRename, Want: "agent_info", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -235,13 +235,13 @@ func (c *Client) AgentSendKeys(ctx context.Context, params AgentSendKeysParams) 
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodAgentSendKeys, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*OKResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodAgentSendKeys, Want: "ok", Got: result.ResultType()}
+		return nil, opError(MethodAgentSendKeys, OpDecode, &UnexpectedResultError{Method: MethodAgentSendKeys, Want: "ok", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -252,13 +252,13 @@ func (c *Client) AgentStart(ctx context.Context, params AgentStartParams) (*Agen
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodAgentStart, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*AgentStartedResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodAgentStart, Want: "agent_started", Got: result.ResultType()}
+		return nil, opError(MethodAgentStart, OpDecode, &UnexpectedResultError{Method: MethodAgentStart, Want: "agent_started", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -269,13 +269,13 @@ func (c *Client) AgentViewClear(ctx context.Context, params AgentViewClearParams
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodAgentViewClear, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*AgentViewResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodAgentViewClear, Want: "agent_view", Got: result.ResultType()}
+		return nil, opError(MethodAgentViewClear, OpDecode, &UnexpectedResultError{Method: MethodAgentViewClear, Want: "agent_view", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -286,13 +286,13 @@ func (c *Client) AgentViewSet(ctx context.Context, params AgentViewSetParams) (*
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodAgentViewSet, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*AgentViewResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodAgentViewSet, Want: "agent_view", Got: result.ResultType()}
+		return nil, opError(MethodAgentViewSet, OpDecode, &UnexpectedResultError{Method: MethodAgentViewSet, Want: "agent_view", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -303,13 +303,13 @@ func (c *Client) AgentWait(ctx context.Context, params AgentWaitParams) (*AgentI
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodAgentWait, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*AgentInfoResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodAgentWait, Want: "agent_info", Got: result.ResultType()}
+		return nil, opError(MethodAgentWait, OpDecode, &UnexpectedResultError{Method: MethodAgentWait, Want: "agent_info", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -320,13 +320,13 @@ func (c *Client) ClientShellSurfaceSet(ctx context.Context, params ClientShellSu
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodClientShellSurfaceSet, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*ClientShellSurfaceSetResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodClientShellSurfaceSet, Want: "client_shell_surface_set", Got: result.ResultType()}
+		return nil, opError(MethodClientShellSurfaceSet, OpDecode, &UnexpectedResultError{Method: MethodClientShellSurfaceSet, Want: "client_shell_surface_set", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -337,13 +337,13 @@ func (c *Client) ClientWindowTitleClear(ctx context.Context) (*ClientWindowTitle
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodClientWindowTitleClear, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*ClientWindowTitleResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodClientWindowTitleClear, Want: "client_window_title", Got: result.ResultType()}
+		return nil, opError(MethodClientWindowTitleClear, OpDecode, &UnexpectedResultError{Method: MethodClientWindowTitleClear, Want: "client_window_title", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -354,13 +354,13 @@ func (c *Client) ClientWindowTitleSet(ctx context.Context, params ClientWindowTi
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodClientWindowTitleSet, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*ClientWindowTitleResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodClientWindowTitleSet, Want: "client_window_title", Got: result.ResultType()}
+		return nil, opError(MethodClientWindowTitleSet, OpDecode, &UnexpectedResultError{Method: MethodClientWindowTitleSet, Want: "client_window_title", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -372,7 +372,7 @@ func (c *Client) CommandInvoke(ctx context.Context, params CommandInvokeParams) 
 	if err != nil {
 		return nil, err
 	}
-	return DecodeResult(raw)
+	return decodeResult(MethodCommandInvoke, raw)
 }
 
 // EventsSubscribe calls "events.subscribe" and keeps the connection open.
@@ -387,13 +387,13 @@ func (c *Client) EventsWait(ctx context.Context, params EventsWaitParams) (*Wait
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodEventsWait, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*WaitMatchedResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodEventsWait, Want: "wait_matched", Got: result.ResultType()}
+		return nil, opError(MethodEventsWait, OpDecode, &UnexpectedResultError{Method: MethodEventsWait, Want: "wait_matched", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -404,13 +404,13 @@ func (c *Client) IntegrationInstall(ctx context.Context, params IntegrationInsta
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodIntegrationInstall, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*IntegrationInstallResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodIntegrationInstall, Want: "integration_install", Got: result.ResultType()}
+		return nil, opError(MethodIntegrationInstall, OpDecode, &UnexpectedResultError{Method: MethodIntegrationInstall, Want: "integration_install", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -421,13 +421,13 @@ func (c *Client) IntegrationList(ctx context.Context) (*IntegrationListResponse,
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodIntegrationList, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*IntegrationListResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodIntegrationList, Want: "integration_list", Got: result.ResultType()}
+		return nil, opError(MethodIntegrationList, OpDecode, &UnexpectedResultError{Method: MethodIntegrationList, Want: "integration_list", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -438,13 +438,13 @@ func (c *Client) IntegrationUninstall(ctx context.Context, params IntegrationUni
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodIntegrationUninstall, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*IntegrationUninstallResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodIntegrationUninstall, Want: "integration_uninstall", Got: result.ResultType()}
+		return nil, opError(MethodIntegrationUninstall, OpDecode, &UnexpectedResultError{Method: MethodIntegrationUninstall, Want: "integration_uninstall", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -455,13 +455,13 @@ func (c *Client) LayoutApply(ctx context.Context, params LayoutApplyParams) (*La
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodLayoutApply, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*LayoutApplyResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodLayoutApply, Want: "layout_apply", Got: result.ResultType()}
+		return nil, opError(MethodLayoutApply, OpDecode, &UnexpectedResultError{Method: MethodLayoutApply, Want: "layout_apply", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -472,13 +472,13 @@ func (c *Client) LayoutExport(ctx context.Context, params LayoutExportParams) (*
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodLayoutExport, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*LayoutExportResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodLayoutExport, Want: "layout_export", Got: result.ResultType()}
+		return nil, opError(MethodLayoutExport, OpDecode, &UnexpectedResultError{Method: MethodLayoutExport, Want: "layout_export", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -489,13 +489,13 @@ func (c *Client) LayoutSetSplitRatio(ctx context.Context, params LayoutSetSplitR
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodLayoutSetSplitRatio, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*LayoutSplitRatioSetResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodLayoutSetSplitRatio, Want: "layout_split_ratio_set", Got: result.ResultType()}
+		return nil, opError(MethodLayoutSetSplitRatio, OpDecode, &UnexpectedResultError{Method: MethodLayoutSetSplitRatio, Want: "layout_split_ratio_set", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -506,13 +506,13 @@ func (c *Client) NotificationShow(ctx context.Context, params NotificationShowPa
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodNotificationShow, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*NotificationShowResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodNotificationShow, Want: "notification_show", Got: result.ResultType()}
+		return nil, opError(MethodNotificationShow, OpDecode, &UnexpectedResultError{Method: MethodNotificationShow, Want: "notification_show", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -523,13 +523,13 @@ func (c *Client) PaneClearAgentAuthority(ctx context.Context, params PaneClearAg
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneClearAgentAuthority, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*OKResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneClearAgentAuthority, Want: "ok", Got: result.ResultType()}
+		return nil, opError(MethodPaneClearAgentAuthority, OpDecode, &UnexpectedResultError{Method: MethodPaneClearAgentAuthority, Want: "ok", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -540,13 +540,13 @@ func (c *Client) PaneClose(ctx context.Context, params PaneTarget) (*OKResponse,
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneClose, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*OKResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneClose, Want: "ok", Got: result.ResultType()}
+		return nil, opError(MethodPaneClose, OpDecode, &UnexpectedResultError{Method: MethodPaneClose, Want: "ok", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -557,13 +557,13 @@ func (c *Client) PaneCopyMotion(ctx context.Context, params PaneCopyMotionParams
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneCopyMotion, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PaneCopyMotionResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneCopyMotion, Want: "pane_copy_motion", Got: result.ResultType()}
+		return nil, opError(MethodPaneCopyMotion, OpDecode, &UnexpectedResultError{Method: MethodPaneCopyMotion, Want: "pane_copy_motion", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -574,13 +574,13 @@ func (c *Client) PaneCopySearch(ctx context.Context, params PaneCopySearchParams
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneCopySearch, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PaneCopySearchResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneCopySearch, Want: "pane_copy_search", Got: result.ResultType()}
+		return nil, opError(MethodPaneCopySearch, OpDecode, &UnexpectedResultError{Method: MethodPaneCopySearch, Want: "pane_copy_search", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -591,13 +591,13 @@ func (c *Client) PaneCurrent(ctx context.Context, params PaneCurrentParams) (*Pa
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneCurrent, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PaneCurrentResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneCurrent, Want: "pane_current", Got: result.ResultType()}
+		return nil, opError(MethodPaneCurrent, OpDecode, &UnexpectedResultError{Method: MethodPaneCurrent, Want: "pane_current", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -608,13 +608,13 @@ func (c *Client) PaneEdges(ctx context.Context, params PaneEdgesParams) (*PaneEd
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneEdges, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PaneEdgesResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneEdges, Want: "pane_edges", Got: result.ResultType()}
+		return nil, opError(MethodPaneEdges, OpDecode, &UnexpectedResultError{Method: MethodPaneEdges, Want: "pane_edges", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -625,13 +625,13 @@ func (c *Client) PaneEditScrollback(ctx context.Context, params PaneTarget) (*OK
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneEditScrollback, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*OKResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneEditScrollback, Want: "ok", Got: result.ResultType()}
+		return nil, opError(MethodPaneEditScrollback, OpDecode, &UnexpectedResultError{Method: MethodPaneEditScrollback, Want: "ok", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -642,13 +642,13 @@ func (c *Client) PaneFocus(ctx context.Context, params PaneTarget) (*PaneInfoRes
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneFocus, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PaneInfoResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneFocus, Want: "pane_info", Got: result.ResultType()}
+		return nil, opError(MethodPaneFocus, OpDecode, &UnexpectedResultError{Method: MethodPaneFocus, Want: "pane_info", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -659,13 +659,13 @@ func (c *Client) PaneFocusDirection(ctx context.Context, params PaneFocusDirecti
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneFocusDirection, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PaneFocusDirectionResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneFocusDirection, Want: "pane_focus_direction", Got: result.ResultType()}
+		return nil, opError(MethodPaneFocusDirection, OpDecode, &UnexpectedResultError{Method: MethodPaneFocusDirection, Want: "pane_focus_direction", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -676,13 +676,13 @@ func (c *Client) PaneGet(ctx context.Context, params PaneTarget) (*PaneInfoRespo
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneGet, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PaneInfoResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneGet, Want: "pane_info", Got: result.ResultType()}
+		return nil, opError(MethodPaneGet, OpDecode, &UnexpectedResultError{Method: MethodPaneGet, Want: "pane_info", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -693,13 +693,13 @@ func (c *Client) PaneGraphicsClear(ctx context.Context, params PaneGraphicsClear
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneGraphicsClear, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*OKResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneGraphicsClear, Want: "ok", Got: result.ResultType()}
+		return nil, opError(MethodPaneGraphicsClear, OpDecode, &UnexpectedResultError{Method: MethodPaneGraphicsClear, Want: "ok", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -710,13 +710,13 @@ func (c *Client) PaneGraphicsInfo(ctx context.Context, params PaneTarget) (*Pane
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneGraphicsInfo, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PaneGraphicsInfoResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneGraphicsInfo, Want: "pane_graphics_info", Got: result.ResultType()}
+		return nil, opError(MethodPaneGraphicsInfo, OpDecode, &UnexpectedResultError{Method: MethodPaneGraphicsInfo, Want: "pane_graphics_info", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -727,13 +727,13 @@ func (c *Client) PaneGraphicsSet(ctx context.Context, params PaneGraphicsSetPara
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneGraphicsSet, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*OKResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneGraphicsSet, Want: "ok", Got: result.ResultType()}
+		return nil, opError(MethodPaneGraphicsSet, OpDecode, &UnexpectedResultError{Method: MethodPaneGraphicsSet, Want: "ok", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -744,13 +744,13 @@ func (c *Client) PaneInputSet(ctx context.Context, params PaneInputSetParams) (*
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneInputSet, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*OKResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneInputSet, Want: "ok", Got: result.ResultType()}
+		return nil, opError(MethodPaneInputSet, OpDecode, &UnexpectedResultError{Method: MethodPaneInputSet, Want: "ok", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -761,13 +761,13 @@ func (c *Client) PaneLayout(ctx context.Context, params PaneLayoutParams) (*Pane
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneLayout, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PaneLayoutResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneLayout, Want: "pane_layout", Got: result.ResultType()}
+		return nil, opError(MethodPaneLayout, OpDecode, &UnexpectedResultError{Method: MethodPaneLayout, Want: "pane_layout", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -778,13 +778,13 @@ func (c *Client) PaneLinkActivate(ctx context.Context, params PaneLinkActivatePa
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneLinkActivate, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PaneLinkActivatedResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneLinkActivate, Want: "pane_link_activated", Got: result.ResultType()}
+		return nil, opError(MethodPaneLinkActivate, OpDecode, &UnexpectedResultError{Method: MethodPaneLinkActivate, Want: "pane_link_activated", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -795,13 +795,13 @@ func (c *Client) PaneList(ctx context.Context, params PaneListParams) (*PaneList
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneList, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PaneListResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneList, Want: "pane_list", Got: result.ResultType()}
+		return nil, opError(MethodPaneList, OpDecode, &UnexpectedResultError{Method: MethodPaneList, Want: "pane_list", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -812,13 +812,13 @@ func (c *Client) PaneMove(ctx context.Context, params PaneMoveParams) (*PaneMove
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneMove, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PaneMoveResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneMove, Want: "pane_move", Got: result.ResultType()}
+		return nil, opError(MethodPaneMove, OpDecode, &UnexpectedResultError{Method: MethodPaneMove, Want: "pane_move", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -829,13 +829,13 @@ func (c *Client) PaneNeighbor(ctx context.Context, params PaneNeighborParams) (*
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneNeighbor, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PaneNeighborResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneNeighbor, Want: "pane_neighbor", Got: result.ResultType()}
+		return nil, opError(MethodPaneNeighbor, OpDecode, &UnexpectedResultError{Method: MethodPaneNeighbor, Want: "pane_neighbor", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -846,13 +846,13 @@ func (c *Client) PaneProcessInfo(ctx context.Context, params PaneProcessInfoPara
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneProcessInfo, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PaneProcessInfoResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneProcessInfo, Want: "pane_process_info", Got: result.ResultType()}
+		return nil, opError(MethodPaneProcessInfo, OpDecode, &UnexpectedResultError{Method: MethodPaneProcessInfo, Want: "pane_process_info", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -863,13 +863,13 @@ func (c *Client) PaneRead(ctx context.Context, params PaneReadParams) (*PaneRead
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneRead, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PaneReadResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneRead, Want: "pane_read", Got: result.ResultType()}
+		return nil, opError(MethodPaneRead, OpDecode, &UnexpectedResultError{Method: MethodPaneRead, Want: "pane_read", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -880,13 +880,13 @@ func (c *Client) PaneReleaseAgent(ctx context.Context, params PaneReleaseAgentPa
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneReleaseAgent, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*OKResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneReleaseAgent, Want: "ok", Got: result.ResultType()}
+		return nil, opError(MethodPaneReleaseAgent, OpDecode, &UnexpectedResultError{Method: MethodPaneReleaseAgent, Want: "ok", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -897,13 +897,13 @@ func (c *Client) PaneRename(ctx context.Context, params PaneRenameParams) (*Pane
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneRename, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PaneInfoResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneRename, Want: "pane_info", Got: result.ResultType()}
+		return nil, opError(MethodPaneRename, OpDecode, &UnexpectedResultError{Method: MethodPaneRename, Want: "pane_info", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -914,13 +914,13 @@ func (c *Client) PaneReportAgent(ctx context.Context, params PaneReportAgentPara
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneReportAgent, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*OKResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneReportAgent, Want: "ok", Got: result.ResultType()}
+		return nil, opError(MethodPaneReportAgent, OpDecode, &UnexpectedResultError{Method: MethodPaneReportAgent, Want: "ok", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -931,13 +931,13 @@ func (c *Client) PaneReportAgentSession(ctx context.Context, params PaneReportAg
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneReportAgentSession, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*OKResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneReportAgentSession, Want: "ok", Got: result.ResultType()}
+		return nil, opError(MethodPaneReportAgentSession, OpDecode, &UnexpectedResultError{Method: MethodPaneReportAgentSession, Want: "ok", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -948,13 +948,13 @@ func (c *Client) PaneReportMetadata(ctx context.Context, params PaneReportMetada
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneReportMetadata, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*OKResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneReportMetadata, Want: "ok", Got: result.ResultType()}
+		return nil, opError(MethodPaneReportMetadata, OpDecode, &UnexpectedResultError{Method: MethodPaneReportMetadata, Want: "ok", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -965,13 +965,13 @@ func (c *Client) PaneResize(ctx context.Context, params PaneResizeParams) (*Pane
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneResize, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PaneResizeResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneResize, Want: "pane_resize", Got: result.ResultType()}
+		return nil, opError(MethodPaneResize, OpDecode, &UnexpectedResultError{Method: MethodPaneResize, Want: "pane_resize", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -982,13 +982,13 @@ func (c *Client) PaneScroll(ctx context.Context, params PaneScrollParams) (*Pane
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneScroll, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PaneInfoResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneScroll, Want: "pane_info", Got: result.ResultType()}
+		return nil, opError(MethodPaneScroll, OpDecode, &UnexpectedResultError{Method: MethodPaneScroll, Want: "pane_info", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -999,13 +999,13 @@ func (c *Client) PaneSelectionRead(ctx context.Context, params PaneSelectionRead
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneSelectionRead, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PaneSelectionResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneSelectionRead, Want: "pane_selection", Got: result.ResultType()}
+		return nil, opError(MethodPaneSelectionRead, OpDecode, &UnexpectedResultError{Method: MethodPaneSelectionRead, Want: "pane_selection", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1016,13 +1016,13 @@ func (c *Client) PaneSendInput(ctx context.Context, params PaneSendInputParams) 
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneSendInput, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*OKResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneSendInput, Want: "ok", Got: result.ResultType()}
+		return nil, opError(MethodPaneSendInput, OpDecode, &UnexpectedResultError{Method: MethodPaneSendInput, Want: "ok", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1033,13 +1033,13 @@ func (c *Client) PaneSendKeys(ctx context.Context, params PaneSendKeysParams) (*
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneSendKeys, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*OKResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneSendKeys, Want: "ok", Got: result.ResultType()}
+		return nil, opError(MethodPaneSendKeys, OpDecode, &UnexpectedResultError{Method: MethodPaneSendKeys, Want: "ok", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1050,13 +1050,13 @@ func (c *Client) PaneSendText(ctx context.Context, params PaneSendTextParams) (*
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneSendText, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*OKResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneSendText, Want: "ok", Got: result.ResultType()}
+		return nil, opError(MethodPaneSendText, OpDecode, &UnexpectedResultError{Method: MethodPaneSendText, Want: "ok", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1067,13 +1067,13 @@ func (c *Client) PaneSplit(ctx context.Context, params PaneSplitParams) (*PaneIn
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneSplit, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PaneInfoResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneSplit, Want: "pane_info", Got: result.ResultType()}
+		return nil, opError(MethodPaneSplit, OpDecode, &UnexpectedResultError{Method: MethodPaneSplit, Want: "pane_info", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1084,13 +1084,13 @@ func (c *Client) PaneSwap(ctx context.Context, params PaneSwapParams) (*PaneSwap
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneSwap, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PaneSwapResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneSwap, Want: "pane_swap", Got: result.ResultType()}
+		return nil, opError(MethodPaneSwap, OpDecode, &UnexpectedResultError{Method: MethodPaneSwap, Want: "pane_swap", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1101,13 +1101,13 @@ func (c *Client) PaneWaitForOutput(ctx context.Context, params PaneWaitForOutput
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneWaitForOutput, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*OutputMatchedResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneWaitForOutput, Want: "output_matched", Got: result.ResultType()}
+		return nil, opError(MethodPaneWaitForOutput, OpDecode, &UnexpectedResultError{Method: MethodPaneWaitForOutput, Want: "output_matched", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1118,13 +1118,13 @@ func (c *Client) PaneZoom(ctx context.Context, params PaneZoomParams) (*PaneZoom
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPaneZoom, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PaneZoomResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPaneZoom, Want: "pane_zoom", Got: result.ResultType()}
+		return nil, opError(MethodPaneZoom, OpDecode, &UnexpectedResultError{Method: MethodPaneZoom, Want: "pane_zoom", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1135,13 +1135,13 @@ func (c *Client) Ping(ctx context.Context) (*PongResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPing, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PongResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPing, Want: "pong", Got: result.ResultType()}
+		return nil, opError(MethodPing, OpDecode, &UnexpectedResultError{Method: MethodPing, Want: "pong", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1152,13 +1152,13 @@ func (c *Client) PluginActionInvoke(ctx context.Context, params PluginActionInvo
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPluginActionInvoke, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PluginActionInvokedResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPluginActionInvoke, Want: "plugin_action_invoked", Got: result.ResultType()}
+		return nil, opError(MethodPluginActionInvoke, OpDecode, &UnexpectedResultError{Method: MethodPluginActionInvoke, Want: "plugin_action_invoked", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1169,13 +1169,13 @@ func (c *Client) PluginActionList(ctx context.Context, params PluginActionListPa
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPluginActionList, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PluginActionListResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPluginActionList, Want: "plugin_action_list", Got: result.ResultType()}
+		return nil, opError(MethodPluginActionList, OpDecode, &UnexpectedResultError{Method: MethodPluginActionList, Want: "plugin_action_list", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1186,13 +1186,13 @@ func (c *Client) PluginDisable(ctx context.Context, params PluginSetEnabledParam
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPluginDisable, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PluginDisabledResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPluginDisable, Want: "plugin_disabled", Got: result.ResultType()}
+		return nil, opError(MethodPluginDisable, OpDecode, &UnexpectedResultError{Method: MethodPluginDisable, Want: "plugin_disabled", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1203,13 +1203,13 @@ func (c *Client) PluginEnable(ctx context.Context, params PluginSetEnabledParams
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPluginEnable, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PluginEnabledResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPluginEnable, Want: "plugin_enabled", Got: result.ResultType()}
+		return nil, opError(MethodPluginEnable, OpDecode, &UnexpectedResultError{Method: MethodPluginEnable, Want: "plugin_enabled", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1220,13 +1220,13 @@ func (c *Client) PluginLink(ctx context.Context, params PluginLinkParams) (*Plug
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPluginLink, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PluginLinkedResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPluginLink, Want: "plugin_linked", Got: result.ResultType()}
+		return nil, opError(MethodPluginLink, OpDecode, &UnexpectedResultError{Method: MethodPluginLink, Want: "plugin_linked", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1237,13 +1237,13 @@ func (c *Client) PluginList(ctx context.Context, params PluginListParams) (*Plug
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPluginList, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PluginListResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPluginList, Want: "plugin_list", Got: result.ResultType()}
+		return nil, opError(MethodPluginList, OpDecode, &UnexpectedResultError{Method: MethodPluginList, Want: "plugin_list", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1254,13 +1254,13 @@ func (c *Client) PluginLogList(ctx context.Context, params PluginLogListParams) 
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPluginLogList, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PluginLogListResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPluginLogList, Want: "plugin_log_list", Got: result.ResultType()}
+		return nil, opError(MethodPluginLogList, OpDecode, &UnexpectedResultError{Method: MethodPluginLogList, Want: "plugin_log_list", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1271,13 +1271,13 @@ func (c *Client) PluginPaneClose(ctx context.Context, params PluginPaneClosePara
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPluginPaneClose, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PluginPaneClosedResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPluginPaneClose, Want: "plugin_pane_closed", Got: result.ResultType()}
+		return nil, opError(MethodPluginPaneClose, OpDecode, &UnexpectedResultError{Method: MethodPluginPaneClose, Want: "plugin_pane_closed", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1288,13 +1288,13 @@ func (c *Client) PluginPaneFocus(ctx context.Context, params PluginPaneFocusPara
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPluginPaneFocus, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PluginPaneFocusedResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPluginPaneFocus, Want: "plugin_pane_focused", Got: result.ResultType()}
+		return nil, opError(MethodPluginPaneFocus, OpDecode, &UnexpectedResultError{Method: MethodPluginPaneFocus, Want: "plugin_pane_focused", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1306,7 +1306,7 @@ func (c *Client) PluginPaneOpen(ctx context.Context, params PluginPaneOpenParams
 	if err != nil {
 		return nil, err
 	}
-	return DecodeResult(raw)
+	return decodeResult(MethodPluginPaneOpen, raw)
 }
 
 // PluginUnlink calls "plugin.unlink".
@@ -1315,13 +1315,13 @@ func (c *Client) PluginUnlink(ctx context.Context, params PluginUnlinkParams) (*
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPluginUnlink, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*PluginUnlinkedResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPluginUnlink, Want: "plugin_unlinked", Got: result.ResultType()}
+		return nil, opError(MethodPluginUnlink, OpDecode, &UnexpectedResultError{Method: MethodPluginUnlink, Want: "plugin_unlinked", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1332,13 +1332,13 @@ func (c *Client) PopupClose(ctx context.Context) (*OKResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodPopupClose, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*OKResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodPopupClose, Want: "ok", Got: result.ResultType()}
+		return nil, opError(MethodPopupClose, OpDecode, &UnexpectedResultError{Method: MethodPopupClose, Want: "ok", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1349,13 +1349,13 @@ func (c *Client) ProductAnnouncementDismiss(ctx context.Context, params ProductA
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodProductAnnouncementDismiss, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*OKResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodProductAnnouncementDismiss, Want: "ok", Got: result.ResultType()}
+		return nil, opError(MethodProductAnnouncementDismiss, OpDecode, &UnexpectedResultError{Method: MethodProductAnnouncementDismiss, Want: "ok", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1366,13 +1366,13 @@ func (c *Client) ReleaseNotesDismiss(ctx context.Context, params ReleaseNotesDis
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodReleaseNotesDismiss, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*OKResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodReleaseNotesDismiss, Want: "ok", Got: result.ResultType()}
+		return nil, opError(MethodReleaseNotesDismiss, OpDecode, &UnexpectedResultError{Method: MethodReleaseNotesDismiss, Want: "ok", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1383,13 +1383,13 @@ func (c *Client) ServerAgentManifests(ctx context.Context) (*AgentManifestStatus
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodServerAgentManifests, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*AgentManifestStatusResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodServerAgentManifests, Want: "agent_manifest_status", Got: result.ResultType()}
+		return nil, opError(MethodServerAgentManifests, OpDecode, &UnexpectedResultError{Method: MethodServerAgentManifests, Want: "agent_manifest_status", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1401,7 +1401,7 @@ func (c *Client) ServerLiveHandoff(ctx context.Context, params ServerLiveHandoff
 	if err != nil {
 		return nil, err
 	}
-	return DecodeResult(raw)
+	return decodeResult(MethodServerLiveHandoff, raw)
 }
 
 // ServerReloadAgentManifests calls "server.reload_agent_manifests".
@@ -1410,13 +1410,13 @@ func (c *Client) ServerReloadAgentManifests(ctx context.Context) (*AgentManifest
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodServerReloadAgentManifests, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*AgentManifestReloadResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodServerReloadAgentManifests, Want: "agent_manifest_reload", Got: result.ResultType()}
+		return nil, opError(MethodServerReloadAgentManifests, OpDecode, &UnexpectedResultError{Method: MethodServerReloadAgentManifests, Want: "agent_manifest_reload", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1427,13 +1427,13 @@ func (c *Client) ServerReloadConfig(ctx context.Context) (*ConfigReloadResponse,
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodServerReloadConfig, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*ConfigReloadResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodServerReloadConfig, Want: "config_reload", Got: result.ResultType()}
+		return nil, opError(MethodServerReloadConfig, OpDecode, &UnexpectedResultError{Method: MethodServerReloadConfig, Want: "config_reload", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1444,13 +1444,13 @@ func (c *Client) ServerStop(ctx context.Context) (*OKResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodServerStop, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*OKResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodServerStop, Want: "ok", Got: result.ResultType()}
+		return nil, opError(MethodServerStop, OpDecode, &UnexpectedResultError{Method: MethodServerStop, Want: "ok", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1461,13 +1461,13 @@ func (c *Client) SessionSnapshot(ctx context.Context) (*SessionSnapshotResponse,
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodSessionSnapshot, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*SessionSnapshotResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodSessionSnapshot, Want: "session_snapshot", Got: result.ResultType()}
+		return nil, opError(MethodSessionSnapshot, OpDecode, &UnexpectedResultError{Method: MethodSessionSnapshot, Want: "session_snapshot", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1478,13 +1478,13 @@ func (c *Client) TabClose(ctx context.Context, params TabTarget) (*OKResponse, e
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodTabClose, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*OKResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodTabClose, Want: "ok", Got: result.ResultType()}
+		return nil, opError(MethodTabClose, OpDecode, &UnexpectedResultError{Method: MethodTabClose, Want: "ok", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1495,13 +1495,13 @@ func (c *Client) TabCreate(ctx context.Context, params TabCreateParams) (*TabCre
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodTabCreate, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*TabCreatedResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodTabCreate, Want: "tab_created", Got: result.ResultType()}
+		return nil, opError(MethodTabCreate, OpDecode, &UnexpectedResultError{Method: MethodTabCreate, Want: "tab_created", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1512,13 +1512,13 @@ func (c *Client) TabFocus(ctx context.Context, params TabTarget) (*TabInfoRespon
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodTabFocus, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*TabInfoResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodTabFocus, Want: "tab_info", Got: result.ResultType()}
+		return nil, opError(MethodTabFocus, OpDecode, &UnexpectedResultError{Method: MethodTabFocus, Want: "tab_info", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1529,13 +1529,13 @@ func (c *Client) TabGet(ctx context.Context, params TabTarget) (*TabInfoResponse
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodTabGet, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*TabInfoResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodTabGet, Want: "tab_info", Got: result.ResultType()}
+		return nil, opError(MethodTabGet, OpDecode, &UnexpectedResultError{Method: MethodTabGet, Want: "tab_info", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1546,13 +1546,13 @@ func (c *Client) TabList(ctx context.Context, params TabListParams) (*TabListRes
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodTabList, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*TabListResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodTabList, Want: "tab_list", Got: result.ResultType()}
+		return nil, opError(MethodTabList, OpDecode, &UnexpectedResultError{Method: MethodTabList, Want: "tab_list", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1563,13 +1563,13 @@ func (c *Client) TabMove(ctx context.Context, params TabMoveParams) (*TabListRes
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodTabMove, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*TabListResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodTabMove, Want: "tab_list", Got: result.ResultType()}
+		return nil, opError(MethodTabMove, OpDecode, &UnexpectedResultError{Method: MethodTabMove, Want: "tab_list", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1580,13 +1580,13 @@ func (c *Client) TabRename(ctx context.Context, params TabRenameParams) (*TabInf
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodTabRename, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*TabInfoResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodTabRename, Want: "tab_info", Got: result.ResultType()}
+		return nil, opError(MethodTabRename, OpDecode, &UnexpectedResultError{Method: MethodTabRename, Want: "tab_info", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1597,13 +1597,13 @@ func (c *Client) WorkspaceClose(ctx context.Context, params WorkspaceCloseParams
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodWorkspaceClose, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*OKResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodWorkspaceClose, Want: "ok", Got: result.ResultType()}
+		return nil, opError(MethodWorkspaceClose, OpDecode, &UnexpectedResultError{Method: MethodWorkspaceClose, Want: "ok", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1614,13 +1614,13 @@ func (c *Client) WorkspaceCreate(ctx context.Context, params WorkspaceCreatePara
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodWorkspaceCreate, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*WorkspaceCreatedResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodWorkspaceCreate, Want: "workspace_created", Got: result.ResultType()}
+		return nil, opError(MethodWorkspaceCreate, OpDecode, &UnexpectedResultError{Method: MethodWorkspaceCreate, Want: "workspace_created", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1631,13 +1631,13 @@ func (c *Client) WorkspaceFocus(ctx context.Context, params WorkspaceTarget) (*W
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodWorkspaceFocus, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*WorkspaceInfoResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodWorkspaceFocus, Want: "workspace_info", Got: result.ResultType()}
+		return nil, opError(MethodWorkspaceFocus, OpDecode, &UnexpectedResultError{Method: MethodWorkspaceFocus, Want: "workspace_info", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1648,13 +1648,13 @@ func (c *Client) WorkspaceGet(ctx context.Context, params WorkspaceTarget) (*Wor
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodWorkspaceGet, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*WorkspaceInfoResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodWorkspaceGet, Want: "workspace_info", Got: result.ResultType()}
+		return nil, opError(MethodWorkspaceGet, OpDecode, &UnexpectedResultError{Method: MethodWorkspaceGet, Want: "workspace_info", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1665,13 +1665,13 @@ func (c *Client) WorkspaceList(ctx context.Context) (*WorkspaceListResponse, err
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodWorkspaceList, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*WorkspaceListResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodWorkspaceList, Want: "workspace_list", Got: result.ResultType()}
+		return nil, opError(MethodWorkspaceList, OpDecode, &UnexpectedResultError{Method: MethodWorkspaceList, Want: "workspace_list", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1682,13 +1682,13 @@ func (c *Client) WorkspaceMove(ctx context.Context, params WorkspaceMoveParams) 
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodWorkspaceMove, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*WorkspaceListResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodWorkspaceMove, Want: "workspace_list", Got: result.ResultType()}
+		return nil, opError(MethodWorkspaceMove, OpDecode, &UnexpectedResultError{Method: MethodWorkspaceMove, Want: "workspace_list", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1699,13 +1699,13 @@ func (c *Client) WorkspaceMoveBlock(ctx context.Context, params WorkspaceMoveBlo
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodWorkspaceMoveBlock, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*WorkspaceListResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodWorkspaceMoveBlock, Want: "workspace_list", Got: result.ResultType()}
+		return nil, opError(MethodWorkspaceMoveBlock, OpDecode, &UnexpectedResultError{Method: MethodWorkspaceMoveBlock, Want: "workspace_list", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1716,13 +1716,13 @@ func (c *Client) WorkspaceRename(ctx context.Context, params WorkspaceRenamePara
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodWorkspaceRename, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*WorkspaceInfoResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodWorkspaceRename, Want: "workspace_info", Got: result.ResultType()}
+		return nil, opError(MethodWorkspaceRename, OpDecode, &UnexpectedResultError{Method: MethodWorkspaceRename, Want: "workspace_info", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1733,13 +1733,13 @@ func (c *Client) WorkspaceReportMetadata(ctx context.Context, params WorkspaceRe
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodWorkspaceReportMetadata, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*OKResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodWorkspaceReportMetadata, Want: "ok", Got: result.ResultType()}
+		return nil, opError(MethodWorkspaceReportMetadata, OpDecode, &UnexpectedResultError{Method: MethodWorkspaceReportMetadata, Want: "ok", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1750,13 +1750,13 @@ func (c *Client) WorktreeCreate(ctx context.Context, params WorktreeCreateParams
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodWorktreeCreate, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*WorktreeCreatedResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodWorktreeCreate, Want: "worktree_created", Got: result.ResultType()}
+		return nil, opError(MethodWorktreeCreate, OpDecode, &UnexpectedResultError{Method: MethodWorktreeCreate, Want: "worktree_created", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1767,13 +1767,13 @@ func (c *Client) WorktreeList(ctx context.Context, params WorktreeListParams) (*
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodWorktreeList, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*WorktreeListResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodWorktreeList, Want: "worktree_list", Got: result.ResultType()}
+		return nil, opError(MethodWorktreeList, OpDecode, &UnexpectedResultError{Method: MethodWorktreeList, Want: "worktree_list", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1784,13 +1784,13 @@ func (c *Client) WorktreeOpen(ctx context.Context, params WorktreeOpenParams) (*
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodWorktreeOpen, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*WorktreeOpenedResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodWorktreeOpen, Want: "worktree_opened", Got: result.ResultType()}
+		return nil, opError(MethodWorktreeOpen, OpDecode, &UnexpectedResultError{Method: MethodWorktreeOpen, Want: "worktree_opened", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1801,13 +1801,13 @@ func (c *Client) WorktreeRemove(ctx context.Context, params WorktreeRemoveParams
 	if err != nil {
 		return nil, err
 	}
-	result, err := DecodeResult(raw)
+	result, err := decodeResult(MethodWorktreeRemove, raw)
 	if err != nil {
 		return nil, err
 	}
 	typed, ok := result.(*WorktreeRemovedResponse)
 	if !ok {
-		return nil, &UnexpectedResultError{Method: MethodWorktreeRemove, Want: "worktree_removed", Got: result.ResultType()}
+		return nil, opError(MethodWorktreeRemove, OpDecode, &UnexpectedResultError{Method: MethodWorktreeRemove, Want: "worktree_removed", Got: result.ResultType()})
 	}
 	return typed, nil
 }

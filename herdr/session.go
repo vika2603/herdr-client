@@ -228,11 +228,11 @@ func focusedID[T any](values []T, read func(T) (string, bool)) *string {
 // the mirror from a fresh snapshot and reports the gap as a *ResyncEvent
 // before the events of the new stream. Reconnection waits between attempts and
 // gives up when ctx is done or the Session is closed, both of which leave the
-// Session reconnectable on a later Next. A closed Session reports
-// ErrStreamClosed; a done context reports ctx.Err().
+// Session reconnectable on a later Next. Use errors.Is to identify a closed
+// session (ErrStreamClosed) or a canceled read/backoff (ctx.Err()).
 //
-// An event the generated code cannot decode is reported as *UnknownEventError
-// and does not reach the mirror.
+// Payload decoding failures carry OpDecode and do not reach the mirror. An
+// unknown event remains inspectable as *UnknownEventError through errors.As.
 func (s *Session) Next(ctx context.Context) (Event, error) {
 	s.nextMu.Lock()
 	defer s.nextMu.Unlock()
@@ -275,7 +275,8 @@ func (s *Session) Next(ctx context.Context) (Event, error) {
 	}
 }
 
-// Close ends the stream. A blocked Next returns ErrStreamClosed.
+// Close ends the stream. A blocked Next matches ErrStreamClosed through
+// errors.Is; a connection close failure retains its OpClose context.
 func (s *Session) Close() error {
 	s.streamMu.Lock()
 	if s.closed {
@@ -298,7 +299,7 @@ func (s *Session) Close() error {
 func (s *Session) deliver(raw *RawEvent) (Event, error) {
 	event, err := DecodeEvent(raw.Event, raw.Data)
 	if err != nil {
-		return nil, err
+		return nil, opError(MethodEventsSubscribe, OpDecode, err)
 	}
 	s.mu.Lock()
 	s.cache.apply(event)

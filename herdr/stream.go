@@ -8,12 +8,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net"
-	"os"
 	"sync"
 )
 
-// ErrStreamClosed is returned by Stream.Next once the connection is closed.
+// ErrStreamClosed identifies a closed stream through errors.Is.
 var ErrStreamClosed = errors.New("herdr: stream closed")
 
 // RawEvent is one line pushed on a streaming connection.
@@ -88,44 +86,46 @@ func (s *Stream) read(r *bufio.Reader) {
 func (s *Stream) Ack() json.RawMessage { return s.ack }
 
 // Next blocks until the server pushes the next line, the stream is closed, or
-// ctx is done. A closed stream reports ErrStreamClosed; a done context
-// reports ctx.Err() and leaves the stream usable.
+// ctx is done. Read failures and cancellation carry an OpError. errors.Is
+// still identifies ErrStreamClosed or ctx.Err(); canceling Next leaves the
+// stream usable.
 func (s *Stream) Next(ctx context.Context) (*RawEvent, error) {
 	if err := ctx.Err(); err != nil {
-		return nil, err
+		return nil, opError(s.method, OpRead, err)
 	}
 	select {
 	case <-s.closed:
-		return nil, s.terminalErr()
+		return nil, s.terminalErr(ctx)
 	default:
 	}
 
 	select {
 	case <-ctx.Done():
-		return nil, ctx.Err()
+		return nil, opError(s.method, OpRead, ctx.Err())
 	case <-s.closed:
-		return nil, s.terminalErr()
+		return nil, s.terminalErr(ctx)
 	case line, ok := <-s.lines:
 		if !ok {
-			return nil, s.terminalErr()
+			return nil, s.terminalErr(ctx)
 		}
 		if line.err != nil {
 			s.setReadErr(line.err)
-			return nil, s.terminalErr()
+			return nil, s.terminalErr(ctx)
 		}
 		event := &RawEvent{}
 		if err := json.Unmarshal(line.data, event); err != nil {
-			return nil, fmt.Errorf("herdr: %s: invalid event: %w", s.method, err)
+			return nil, opError(s.method, OpDecode, err)
 		}
 		return event, nil
 	}
 }
 
-// Close closes the connection. A blocked Next returns ErrStreamClosed.
+// Close closes the connection. A blocked Next matches ErrStreamClosed through
+// errors.Is. A connection close failure carries OpClose.
 func (s *Stream) Close() error {
 	s.closeOnce.Do(func() {
 		close(s.closed)
-		s.closeErr = s.conn.Close()
+		s.closeErr = opError(s.method, OpClose, s.conn.Close())
 	})
 	return s.closeErr
 }
@@ -138,20 +138,22 @@ func (s *Stream) setReadErr(err error) {
 	}
 }
 
-// terminalErr reports the end of the stream as ErrStreamClosed, wrapping the
-// read error when it says more than that the connection went away.
-func (s *Stream) terminalErr() error {
+// terminalErr preserves both the stream-closed sentinel and a received read
+// error. Session can reconnect by errors.Is while callers can inspect the cause.
+func (s *Stream) terminalErr(ctx context.Context) error {
+	if err := ctx.Err(); err != nil {
+		return opError(s.method, OpRead, err)
+	}
 	s.mu.Lock()
 	err := s.readErr
 	s.mu.Unlock()
-	switch {
-	case err == nil,
-		errors.Is(err, io.EOF),
-		errors.Is(err, io.ErrUnexpectedEOF),
-		errors.Is(err, net.ErrClosed),
-		errors.Is(err, os.ErrClosed):
-		return ErrStreamClosed
-	default:
-		return fmt.Errorf("%w: %w", ErrStreamClosed, err)
+	return streamReadError(s.method, err)
+}
+
+func streamReadError(method string, err error) error {
+	cause := ErrStreamClosed
+	if err != nil {
+		cause = fmt.Errorf("%w: %w", ErrStreamClosed, err)
 	}
+	return opError(method, OpRead, cause)
 }
