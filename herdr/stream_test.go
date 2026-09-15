@@ -94,12 +94,12 @@ func TestOpenStreamKeepsEventsWrittenWithTheAck(t *testing.T) {
 	// The server may put the acknowledgement and the first events into one
 	// write; the reader buffered by OpenStream must keep them.
 	release := make(chan struct{})
-	t.Cleanup(func() { close(release) })
 	server := newFakeServer(t, func(s *fakeSession) {
 		s.writeString(`{"id":"` + s.request().ID + `","result":` + subscriptionStarted + "}\n" +
 			`{"event":"pane_created","data":{"type":"pane_created"}}` + "\n")
 		<-release
 	})
+	t.Cleanup(func() { close(release) })
 	stream := openTestStream(t, server)
 
 	event, err := stream.Next(context.Background())

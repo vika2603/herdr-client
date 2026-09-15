@@ -68,7 +68,9 @@ that carry no discriminator.
 | `cmd/herdr-api-gen` `internal/gen` | The generator | hand |
 | `internal/cmd/herdrcheck` | Drift detection against the installed herdr | hand |
 | `plugin` `plugin/manifest` | Plugin environment, registry, manifest | hand |
-| `plugin/plugintest` | A plugin environment and an API socket built for tests | hand |
+| `herdrtest` | Protocol test server, dynamic responses and event streams | hand |
+| `internal/testsocket` | Shared test listener and connection lifecycle | hand |
+| `plugin/plugintest` | Plugin environment, manifest checks and protocol server adaptation | hand |
 | `examples/agent-status` | A worked plugin serving three entrypoint kinds | hand |
 | `examples/agent-board` | A pane entrypoint on the session mirror | hand |
 | `examples/worktree-bootstrap` | A link handler that opens a ready workspace | hand |
@@ -623,13 +625,49 @@ kind, the invocation context, the event payload and the two directories, so a
 handler test sets no environment variables. It is a separate package so that
 importing it cannot pull test-only code into a plugin binary.
 
-`plugintest.NewServer` answers the calls a handler makes from a script keyed
-by method and records what it was asked, so a handler whose second call takes
-an id from the first response can be tested end to end. It answers one
-request per connection and closes, as herdr does, and refuses an unscripted
-method with an error naming it rather than hanging. Streaming methods are out
-of scope. It needs a Unix domain socket, so it skips the test on Windows,
-where the herdr API is a named pipe that the standard library cannot create.
+`herdrtest.NewServer` answers the real client over a local socket. It records
+requests, serves fixed results with `Reply`, API errors with `Fail`, and dynamic
+results with `Handle`. The latter lets a test inspect parameters or coordinate
+a snapshot response with an event producer. Handlers run concurrently and get
+a context canceled by client disconnect or server shutdown.
+
+`AllowSubscriptions` acknowledges valid, nonempty `events.subscribe` requests.
+`WaitSubscription` returns the acknowledged streams in order, including
+reconnects; each handle sends typed events with `Send`, sends explicitly raw
+envelopes with `SendRaw`, and can be closed to force a resync. The test supplies
+snapshot responses and events: the server does not emulate Herdr's state,
+filter events, or promise replay. Lifecycle events use underscore envelope
+names; the three pane-scoped event envelopes retain their dotted names.
+
+`WaitCall` and `WaitSubscription` use indexed, non-consuming records and wake
+all interested waiters. Contexts bound waits; channels in handlers can arrange
+precise response timing without sleeps. A written acknowledgement or event does
+not prove client consumption. Plugin tests wait for observable output to prove
+an event was processed.
+
+`plugin/plugintest.Server` adds only plugin environment adaptation to this
+protocol server. Its existing `Reply(...).Fail(...).Env(...)` calls remain
+available, along with the protocol server's subscriptions and waits. The shared
+`internal/testsocket` owns the listener, accepted sockets, cancellation and
+joining of server goroutines. The older raw fake server and its mirror helper
+also use that lifecycle owner; their special wire-corruption and internal
+Session tests stay in the client package to avoid a client/test-package import
+cycle.
+
+Closing the server cancels handlers and closes connections before joining the
+server goroutines. Handlers must observe cancellation and must not close the
+server themselves. Cleanup releases test-owned handler gates before joining
+those handlers. A canceled in-progress event write closes its subscription,
+since a partially written frame cannot safely be resumed; cancellation while
+waiting for another writer does not disturb that connection.
+
+Unscripted methods return a diagnostic API error naming the method. They do not
+automatically fail the test, so tests can verify how a caller handles a rejected
+request. Invalid scripted results fail the test and return an error to the
+caller. Graphics streaming and a public real-server harness are not included.
+Unix socket tests skip on Windows, where the Herdr client uses named pipes and
+the standard library supplies no matching listener. Cross-platform type checks
+are not Windows runtime evidence.
 
 ```go
 err := p.Dispatch(ctx, plugintest.Env(plugintest.Action("show")))

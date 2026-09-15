@@ -3,13 +3,14 @@ package herdr
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"net"
-	"os"
-	"path/filepath"
 	"sync"
 	"testing"
+
+	"github.com/vika2603/herdr-client/internal/testsocket"
 )
 
 // fakeRequest is one request line the fake server received.
@@ -40,45 +41,25 @@ type fakeServer struct {
 
 // fakeSession is one accepted connection together with its request.
 type fakeSession struct {
-	server *fakeServer
-	conn   net.Conn
-	reader *bufio.Reader
-	req    fakeRequest
+	server     *fakeServer
+	conn       net.Conn
+	reader     *bufio.Reader
+	req        fakeRequest
+	background sync.WaitGroup
 }
 
 func newFakeServer(t *testing.T, handle func(*fakeSession)) *fakeServer {
 	t.Helper()
-	// A short directory keeps the socket path within the length limit that
-	// macOS imposes on Unix domain sockets.
-	dir, err := os.MkdirTemp("", "herdr")
-	if err != nil {
-		t.Fatalf("create temp dir: %v", err)
-	}
-	path := filepath.Join(dir, "herdr.sock")
-	listener, err := net.Listen("unix", path)
-	if err != nil {
-		t.Fatalf("listen on %s: %v", path, err)
-	}
-	server := &fakeServer{t: t, path: path, listener: listener, handle: handle}
-	t.Cleanup(func() {
-		_ = listener.Close()
-		_ = os.RemoveAll(dir)
+	server := &fakeServer{t: t, handle: handle}
+	socket := testsocket.New(t, func(_ context.Context, conn net.Conn) {
+		server.mu.Lock()
+		server.accepted++
+		server.mu.Unlock()
+		server.serveConn(conn)
 	})
-	go server.serve()
+	server.path = socket.Path
+	server.listener = socket.Listener
 	return server
-}
-
-func (s *fakeServer) serve() {
-	for {
-		conn, err := s.listener.Accept()
-		if err != nil {
-			return
-		}
-		s.mu.Lock()
-		s.accepted++
-		s.mu.Unlock()
-		go s.serveConn(conn)
-	}
 }
 
 func (s *fakeServer) serveConn(conn net.Conn) {
@@ -91,6 +72,10 @@ func (s *fakeServer) serveConn(conn net.Conn) {
 	}
 
 	session := &fakeSession{server: s, conn: conn, reader: reader, req: parseFakeRequest(line)}
+	defer func() {
+		_ = conn.Close()
+		session.background.Wait()
+	}()
 	s.mu.Lock()
 	s.connections++
 	s.requests = append(s.requests, session.req)
@@ -176,7 +161,9 @@ func (s *fakeSession) fail(code, message string) {
 // watchClientWrites records anything the client sends after its request and
 // closes the connection, the way herdr treats a write on a stream.
 func (s *fakeSession) watchClientWrites() {
+	s.background.Add(1)
 	go func() {
+		defer s.background.Done()
 		buf := make([]byte, 512)
 		n, err := s.reader.Read(buf)
 		if n > 0 {

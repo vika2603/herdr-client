@@ -5,9 +5,7 @@ inside a pane it owns, and the command runs until the user closes that pane.
 The board mirrors the session and redraws itself on every change.
 
 ```go
-p := plugin.New()
-p.Pane("board", onBoard)
-p.Action("open", onOpen)
+p := newPluginWithOutput(os.Stdout)
 
 ctx, stop := plugin.ShutdownContext(context.Background())
 code := p.Run(ctx)
@@ -106,12 +104,29 @@ the board redraws. Close the pane to end it.
 ## Tests
 
 The rendering is a pure function of a frame struct, so `TestRender` pins the
-layout with golden strings and needs no server. `TestDispatchReachesBothEntrypoints` builds the environment Herdr would inject with `plugintest.Env`
-and runs `Plugin.Dispatch` against a socket path nothing is listening on: the
-error names that socket, which tells a handler that ran from an id the registry
-does not serve. `TestManifest` is one call to `plugintest.CheckManifest`, which
-validates `herdr-plugin.toml` the way Herdr does and reports any entrypoint the
-manifest and the registry disagree on.
+layout with golden strings. The pane constructor accepts an `io.Writer`;
+`newPlugin()` still uses stdout, while tests capture frames without opening a
+terminal or changing what the board displays.
+
+`dispatch_test.go` runs the registered entrypoints with `plugintest.NewServer`
+and a real `herdr.Client` and `Session`. It checks the initial subscription and
+snapshot, event-driven updates, continued operation after an unknown event,
+disconnect and fresh-snapshot resync, cancellation, API errors and connection
+cleanup. The action test checks the actual `plugin.pane.open` parameters.
+Tests wait for subscription acknowledgements and complete output frames rather
+than sleeping to guess when the board has updated.
+
+Run these tests from the repository root:
+
+```bash
+go test -race ./examples/agent-board
+```
+
+No Herdr binary, agent process or terminal UI is needed. Socket tests skip on
+Windows because the test server has no named-pipe listener. These tests verify
+plugin behavior and rendered text, not terminal display quality or compatibility
+with a real Herdr server. `TestManifest` continues to check agreement between
+`herdr-plugin.toml` and the registry with `plugintest.CheckManifest`.
 
 `Plugin.Run` returns the exit code Herdr records in its plugin command log;
 [agent-status](../agent-status/README.md#exit-codes) documents the three.

@@ -48,8 +48,18 @@ func main() {
 // newPlugin registers one handler per entrypoint of herdr-plugin.toml.
 // TestManifest checks the two against each other.
 func newPlugin() *plugin.Plugin {
+	return newPluginWithOutput(os.Stdout)
+}
+
+// newPluginWithOutput builds the same plugin while directing pane frames to
+// output. Keeping the terminal as a constructor dependency lets tests exercise
+// the full entrypoint through the protocol without replacing the client or
+// opening a real pane.
+func newPluginWithOutput(output io.Writer) *plugin.Plugin {
 	p := plugin.New()
-	p.Pane(paneBoard, onBoard)
+	p.Pane(paneBoard, func(ctx context.Context, env *plugin.Env) error {
+		return onBoard(ctx, env, output)
+	})
 	p.Action(actionOpen, onOpen)
 	return p
 }
@@ -74,8 +84,8 @@ func onOpen(ctx context.Context, env *plugin.Env) error {
 // mid-bootstrap it is context.Canceled, and a closed mirror is
 // ErrStreamClosed, so both are answered here rather than in one branch of the
 // loop.
-func onBoard(ctx context.Context, env *plugin.Env) error {
-	err := runBoard(ctx, env)
+func onBoard(ctx context.Context, env *plugin.Env, output io.Writer) error {
+	err := runBoard(ctx, env, output)
 	if errors.Is(err, context.Canceled) || errors.Is(err, herdr.ErrStreamClosed) {
 		return nil
 	}
@@ -83,7 +93,7 @@ func onBoard(ctx context.Context, env *plugin.Env) error {
 }
 
 // runBoard mirrors the session and redraws the board until the pane closes.
-func runBoard(ctx context.Context, env *plugin.Env) error {
+func runBoard(ctx context.Context, env *plugin.Env, output io.Writer) error {
 	client := env.Client()
 	session, err := herdr.OpenSession(ctx, client)
 	if err != nil {
@@ -96,7 +106,7 @@ func runBoard(ctx context.Context, env *plugin.Env) error {
 	}
 
 	frame := board{}.from(session)
-	draw(os.Stdout, frame)
+	draw(output, frame)
 	for {
 		event, err := session.Next(ctx)
 		if err != nil {
@@ -109,7 +119,7 @@ func runBoard(ctx context.Context, env *plugin.Env) error {
 			return err
 		}
 		frame = frame.after(event).from(session)
-		draw(os.Stdout, frame)
+		draw(output, frame)
 	}
 }
 

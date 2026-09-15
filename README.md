@@ -24,7 +24,7 @@ go get github.com/vika2603/herdr-client
 This is a v0, so the API can still change between minor versions. Pin the
 version you build against.
 
-The module holds two packages a plugin imports:
+The runtime packages a plugin imports are:
 
 ```go
 import (
@@ -268,6 +268,102 @@ if err := newPlugin().Dispatch(ctx, server.Env(plugintest.Action("run"))); err !
 // server.Methods() and server.Calls() report what the handler asked for.
 ```
 
+The protocol server is also available as `herdrtest.NewServer(t)` for programs
+that use the client without being plugins. `plugintest.Server` adapts that
+server to a plugin `Env`; both exercise the real client's encoding, local IPC,
+response decoding and event handling. Neither needs a Herdr binary, an agent
+process or a terminal UI. Socket tests skip on Windows because this test
+server does not implement a named-pipe listener.
+
+`Reply` captures a fixed result and answers every call with it. `Fail` scripts
+an API error. `Handle` computes a result for each call, so it can inspect
+parameters, return different results, or hold a snapshot response until a test
+releases it:
+
+```go
+server.Handle(herdr.MethodSessionSnapshot,
+    func(ctx context.Context, call herdrtest.Call) (herdr.Result, error) {
+        select {
+        case <-releaseSnapshot:
+            return herdr.SessionSnapshotResponse{Snapshot: snapshot}, nil
+        case <-ctx.Done():
+            return nil, ctx.Err()
+        }
+    })
+```
+
+Handlers can run concurrently. Synchronize shared state, and observe their
+context when blocking: it ends when the client disconnects or the server
+closes. A `*herdr.Error` preserves its API code; other errors return
+`internal_error`. A handler returning neither a result nor an error fails the
+test as a scripting mistake. An unscripted method returns `invalid_request`
+naming the method; assert on the client error or recorded calls rather than
+expecting it to fail the test automatically.
+
+### Testing subscriptions and session mirrors
+
+`AllowSubscriptions` acknowledges `events.subscribe`. `WaitSubscription`
+returns a handle for each accepted stream, including reconnects. The following
+uses the same `OpenSession` and decoding path a plugin uses:
+
+```go
+server := herdrtest.NewServer(t).
+    AllowSubscriptions().
+    Reply(herdr.MethodSessionSnapshot, herdr.SessionSnapshotResponse{})
+
+session, err := herdr.OpenSession(ctx, server.Client())
+if err != nil {
+    t.Fatal(err)
+}
+defer session.Close()
+
+subscription, err := server.WaitSubscription(ctx, 0)
+if err != nil {
+    t.Fatal(err)
+}
+err = subscription.Send(ctx, herdr.WorkspaceCreatedEvent{
+    Workspace: herdr.WorkspaceInfo{WorkspaceID: "w1", Label: "project"},
+})
+if err != nil {
+    t.Fatal(err)
+}
+if _, err := session.Next(ctx); err != nil {
+    t.Fatal(err)
+}
+// session.Workspaces() now includes w1.
+```
+
+`WaitCall(ctx, index)` waits for a request, and `WaitSubscription(ctx, index)`
+waits for a subscription acknowledgement to be written. Indices are zero-based;
+waits observe records without consuming them. Multiple waiters can observe the
+same request or subscription. Use a bounded context and channels to arrange
+request/response timing, not fixed sleeps.
+
+`Send` writes a typed event in its wire format. `SendRaw` can inject an unknown
+event name or a mismatched payload. The server does not filter sent events by
+the subscriptions requested, emulate Herdr's business rules, or maintain a
+session snapshot automatically: the test owns those responses. A successful
+send means the bytes were written, not that the plugin processed them. Wait on
+observable plugin output or another explicit application signal before
+asserting on a frame. `Session` itself applies an event when `Next` returns it.
+
+Close a subscription to simulate a disconnect. Set up the new snapshot before
+closing it, then drive the client's next read and wait for subscription index 1
+to observe the reconnect. `Subscription.Done()` reports a closed connection.
+`Server.Close()` cancels handlers, closes active and partially read connections,
+waits for server goroutines, and removes its socket directory; test cleanup does
+this automatically. A handler must not call `Server.Close()` itself, because
+close waits for handlers to return. Caller-owned goroutines still belong to the
+test: cancel and join them before cleanup completes.
+
+The `agent-board` example tests its full registered pane entrypoint this way,
+with output written to a test recorder. Those tests cover bootstrap, live
+updates, resync, cancellation and errors; they do not establish terminal
+rendering quality or real-server compatibility. Graphics streaming and a real
+Herdr harness are outside this test server's API.
+
+### Checking dispatch and manifests
+
 `Dispatch` runs the same selection `Run` does and returns the handler's error
 instead of an exit code. `CheckManifest` reports every disagreement between
 the manifest and the code: an id declared with no handler, a handler with no
@@ -300,7 +396,8 @@ eligible.
 | `herdr`                             | Transport, plus the generated types, results, events and method wrappers |
 | `plugin`                            | The environment Herdr injects into plugin commands, and the registry     |
 | `plugin/manifest`                   | `herdr-plugin.toml` parsing and validation                               |
-| `plugin/plugintest`                 | A plugin environment built in memory, and the manifest check             |
+| `herdrtest`                         | Protocol test server, dynamic responses, subscriptions and synchronization |
+| `plugin/plugintest`                 | Plugin environment and manifest checks, plus protocol server adaptation |
 | `examples`                          | Worked plugins                                                           |
 | `cmd/herdr-api-gen`, `internal/gen` | The generator that produces `*_gen.go`                                   |
 | `internal/e2e`                      | The suite that proves the result types against a real server             |

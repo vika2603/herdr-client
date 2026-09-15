@@ -179,11 +179,11 @@ func TestCallWithRequestIDs(t *testing.T) {
 func TestCallContextCanceled(t *testing.T) {
 	received := make(chan struct{})
 	release := make(chan struct{})
-	t.Cleanup(func() { close(release) })
 	server := newFakeServer(t, func(_ *fakeSession) {
 		close(received)
 		<-release
 	})
+	t.Cleanup(func() { close(release) })
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -200,8 +200,8 @@ func TestCallContextCanceled(t *testing.T) {
 
 func TestCallContextDeadline(t *testing.T) {
 	release := make(chan struct{})
-	t.Cleanup(func() { close(release) })
 	server := newFakeServer(t, func(_ *fakeSession) { <-release })
+	t.Cleanup(func() { close(release) })
 
 	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
 	defer cancel()
@@ -214,8 +214,8 @@ func TestCallContextDeadline(t *testing.T) {
 
 func TestCallDialTimeout(t *testing.T) {
 	release := make(chan struct{})
-	t.Cleanup(func() { close(release) })
 	server := newFakeServer(t, func(_ *fakeSession) { <-release })
+	t.Cleanup(func() { close(release) })
 
 	_, err := New(server.path, WithDialTimeout(time.Nanosecond)).CallRaw(context.Background(), "ping", nil)
 	if err == nil {
