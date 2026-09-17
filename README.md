@@ -1,6 +1,6 @@
 # Herdr Client
 
-Go client for [Herdr](https://herdr.dev), generated against herdr 0.9.0,
+Go client for [Herdr](https://herdr.dev), generated against herdr 0.9.1,
 protocol 22: the full socket API, a live mirror of the session, and the
 pieces a Herdr plugin written in Go needs.
 
