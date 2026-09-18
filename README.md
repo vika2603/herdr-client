@@ -5,7 +5,7 @@ protocol 22: the full socket API, a live mirror of the session, and the
 pieces a Herdr plugin written in Go needs.
 
 The wire types, copy methods, result and event decoders, and a typed wrapper for every
-one of the 102 API methods are generated from the schema the herdr binary
+one of the 103 API methods are generated from the schema the herdr binary
 prints, so the client tracks the server rather than a hand-written guess of
 it. The transport, the session mirror, the graphics frame stream, the plugin
 process environment and the manifest parser are hand-written.

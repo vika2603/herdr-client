@@ -205,6 +205,12 @@ func DecodeResult(raw json.RawMessage) (Result, error) {
 			return nil, err
 		}
 		return &value, nil
+	case "pane_link_resolved":
+		var value PaneLinkResolvedResponse
+		if err := json.Unmarshal(raw, &value); err != nil {
+			return nil, err
+		}
+		return &value, nil
 	case "pane_list":
 		var value PaneListResponse
 		if err := json.Unmarshal(raw, &value); err != nil {
@@ -1231,6 +1237,35 @@ func (v PaneLinkActivatedResponse) MarshalJSON() ([]byte, error) {
 		Type string `json:"type"`
 		alias
 	}{Type: "pane_link_activated", alias: alias(v)})
+}
+
+// PaneLinkResolvedResponse is the "pane_link_resolved" result.
+type PaneLinkResolvedResponse struct {
+	Regions []PaneLinkRegion `json:"regions"`
+}
+
+// Clone returns a deep copy of v.
+func (v PaneLinkResolvedResponse) Clone() PaneLinkResolvedResponse {
+	out := v
+	if v.Regions != nil {
+		out.Regions = make([]PaneLinkRegion, len(v.Regions))
+		for i1 := range v.Regions {
+			out.Regions[i1] = v.Regions[i1].Clone()
+		}
+	}
+	return out
+}
+
+// ResultType returns "pane_link_resolved".
+func (PaneLinkResolvedResponse) ResultType() string { return "pane_link_resolved" }
+
+// MarshalJSON writes the object with its "type" field.
+func (v PaneLinkResolvedResponse) MarshalJSON() ([]byte, error) {
+	type alias PaneLinkResolvedResponse
+	return json.Marshal(struct {
+		Type string `json:"type"`
+		alias
+	}{Type: "pane_link_resolved", alias: alias(v)})
 }
 
 // PaneListResponse is the "pane_list" result.

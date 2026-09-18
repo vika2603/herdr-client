@@ -47,6 +47,7 @@ const (
 	MethodPaneInputSet               = "pane.input.set"
 	MethodPaneLayout                 = "pane.layout"
 	MethodPaneLinkActivate           = "pane.link.activate"
+	MethodPaneLinkResolve            = "pane.link.resolve"
 	MethodPaneList                   = "pane.list"
 	MethodPaneMove                   = "pane.move"
 	MethodPaneNeighbor               = "pane.neighbor"
@@ -785,6 +786,23 @@ func (c *Client) PaneLinkActivate(ctx context.Context, params PaneLinkActivatePa
 	typed, ok := result.(*PaneLinkActivatedResponse)
 	if !ok {
 		return nil, opError(MethodPaneLinkActivate, OpDecode, &UnexpectedResultError{Method: MethodPaneLinkActivate, Want: "pane_link_activated", Got: result.ResultType()})
+	}
+	return typed, nil
+}
+
+// PaneLinkResolve calls "pane.link.resolve".
+func (c *Client) PaneLinkResolve(ctx context.Context, params PaneLinkActivateParams) (*PaneLinkResolvedResponse, error) {
+	raw, err := c.CallRaw(ctx, MethodPaneLinkResolve, params)
+	if err != nil {
+		return nil, err
+	}
+	result, err := decodeResult(MethodPaneLinkResolve, raw)
+	if err != nil {
+		return nil, err
+	}
+	typed, ok := result.(*PaneLinkResolvedResponse)
+	if !ok {
+		return nil, opError(MethodPaneLinkResolve, OpDecode, &UnexpectedResultError{Method: MethodPaneLinkResolve, Want: "pane_link_resolved", Got: result.ResultType()})
 	}
 	return typed, nil
 }

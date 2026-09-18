@@ -13,7 +13,7 @@ generated Go type and method wrapper in this module.
 `method-results.json` maps each request method to the `ResponseResult`
 variant it returns. The schema does not carry this relation, so the table is
 maintained by hand: it was read out of the herdr handlers for the version
-above, and `internal/e2e` then confirmed it by calling 92 of the 102 methods
+above, and `internal/e2e` then confirmed it by calling 93 of the 103 methods
 against a real server and checking the type that came back, with no
 disagreements. The generator
 refuses to run when a method in the schema has no entry, or when an entry
@@ -27,7 +27,11 @@ as known and fails only on new drift.
 
 The `Track herdr` workflow performs this against each new herdr release and
 opens a pull request, so the steps below are for refreshing against a binary
-installed locally.
+installed locally. A method the release added has no entry yet, which the
+generator refuses to run on, so the workflow reads one out of the handlers of
+that release with `internal/cmd/herdrsource` and reports where it read it. A
+method it cannot settle gets an entry accepting any result, whose wrapper
+returns the `Result` interface until someone narrows it.
 
 ```bash
 just herdr-check            # report what moved before changing anything

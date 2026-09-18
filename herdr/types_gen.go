@@ -2711,6 +2711,19 @@ func (v PaneLinkActivateParams) Clone() PaneLinkActivateParams {
 	return out
 }
 
+// Inclusive display-cell columns on a pane's current viewport.
+type PaneLinkRegion struct {
+	EndCol   uint16 `json:"end_col"`
+	Row      uint16 `json:"row"`
+	StartCol uint16 `json:"start_col"`
+}
+
+// Clone returns a deep copy of v.
+func (v PaneLinkRegion) Clone() PaneLinkRegion {
+	out := v
+	return out
+}
+
 type PaneListParams struct {
 	WorkspaceID Optional[string] `json:"workspace_id,omitzero"`
 }

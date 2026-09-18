@@ -46,6 +46,12 @@ e2e:
 herdr-check:
     go run ./internal/cmd/herdrcheck
 
+# Read the result type of each method out of a herdr checkout and fill in any
+# the table lacks. The schema does not carry this relation, so a release that
+# adds a method otherwise stops `just gen`.
+methods src:
+    go run ./internal/cmd/herdrsource -src {{src}} -apply
+
 # Refresh the schema snapshot from the installed herdr binary.
 schema-update:
     herdr api schema --output schema/herdr-api.schema.json

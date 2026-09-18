@@ -593,7 +593,7 @@ stopped in cleanup. It never touches the caller's session. Its purpose is to
 prove `schema/method-results.json`, which the schema does not state and which
 was derived by reading herdr's handlers: every reachable method is called
 through its generated wrapper and its result type asserted, so a wrong mapping
-fails as a decode or assertion error. It currently exercises 92 of the 102
+fails as a decode or assertion error. It currently exercises 93 of the 103
 methods with no disagreements, and the coverage list is checked against the
 schema so a method can neither disappear nor go unexplained unnoticed.
 
@@ -665,6 +665,45 @@ would leave `method-results.json` quietly wrong. `internal/e2e` is the guard:
 it calls each reachable method through its generated wrapper and asserts on the
 decoded result type, so a changed mapping fails as a decode or assertion error.
 Run `just e2e` after regenerating.
+
+Filling that table in for a method the release added is what
+`internal/cmd/herdrsource` does. The generator refuses to run without an entry,
+so an added method would otherwise stop the regeneration outright and leave the
+branch with no generated code at all. The command reads the relation where it
+lives: herdr's dispatch names a `Method` variant, and the handler behind it
+encodes a `ResponseResult`. `just methods <herdr checkout>` runs it, and the
+`Track herdr` workflow runs it against the sources of the release being
+upgraded to and reports every result with the file and line it was read from.
+
+It is not a Rust parser, and three kinds of method are beyond it. Read against
+herdr 0.9.1 it settled 100 of the 103 methods with nothing contradicting the
+table.
+
+- A **deferred handler** answers from a completion callback the dispatch never
+  calls. `worktree.create` and `worktree.remove` are these: the dispatch starts
+  the work and `handle_api_worktree_add_finished` in
+  `src/app/api/worktrees/deferred.rs` encodes the result, with nothing between
+  them but an operation id and a channel. No static reading crosses that.
+- A **dispatch shape it does not know** reads as no dispatch at all, which is
+  what `client_shell.surface.set` does. It reports the gap rather than reaching
+  for whichever result sits nearby.
+- **Having no type information.** It matches text, so `self.handle_x()` cannot
+  be resolved to one `impl`, and a helper shared by two methods encodes both
+  their results. It reports every result it reaches and narrows nothing when
+  there is more than one.
+
+A method it cannot settle gets an entry accepting any result, whose wrapper
+returns the `Result` interface. That costs the caller a type assertion, where
+guessing would cost a wrapper that rejects a correct response: an entry naming
+the wrong type turns every call into an `UnexpectedResultError`. Narrowing it
+afterwards rests on `internal/e2e`, which observes what the server sends rather
+than what the source says.
+
+The command also reads herdr's own tests as a second opinion. A test naming one
+method and one result is weak evidence of a pairing, covering 28 of the 103
+methods at 0.9.1 and wrong about 2 of them, because a test may name a method it
+merely sets up with. A disagreement with the handlers is therefore reported for
+a person to look at and never decides an entry.
 
 **Behaviour the schema does not describe** is the part with no automatic
 guard. Each item below was read out of the herdr sources at v0.9.0 and has to
