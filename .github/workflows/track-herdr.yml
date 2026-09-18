@@ -133,9 +133,34 @@ jobs:
           sed -i "s/^| \`schema_version\` | .* |$/| \`schema_version\` | $SCHEMA_VERSION |/" schema/README.md
 
       # The generator refuses to run while a method in the schema has no entry
-      # in method-results.json, which is the expected outcome of a release that
-      # adds methods. It writes nothing when it refuses, so the branch still
-      # carries a usable snapshot and the failure becomes a review item.
+      # in method-results.json, so a release that adds one would stop the
+      # regeneration and leave the branch without generated code for anything.
+      # The schema states that a method exists and that a result type exists
+      # but never that one answers the other; only herdr's handlers do, which
+      # is what herdrsource reads. A method it settles gets that result type,
+      # one it cannot gets an entry accepting any result, and either way the
+      # regeneration proceeds.
+      - name: Fetch the herdr sources for the release
+        run: |
+          set -euo pipefail
+          # Only src/ is read, and the scan needs file contents rather than
+          # history, so the clone takes one commit and no blobs it will not open.
+          git clone --quiet --depth 1 --branch "$TAG" --filter=blob:none \
+            --no-checkout https://github.com/herdrdev/herdr.git "$RUNNER_TEMP/herdr-src"
+          git -C "$RUNNER_TEMP/herdr-src" sparse-checkout set --no-cone 'src/**'
+          git -C "$RUNNER_TEMP/herdr-src" checkout --quiet
+
+      - name: Read the result type of each method from the handlers
+        id: methods
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          go run ./internal/cmd/herdrsource \
+            -src "$RUNNER_TEMP/herdr-src" \
+            -apply \
+            -report "$RUNNER_TEMP/methods.md"
+          echo "read the table against the $TAG handlers"
+
       - name: Regenerate the API surface
         id: generate
         continue-on-error: true
@@ -221,6 +246,7 @@ jobs:
 
       - name: Compose the pull request body
         env:
+          METHODS: ${{ steps.methods.outcome }}
           GENERATE: ${{ steps.generate.outcome }}
           TEST: ${{ steps.test.outcome }}
           LINT: ${{ steps.lint.outcome }}
@@ -232,9 +258,10 @@ jobs:
           set -euo pipefail
           body="$RUNNER_TEMP/pr-body.md"
 
-          if [ "$GENERATE" = success ] && [ "$TEST" = success ] \
-            && [ "$LINT" = success ] && [ "$CROSS" = success ] \
-            && [ "$HERDRCHECK" = success ] && [ "$E2E" = success ]; then
+          if [ "$METHODS" = success ] && [ "$GENERATE" = success ] \
+            && [ "$TEST" = success ] && [ "$LINT" = success ] \
+            && [ "$CROSS" = success ] && [ "$HERDRCHECK" = success ] \
+            && [ "$E2E" = success ]; then
             all_passed=true
           else
             all_passed=false
@@ -270,6 +297,7 @@ jobs:
             echo
             echo "| Step | Result |"
             echo "| --- | --- |"
+            echo "| \`herdrsource\` against the $TAG handlers | $(outcome "$METHODS") |"
             echo "| \`go generate ./...\` | $(outcome "$GENERATE") |"
             echo "| \`go build\` and \`go test -race\` | $(outcome "$TEST") |"
             echo "| \`golangci-lint\` | $(outcome "$LINT") |"
@@ -291,13 +319,28 @@ jobs:
             else
               echo "Before merging:"
               echo
-              echo "- [ ] Add an entry to \`schema/method-results.json\` for every method the release added, then rerun \`just gen\`."
+              if [ "$METHODS" != success ]; then
+                echo "- [ ] Settle what \`herdrsource\` left open below: narrow any entry it could not read, and check the ones it flags."
+              fi
+              echo "- [ ] Call each method the release added in \`internal/e2e\`, or record in \`outOfReach\` why the suite cannot."
               echo "- [ ] Re-derive that table from the herdr v$TARGET handler sources and update its \`_comment\`, which still names the version it was read from."
               echo "- [ ] Walk the upgrade checklist in \`docs/design.md\`: it lists the behaviour the schema does not describe, along with the herdr source file each fact came from."
               echo "- [ ] Update the method and e2e coverage counts in \`README.md\` and \`schema/README.md\` if they moved."
             fi
             echo
           } > "$body"
+
+          if [ -s "$RUNNER_TEMP/methods.md" ]; then
+            {
+              echo "## The result type of each method"
+              echo
+              echo "Read out of the \`$TAG\` handlers, which is where the relation lives:"
+              echo "the schema names every method and every result but never says which"
+              echo "answers which."
+              echo
+              cat "$RUNNER_TEMP/methods.md"
+            } >> "$body"
+          fi
 
           log_section "go generate" "$RUNNER_TEMP/generate.log"
           log_section "go build and go test" "$RUNNER_TEMP/test.log"

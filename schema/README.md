@@ -27,7 +27,11 @@ as known and fails only on new drift.
 
 The `Track herdr` workflow performs this against each new herdr release and
 opens a pull request, so the steps below are for refreshing against a binary
-installed locally.
+installed locally. A method the release added has no entry yet, which the
+generator refuses to run on, so the workflow reads one out of the handlers of
+that release with `internal/cmd/herdrsource` and reports where it read it. A
+method it cannot settle gets an entry accepting any result, whose wrapper
+returns the `Result` interface until someone narrows it.
 
 ```bash
 just herdr-check            # report what moved before changing anything
