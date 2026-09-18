@@ -593,7 +593,7 @@ stopped in cleanup. It never touches the caller's session. Its purpose is to
 prove `schema/method-results.json`, which the schema does not state and which
 was derived by reading herdr's handlers: every reachable method is called
 through its generated wrapper and its result type asserted, so a wrong mapping
-fails as a decode or assertion error. It currently exercises 92 of the 102
+fails as a decode or assertion error. It currently exercises 93 of the 103
 methods with no disagreements, and the coverage list is checked against the
 schema so a method can neither disappear nor go unexplained unnoticed.
 

@@ -217,6 +217,9 @@
     "pane.link.activate": {
       "result": "pane_link_activated"
     },
+    "pane.link.resolve": {
+      "result": "pane_link_resolved"
+    },
     "pane.rename": {
       "result": "pane_info"
     },

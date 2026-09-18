@@ -13,7 +13,7 @@ generated Go type and method wrapper in this module.
 `method-results.json` maps each request method to the `ResponseResult`
 variant it returns. The schema does not carry this relation, so the table is
 maintained by hand: it was read out of the herdr handlers for the version
-above, and `internal/e2e` then confirmed it by calling 92 of the 102 methods
+above, and `internal/e2e` then confirmed it by calling 93 of the 103 methods
 against a real server and checking the type that came back, with no
 disagreements. The generator
 refuses to run when a method in the schema has no entry, or when an entry

@@ -163,4 +163,15 @@ func stagePane(t *testing.T, h *harness, st *state) {
 			t.Errorf("pane.link.activate reported a handled link without a URL")
 		}
 	}
+
+	// pane.link.resolve reads the same cell without following what it finds,
+	// so the cell that held no link for activate resolves to no regions.
+	resolved, err := h.client.PaneLinkResolve(h.ctx(t), herdr.PaneLinkActivateParams{
+		PaneID:      st.paneID,
+		ViewportRow: 0,
+		Col:         0,
+	})
+	if h.cover(t, herdr.MethodPaneLinkResolve, resolved, err) && len(resolved.Regions) != 0 {
+		t.Errorf("pane.link.resolve found %d regions on a cell with no link", len(resolved.Regions))
+	}
 }
