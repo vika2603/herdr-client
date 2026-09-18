@@ -1,6 +1,6 @@
 {
   "_comment": "Result type per request method. The schema does not record which ResponseResult variant a method returns; this table was derived from herdr v0.9.0 handler sources and must be reviewed when the schema snapshot changes. Values: {\"result\": \"<type>\"} exactly one variant; {\"results\": [...]} several variants (\"*\" = any, wrapper returns the Result interface); {\"stream\": \"<ack type>\"} the connection stays open after the acknowledging result and pushes events.",
-  "herdr_version": "0.9.0",
+  "herdr_version": "0.9.1",
   "protocol": 22,
   "methods": {
     "ping": {
