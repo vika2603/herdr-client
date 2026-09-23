@@ -51,6 +51,42 @@ func TestWrapperSendsParams(t *testing.T) {
 	}
 }
 
+func TestPaneLinkResolveWrapper(t *testing.T) {
+	server := replyWith(t, `{"type":"pane_link_resolved","regions":[{"row":2,"start_col":3,"end_col":8}]}`)
+	params := PaneLinkActivateParams{PaneID: "w1:p1", ViewportRow: 2, Col: 3}
+	resolved, err := New(server.path).PaneLinkResolve(context.Background(), params)
+	if err != nil {
+		t.Fatalf("PaneLinkResolve: %v", err)
+	}
+	if len(resolved.Regions) != 1 || resolved.Regions[0] != (PaneLinkRegion{Row: 2, StartCol: 3, EndCol: 8}) {
+		t.Errorf("regions = %+v", resolved.Regions)
+	}
+	cloned := resolved.Clone()
+	cloned.Regions[0].StartCol = 4
+	if resolved.Regions[0].StartCol != 3 {
+		t.Error("cloned regions share storage with the original response")
+	}
+	request := server.request(0)
+	if request.Method != MethodPaneLinkResolve {
+		t.Errorf("method = %q, want %q", request.Method, MethodPaneLinkResolve)
+	}
+	if string(request.Params) != `{"col":3,"pane_id":"w1:p1","viewport_row":2}` {
+		t.Errorf("params = %s", request.Params)
+	}
+}
+
+func TestPaneLinkResolveRejectsUnexpectedResult(t *testing.T) {
+	server := replyWith(t, `{"type":"pane_link_activated","handled":false}`)
+	_, err := New(server.path).PaneLinkResolve(context.Background(), PaneLinkActivateParams{PaneID: "w1:p1"})
+	var unexpected *UnexpectedResultError
+	if !errors.As(err, &unexpected) {
+		t.Fatalf("error = %v (%T), want *UnexpectedResultError", err, err)
+	}
+	if unexpected.Method != MethodPaneLinkResolve || unexpected.Want != "pane_link_resolved" || unexpected.Got != "pane_link_activated" {
+		t.Errorf("error = %+v", unexpected)
+	}
+}
+
 func TestWrapperReportsUnexpectedResult(t *testing.T) {
 	server := replyWith(t, `{"type":"ok"}`)
 	_, err := New(server.path).PaneGet(context.Background(), PaneTarget{PaneID: "w1:p1"})

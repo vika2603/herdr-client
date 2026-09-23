@@ -8,15 +8,14 @@
 // This command reads it instead, out of a checkout of herdr at that release,
 // and re-checks the entries that already exist against the same sources.
 //
-// Every method ends up with an entry either way. One the sources settle gets
-// the result type they name; one they do not gets an entry accepting any
-// result, which generates a wrapper returning the Result interface rather
-// than a named response type. Generation is never blocked, and a wrong
-// narrowing is never guessed.
+// For methods present in the source enum, every schema method ends up with
+// an entry. One the sources settle gets the result type they name; one they
+// do not gets an entry accepting any result, whose wrapper returns Result.
+// A schema/source method mismatch stops early rather than guessing.
 //
-// Without -apply it only reports. A non-zero exit means something is left for
-// a person: an entry that could not be narrowed, one the sources contradict,
-// or one herdr's own tests disagree with.
+// Without -apply it only reports. A non-zero exit means an added entry could
+// not be narrowed or the handlers contradict the table. Herdr's tests are weak
+// evidence and their disagreements are reported without blocking upgrades.
 package main
 
 import (
@@ -24,6 +23,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 )
 
@@ -128,7 +128,8 @@ type conflict struct {
 type result struct {
 	narrowed    []added
 	widened     []added
-	contradicts []conflict // the handlers contradict the table
+	contradicts []conflict // no result the handlers reach is accepted by the table
+	partial     []conflict // some candidates are accepted and others are not
 	disputed    []conflict // herdr's own tests contradict the handlers
 	confirmed   int
 	unread      []string
@@ -151,6 +152,34 @@ func run(opts options) (*result, error) {
 	table, text, err := readTable(opts.methods)
 	if err != nil {
 		return nil, err
+	}
+
+	// A changed schema method missing from the source enum cannot be filled in
+	// by this scan. Report it here instead of claiming success and leaving the
+	// generator to fail later with an unrelated-looking table error.
+	seenMethods := make(map[string]bool, len(variants))
+	for _, v := range variants {
+		seenMethods[v.method] = true
+	}
+	var missing []string
+	for method := range schemaMethods {
+		if !seenMethods[method] {
+			missing = append(missing, method)
+		}
+	}
+	if len(missing) > 0 {
+		slices.Sort(missing)
+		return nil, fmt.Errorf("schema methods absent from the source Method enum: %s", strings.Join(missing, ", "))
+	}
+	var obsolete []string
+	for method := range table {
+		if !schemaMethods[method] {
+			obsolete = append(obsolete, method)
+		}
+	}
+	if len(obsolete) > 0 {
+		slices.Sort(obsolete)
+		return nil, fmt.Errorf("method table entries absent from the schema: %s", strings.Join(obsolete, ", "))
 	}
 
 	index := functions(files)
@@ -194,19 +223,27 @@ func run(opts options) (*result, error) {
 		case len(types) == 0:
 			res.unread = append(res.unread, v.method)
 		default:
-			// A helper shared by two methods encodes both their results, so
-			// the entry agrees as long as what it names is among them. An
-			// entry the sources no longer encode at all is real drift.
-			agrees := false
+			// A shared helper can encode results for different callers.
+			// Preserve that uncertainty: a subset match is not proof the
+			// wrapper accepts every response this method could return.
+			accepted := 0
 			for _, typ := range types {
 				if existing.allows(typ) {
-					agrees = true
+					accepted++
 				}
 			}
-			if agrees {
+			switch {
+			case accepted == len(types):
 				res.confirmed++
-			} else {
+			case accepted == 0:
 				res.contradicts = append(res.contradicts, conflict{
+					method: v.method, table: existing.String(), handlers: types, at: where,
+				})
+			default:
+				// A shared helper may encode results for another caller,
+				// but a method gaining another result would look the same.
+				// Report the uncertainty rather than quietly confirming it.
+				res.partial = append(res.partial, conflict{
 					method: v.method, table: existing.String(), handlers: types, at: where,
 				})
 			}
@@ -244,9 +281,10 @@ func contains(list []string, want string) bool {
 	return false
 }
 
-// needsAPerson reports whether the run left something to settle by hand.
+// needsAPerson reports blocking findings. Weak test pairings and additional
+// candidates from shared handlers remain visible without blocking a release.
 func (r *result) needsAPerson() bool {
-	return len(r.widened) > 0 || len(r.contradicts) > 0 || len(r.disputed) > 0
+	return len(r.widened) > 0 || len(r.contradicts) > 0
 }
 
 func (r *result) markdown() string {
@@ -281,6 +319,16 @@ func (r *result) markdown() string {
 		fmt.Fprintf(&b, "%d entry/entries the handlers contradict:\n\n", len(r.contradicts))
 		b.WriteString("| Method | Table says | Handlers encode | Read from |\n| --- | --- | --- | --- |\n")
 		for _, c := range r.contradicts {
+			fmt.Fprintf(&b, "| `%s` | `%s` | `%s` | `%s` |\n",
+				c.method, c.table, strings.Join(c.handlers, "`, `"), strings.Join(c.at, "`, `"))
+		}
+		b.WriteString("\n")
+	}
+
+	if len(r.partial) > 0 {
+		fmt.Fprintf(&b, "%d entry/entries accept only some results the scan reaches. A shared handler may encode the others for different callers; a new return variant would also look this way. Check these candidates before narrowing a wrapper:\n\n", len(r.partial))
+		b.WriteString("| Method | Table says | Candidates in handlers | Read from |\n| --- | --- | --- | --- |\n")
+		for _, c := range r.partial {
 			fmt.Fprintf(&b, "| `%s` | `%s` | `%s` | `%s` |\n",
 				c.method, c.table, strings.Join(c.handlers, "`, `"), strings.Join(c.at, "`, `"))
 		}

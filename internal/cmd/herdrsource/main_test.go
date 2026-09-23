@@ -205,6 +205,73 @@ func TestRunReportsAnEntryTheHandlersContradict(t *testing.T) {
 	}
 }
 
+func TestRunRejectsSchemaMethodsMissingFromSource(t *testing.T) {
+	root := checkout(t, map[string]string{"api/schema.rs": dispatchSource})
+	schema, methods := files(t,
+		schemaWith([]string{"ping", "pane.new_method"}, []string{"pong", "ok"}),
+		tableWith([2]string{"ping", "pong"}))
+
+	_, err := run(options{src: root, schema: schema, methods: methods, apply: true})
+	if err == nil || !strings.Contains(err.Error(), "schema methods absent from the source Method enum: pane.new_method") {
+		t.Fatalf("run error = %v, want the missing schema method", err)
+	}
+	written, err := os.ReadFile(methods)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(written) != tableWith([2]string{"ping", "pong"}) {
+		t.Error("failed validation changed the table")
+	}
+}
+
+func TestRunRejectsTableMethodsAbsentFromSchema(t *testing.T) {
+	root := checkout(t, map[string]string{"api/schema.rs": dispatchSource})
+	schema, methods := files(t,
+		schemaWith([]string{"ping"}, []string{"pong", "ok"}),
+		tableWith([2]string{"ping", "pong"}, [2]string{"old.method", "ok"}))
+
+	_, err := run(options{src: root, schema: schema, methods: methods, apply: true})
+	if err == nil || !strings.Contains(err.Error(), "method table entries absent from the schema: old.method") {
+		t.Fatalf("run error = %v, want the obsolete table entry", err)
+	}
+}
+
+func TestRunReportsPartiallyCoveredResults(t *testing.T) {
+	root := checkout(t, map[string]string{"api/schema.rs": `
+pub enum Method {
+    #[serde(rename = "tab.close")]
+    TabClose(TabTarget),
+}
+fn dispatch(request: Request) -> String {
+    match request.method {
+        Method::TabClose(_) => {
+            if request.is_empty() {
+                return encode_success(request.id, ResponseResult::Ok {});
+            }
+            encode_success(request.id, ResponseResult::TabClosed {})
+        }
+    }
+}
+`})
+	schema, methods := files(t,
+		schemaWith([]string{"tab.close"}, []string{"ok", "tab_closed"}),
+		tableWith([2]string{"tab.close", "ok"}))
+
+	res, err := run(options{src: root, schema: schema, methods: methods})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(res.partial) != 1 || res.partial[0].method != "tab.close" || res.confirmed != 0 {
+		t.Fatalf("partial = %+v, confirmed = %d; want the unproven table entry reported", res.partial, res.confirmed)
+	}
+	if !strings.Contains(res.markdown(), "`tab_closed`") {
+		t.Error("the report omitted the additional result candidate")
+	}
+	if res.needsAPerson() {
+		t.Error("a shared handler is not by itself proof the typed entry is wrong")
+	}
+}
+
 // A test pairing is the weaker reading and never decides an entry, but a
 // disagreement with the handlers is worth surfacing.
 func TestRunSurfacesATestThatDisagrees(t *testing.T) {
@@ -225,5 +292,19 @@ func TestRunSurfacesATestThatDisagrees(t *testing.T) {
 	}
 	if res.confirmed != 1 {
 		t.Errorf("the entry was not confirmed against the handlers despite the dispute")
+	}
+	if res.needsAPerson() {
+		t.Error("a weak test pairing should not block a release")
+	}
+}
+
+func TestBlockingFindingsStillRequireReview(t *testing.T) {
+	for _, res := range []*result{
+		{widened: []added{{method: "new.method"}}},
+		{contradicts: []conflict{{method: "old.method"}}},
+	} {
+		if !res.needsAPerson() {
+			t.Errorf("%+v did not request review", res)
+		}
 	}
 }

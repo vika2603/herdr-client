@@ -676,8 +676,13 @@ encodes a `ResponseResult`. `just methods <herdr checkout>` runs it, and the
 upgraded to and reports every result with the file and line it was read from.
 
 It is not a Rust parser, and three kinds of method are beyond it. Read against
-herdr 0.9.1 it settled 100 of the 103 methods with nothing contradicting the
-table.
+herdr 0.9.1 it reaches 100 of the 103 methods: 98 entries agree with every
+candidate it finds and 2 (`plugin.enable` and `plugin.disable`) use a shared
+helper that encodes both result types. It reports these partial matches rather
+than claiming the typed wrappers accept every candidate. The other 3 stand on
+`internal/e2e` instead. A schema method absent from the source `Method` enum
+fails early with its name, before the generator runs. An obsolete table entry
+absent from the schema is rejected at the same point.
 
 - A **deferred handler** answers from a completion callback the dispatch never
   calls. `worktree.create` and `worktree.remove` are these: the dispatch starts
@@ -702,8 +707,12 @@ than what the source says.
 The command also reads herdr's own tests as a second opinion. A test naming one
 method and one result is weak evidence of a pairing, covering 28 of the 103
 methods at 0.9.1 and wrong about 2 of them, because a test may name a method it
-merely sets up with. A disagreement with the handlers is therefore reported for
-a person to look at and never decides an entry.
+merely sets up with. The 0.9.1 scan reports one such disagreement
+(`workspace.list`). A disagreement is therefore reported for a person to look
+at and never decides an entry or blocks an upgrade. The scan
+exits non-zero for missing schema methods, an added method it cannot narrow,
+or a mapping the handlers cannot encode at all. Partial matches and weak test
+pairings stay visible in the report but do not by themselves block a release.
 
 **Behaviour the schema does not describe** is the part with no automatic
 guard. Each item below was read out of the herdr sources at v0.9.0 and has to

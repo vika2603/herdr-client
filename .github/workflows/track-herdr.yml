@@ -158,7 +158,7 @@ jobs:
           go run ./internal/cmd/herdrsource \
             -src "$RUNNER_TEMP/herdr-src" \
             -apply \
-            -report "$RUNNER_TEMP/methods.md"
+            -report "$RUNNER_TEMP/methods.md" 2>&1 | tee "$RUNNER_TEMP/methods.log"
           echo "read the table against the $TAG handlers"
 
       - name: Regenerate the API surface
@@ -342,6 +342,7 @@ jobs:
             } >> "$body"
           fi
 
+          log_section "herdrsource errors" "$RUNNER_TEMP/methods.log"
           log_section "go generate" "$RUNNER_TEMP/generate.log"
           log_section "go build and go test" "$RUNNER_TEMP/test.log"
           log_section "go vet for the other platforms" "$RUNNER_TEMP/cross.log"
