@@ -8,9 +8,13 @@ import (
 )
 
 type AgentInfo struct {
-	Agent                  Optional[string]            `json:"agent,omitzero"`
-	AgentSession           Optional[AgentSessionInfo]  `json:"agent_session,omitzero"`
-	AgentStatus            AgentStatus                 `json:"agent_status"`
+	Agent        Optional[string]           `json:"agent,omitzero"`
+	AgentSession Optional[AgentSessionInfo] `json:"agent_session,omitzero"`
+	AgentStatus  AgentStatus                `json:"agent_status"`
+
+	// The current idle transition completed work, independently of who has
+	// viewed it.
+	CompletionSeq          Optional[uint64]            `json:"completion_seq,omitzero"`
 	Cwd                    Optional[string]            `json:"cwd,omitzero"`
 	DisplayAgent           Optional[string]            `json:"display_agent,omitzero"`
 	Focused                bool                        `json:"focused"`
@@ -2493,62 +2497,6 @@ func (v PaneFocusedSubscription) MarshalJSON() ([]byte, error) {
 	}{Type: "pane.focused", alias: alias(v)})
 }
 
-type PaneGraphicsClearParams struct {
-	LayerID Optional[string] `json:"layer_id,omitzero"`
-	PaneID  string           `json:"pane_id"`
-}
-
-// Clone returns a deep copy of v.
-func (v PaneGraphicsClearParams) Clone() PaneGraphicsClearParams {
-	out := v
-	return out
-}
-
-type PaneGraphicsFormat string
-
-// PaneGraphicsFormat values.
-const (
-	PaneGraphicsFormatPng  PaneGraphicsFormat = "png"
-	PaneGraphicsFormatRgb  PaneGraphicsFormat = "rgb"
-	PaneGraphicsFormatRgba PaneGraphicsFormat = "rgba"
-	PaneGraphicsFormatBgra PaneGraphicsFormat = "bgra"
-)
-
-type PaneGraphicsPlacementParams struct {
-	GridCols    Optional[uint32] `json:"grid_cols,omitzero"`
-	GridRows    Optional[uint32] `json:"grid_rows,omitzero"`
-	ViewportCol Optional[int32]  `json:"viewport_col,omitzero"`
-	ViewportRow Optional[int32]  `json:"viewport_row,omitzero"`
-}
-
-// Clone returns a deep copy of v.
-func (v PaneGraphicsPlacementParams) Clone() PaneGraphicsPlacementParams {
-	out := v
-	return out
-}
-
-type PaneGraphicsSetParams struct {
-	DataBase64  Optional[string]                      `json:"data_base64,omitzero"`
-	Format      PaneGraphicsFormat                    `json:"format"`
-	ImageHeight uint32                                `json:"image_height"`
-	ImageWidth  uint32                                `json:"image_width"`
-	LayerID     Optional[string]                      `json:"layer_id,omitzero"`
-	PaneID      string                                `json:"pane_id"`
-	Placement   Optional[PaneGraphicsPlacementParams] `json:"placement,omitzero"`
-	ZIndex      Optional[int32]                       `json:"z_index,omitzero"`
-}
-
-// Clone returns a deep copy of v.
-func (v PaneGraphicsSetParams) Clone() PaneGraphicsSetParams {
-	out := v
-	if value1, ok2 := v.Placement.Get(); ok2 {
-		var cloned3 PaneGraphicsPlacementParams
-		cloned3 = value1.Clone()
-		out.Placement = Some(cloned3)
-	}
-	return out
-}
-
 type PaneInfo struct {
 	Agent                 Optional[string]            `json:"agent,omitzero"`
 	AgentSession          Optional[AgentSessionInfo]  `json:"agent_session,omitzero"`
@@ -2559,6 +2507,7 @@ type PaneInfo struct {
 	ForegroundCwd         Optional[string]            `json:"foreground_cwd,omitzero"`
 	Label                 Optional[string]            `json:"label,omitzero"`
 	PaneID                string                      `json:"pane_id"`
+	RestoreError          Optional[string]            `json:"restore_error,omitzero"`
 	Revision              uint64                      `json:"revision"`
 	Scroll                Optional[PaneScrollInfo]    `json:"scroll,omitzero"`
 	StateLabels           Optional[map[string]string] `json:"state_labels,omitzero"`
@@ -3173,30 +3122,54 @@ type PaneReportAgentParams struct {
 	AgentSessionPath Optional[string] `json:"agent_session_path,omitzero"`
 	Message          Optional[string] `json:"message,omitzero"`
 	PaneID           string           `json:"pane_id"`
-	Seq              Optional[uint64] `json:"seq,omitzero"`
-	Source           string           `json:"source"`
-	State            PaneAgentState   `json:"state"`
+
+	// Command that resumes this agent's session after a Herdr restart. The
+	// first element must be a plain command name.
+	ResumeArgv Optional[[]string] `json:"resume_argv,omitzero"`
+	Seq        Optional[uint64]   `json:"seq,omitzero"`
+	Source     string             `json:"source"`
+	State      PaneAgentState     `json:"state"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneReportAgentParams) Clone() PaneReportAgentParams {
 	out := v
+	if value1, ok2 := v.ResumeArgv.Get(); ok2 {
+		var cloned3 []string
+		if value1 != nil {
+			cloned3 = make([]string, len(value1))
+			copy(cloned3, value1)
+		}
+		out.ResumeArgv = Some(cloned3)
+	}
 	return out
 }
 
 type PaneReportAgentSessionParams struct {
-	Agent              string           `json:"agent"`
-	AgentSessionID     Optional[string] `json:"agent_session_id,omitzero"`
-	AgentSessionPath   Optional[string] `json:"agent_session_path,omitzero"`
-	PaneID             string           `json:"pane_id"`
-	Seq                Optional[uint64] `json:"seq,omitzero"`
-	SessionStartSource Optional[string] `json:"session_start_source,omitzero"`
-	Source             string           `json:"source"`
+	Agent            string           `json:"agent"`
+	AgentSessionID   Optional[string] `json:"agent_session_id,omitzero"`
+	AgentSessionPath Optional[string] `json:"agent_session_path,omitzero"`
+	PaneID           string           `json:"pane_id"`
+
+	// Command that resumes this agent's session after a Herdr restart. The
+	// first element must be a plain command name.
+	ResumeArgv         Optional[[]string] `json:"resume_argv,omitzero"`
+	Seq                Optional[uint64]   `json:"seq,omitzero"`
+	SessionStartSource Optional[string]   `json:"session_start_source,omitzero"`
+	Source             string             `json:"source"`
 }
 
 // Clone returns a deep copy of v.
 func (v PaneReportAgentSessionParams) Clone() PaneReportAgentSessionParams {
 	out := v
+	if value1, ok2 := v.ResumeArgv.Get(); ok2 {
+		var cloned3 []string
+		if value1 != nil {
+			cloned3 = make([]string, len(value1))
+			copy(cloned3, value1)
+		}
+		out.ResumeArgv = Some(cloned3)
+	}
 	return out
 }
 
@@ -4136,6 +4109,10 @@ type ServerCapabilities struct {
 	HealthCheck Optional[bool] `json:"health_check,omitzero"`
 	LiveHandoff bool           `json:"live_handoff"`
 
+	// Supports connection-scoped `server.ssh_agent.register` on the local
+	// JSON API.
+	SshAgentRegistration Optional[bool] `json:"ssh_agent_registration,omitzero"`
+
 	// Whether this server supports explicit client-shell surface interest.
 	SurfaceInterest Optional[bool] `json:"surface_interest,omitzero"`
 }
@@ -4154,6 +4131,18 @@ type ServerLiveHandoffParams struct {
 
 // Clone returns a deep copy of v.
 func (v ServerLiveHandoffParams) Clone() ServerLiveHandoffParams {
+	out := v
+	return out
+}
+
+type ServerSshAgentRegisterParams struct {
+	// Absolute remote-host agent socket. Registration lasts until this API
+	// connection closes.
+	SocketPath string `json:"socket_path"`
+}
+
+// Clone returns a deep copy of v.
+func (v ServerSshAgentRegisterParams) Clone() ServerSshAgentRegisterParams {
 	out := v
 	return out
 }

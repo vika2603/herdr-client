@@ -36,8 +36,10 @@ that carry no discriminator.
 - `events.subscribe` keeps the connection open after answering
   `{"type":"subscription_started"}` and pushes one event per line. Writing
   anything further on that connection makes the server close it.
-  `pane.graphics.stream` also keeps its connection open but is absent from the
-  schema and is out of scope for this iteration.
+- `server.ssh_agent.register` also keeps the connection open after answering
+  `{"type":"ok"}`, but pushes nothing. The registration lasts until the client
+  closes the connection (`src/api/server.rs`, `handle_connection`, herdr
+  0.9.3).
 - Pushed events use two envelopes, distinguished by the `event` field:
   - Lifecycle events: `{"event":"pane_created","data":{"type":"pane_created",...}}`.
     `event` is an `EventKind` (underscore form) and `data` is discriminated by
@@ -63,7 +65,6 @@ that carry no discriminator.
 | `herdr/subscribe.go` `session.go` `session_bootstrap.go` | Typed event stream and session connection lifecycle | hand |
 | `herdr/session_state.go` `session_cache.go` `ordered_collection.go` | Synchronized state access and pure ordered event reduction | hand |
 | `herdr/session_clone.go` | Collection projection and scalar event-copy helpers | hand |
-| `herdr/graphics.go` | The `pane.graphics.stream` frame stream | hand |
 | `herdr/layout.go` | Walking an applied layout to its panes | hand |
 | `herdr/unions_manual.go` | The four unions without a discriminator | hand |
 | `herdr/*_gen.go` | Types, results, events, and a wrapper per method | generated |
@@ -102,8 +103,8 @@ response line and close, because that is all the server allows. A `nil`
 method. Cancelling the context closes the connection, which is the only way to
 unblock a read on every platform, and the call wraps `ctx.Err()` in an `OpError`.
 
-The request line is encoded before the dial, here as in `OpenStream` and
-`PaneGraphicsStream`, so that it is ready to write the moment the connection
+The request line is encoded before the dial, here as in `OpenStream`, so that
+it is ready to write the moment the connection
 opens. The server's first read decides whether the call is answered
 immediately or a poll interval later, which is enough time to encode a request
 in but not enough to encode one after. An encoding failure therefore surfaces
@@ -120,16 +121,14 @@ connection returned with an error or after cancellation is closed. Successful
 dials are wrapped in a private once-closer, so cancellation, failed handshakes
 and stream cleanup never invoke the underlying Close more than once.
 
-Ordinary calls, subscriptions and graphics streams use one `open` exchange:
+Ordinary calls and streams use one `open` exchange:
 encode before dial, watch the request context, write the complete request,
 read and decode the response, then transfer the connection and its existing
 buffered reader. Failed exchanges close the connection. The watcher is stopped
 and any cancellation callback already running is joined before ownership
 transfers, so a completed opening context cannot later close a returned stream.
-Both request and frame writes reject a short write with `io.ErrShortWrite`.
-A failed frame write closes the graphics stream because a partial header or
-body cannot be followed safely by another frame. This changes no wire framing
-and introduces no connection pool or retries.
+A request write rejects a short write with `io.ErrShortWrite`. This changes no
+wire framing and introduces no connection pool or retries.
 
 `OpenStream` keeps the connection and hands back a `*Stream` whose `Next`
 decodes each pushed line into a `RawEvent`; `Ack` holds the result of the
@@ -203,8 +202,8 @@ in.
   `OutputMatchRegex`, `AgentViewFilterAll`, `EventMatchPaneClosed`. The
   discriminator is the property that carries a `const` in every variant
   (usually `type`; `event` for `EventMatch`).
-- Methods: `pane.graphics.set→MethodPaneGraphicsSet = "pane.graphics.set"`
-  with wrapper `PaneGraphicsSet`.
+- Methods: `pane.input.set→MethodPaneInputSet = "pane.input.set"` with
+  wrapper `PaneInputSet`.
 
 ### Type mapping
 
@@ -371,42 +370,6 @@ synthetic fixture without any Herdr-specific root type checks placement and
 nested copy rules; focused protocol tests cover union/manual adapters. Golden
 and determinism checks verify the generated output against the current schema.
 
-## Graphics streaming
-
-`pane.graphics.stream` keeps its connection open and sends binary frames, so
-`graphics.go` implements it by hand on the transport's own helpers:
-
-```go
-func (c *Client) PaneGraphicsStream(ctx context.Context, params PaneGraphicsStreamParams) (*GraphicsStream, error)
-func (s *GraphicsStream) SendFrame(ctx context.Context, frame GraphicsFrame) error
-func (s *GraphicsStream) SendFileFrame(ctx context.Context, frame GraphicsFileFrame) (*PaneGraphicsFrameAckResponse, error)
-func (s *GraphicsStream) Wait(ctx context.Context) error
-func (s *GraphicsStream) Close() error
-```
-
-An inline frame is one JSON header line followed by exactly `data_length`
-raw bytes and draws no reply, which is why `SendFrame` returns only an error.
-A file frame names an immutable file the terminal reads itself, and the
-server answers it with `pane_graphics_frame_ack` once the terminal has
-accepted it. That variant is the only one in `method-results.json` that no
-method returns, which is consistent with it belonging here. Closing the
-connection clears the layer, and the server ends the stream on an error
-response or on a frame that stalls.
-
-`OpenStream` hands the connection to a reader goroutine that never writes,
-whereas a graphics stream keeps writing frames. Their first exchange shares
-`open`, including connection injection, context ownership, and the buffered
-reader. After its `ok` acknowledgement is validated, `GraphicsStream` takes
-over the connection and retains its own framing and acknowledgement reader.
-
-What the fake server proves is the framing: two frames in sequence parse only
-if the first body was consumed whole. Against a live server only the entry
-point was checked, read-only, by opening a stream for a pane id that cannot
-exist and getting `pane_not_found`, which shows the method is accepted and
-reaches its handler. Frame acceptance, acknowledgements, timeouts and the
-error codes are backed by the herdr sources rather than by execution, because
-exercising them means drawing into a real pane.
-
 ## Session mirror
 
 ```go
@@ -567,10 +530,8 @@ These are template call-site changes, not new schema facts or metadata.
 `DecodeResult` and `DecodeEvent` remain useful independently of a connection.
 
 A stream read error retains `ErrStreamClosed` and its original I/O cause;
-explicit close failures carry `OpClose`. Graphics acknowledgement failures
-retain their original API/decode/read classification when reported by a send
-or `Wait`. Validation fails before transmission, while a partial frame write
-still closes the stream as before. The model does not change connection
+explicit close failures carry `OpClose`. Validation fails before
+transmission. The model does not change connection
 ownership, reconnect policy, or whether canceling an event read keeps it open.
 
 Session-local lifecycle outcomes remain sentinel/context errors when no wire
@@ -613,17 +574,11 @@ the suite above. `just herdr-check` reports drift from the snapshot.
 
 ## Known gaps
 
-`pane.graphics.stream` is the one method the server accepts that the schema
-does not declare, so no wrapper is generated for it. Comparing the method list
-the server reports in an `invalid_request` error against the schema snapshot
-of herdr 0.9.0 shows that single difference; every other method the server
-accepts is generated. The method is absent from the schema because its framing
-is not newline-delimited JSON: after the server acknowledges the request, the
-client sends one JSON header followed by exactly `data_length` raw bytes per
-frame, which no generated wrapper can express. It is written by hand instead;
-see "Graphics streaming" for what that covers and what it does not.
-`schema/known-gaps.json` records the difference so `just herdr-check` does not
-report it as drift.
+Comparing the method list the server reports in an `invalid_request` error
+against the schema snapshot of herdr 0.9.3 shows no difference: every method
+the server accepts is declared in the schema and generated.
+`schema/known-gaps.json` records any accepted difference so `just herdr-check`
+does not report it as drift; it is currently empty.
 
 Rerun that comparison after a schema refresh: a method that appears in the
 error list but not in the snapshot is a method this module cannot reach.
@@ -721,7 +676,7 @@ to look, not a guarantee it still exists.
 
 | Fact | Where it came from |
 | --- | --- |
-| One request per connection; only `events.subscribe` keeps the connection open | `src/api/server.rs`, `handle_connection` and `stream_subscriptions` |
+| One request per connection; only `events.subscribe` and `server.ssh_agent.register` keep the connection open | `src/api/server.rs`, `handle_connection` and `stream_subscriptions` |
 | Socket path resolution and the session name rules | `src/session.rs`, `api_socket_path_for` and `validate_name` |
 | The config directory chain, including `herdr-dev` for debug builds | `src/config/io.rs`, `config_dir`, `platform_config_dir` and `app_dir_name` |
 | The environment injected into plugin commands | `src/app/api/plugins/runtime.rs` and `src/app/api/plugins/panes.rs` |
@@ -834,7 +789,7 @@ waiting for another writer does not disturb that connection.
 Unscripted methods return a diagnostic API error naming the method. They do not
 automatically fail the test, so tests can verify how a caller handles a rejected
 request. Invalid scripted results fail the test and return an error to the
-caller. Graphics streaming and a public real-server harness are not included.
+caller. A public real-server harness is not included.
 Unix socket tests skip on Windows, where the Herdr client uses named pipes and
 the standard library supplies no matching listener. Cross-platform type checks
 are not Windows runtime evidence.
@@ -888,11 +843,11 @@ into its command log, so the standard library is enough.
 
 ## Not built yet
 
-**The last 10 methods.** `agent.start`, `agent.prompt` and `agent.send_keys`
+**The last 9 methods.** `agent.start`, `agent.prompt` and `agent.send_keys`
 need a real agent process in the pane; a machine with a supported agent CLI
 could cover them and one without would skip. `client_shell.surface.set`,
-`command.invoke`, `popup.close` and `pane.graphics.info` need an attached
-client or the client shell endpoint. `product_announcement.dismiss` and
+`command.invoke` and `popup.close` need an attached client or the client
+shell endpoint. `product_announcement.dismiss` and
 `release_notes.dismiss` need state a fresh server does not have; the API
 offers no way to create it, since neither has a matching read method.
 `server.live_handoff` would take down the suite's own server.

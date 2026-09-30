@@ -308,7 +308,7 @@ func emitMethod(c *code, m *Method) {
 	}
 	switch m.Kind {
 	case MethodStream:
-		c.doc(fmt.Sprintf("%s calls %q and keeps the connection open. Read the pushed events with (*Stream).NextEvent.", m.Wrapper, m.Name))
+		c.doc(fmt.Sprintf("%s calls %q and keeps the connection open until the Stream is closed. Events the server pushes on it are read with (*Stream).NextEvent.", m.Wrapper, m.Name))
 		c.printf("func (c *Client) %s(ctx context.Context%s) (*Stream, error) {\n", m.Wrapper, params)
 		c.printf("\treturn c.OpenStream(ctx, %s, %s)\n", m.Const, argument)
 		c.line("}")

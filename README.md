@@ -1,14 +1,14 @@
 # Herdr Client
 
-Go client for [Herdr](https://herdr.dev), generated against herdr 0.9.1,
+Go client for [Herdr](https://herdr.dev), generated against herdr 0.9.3,
 protocol 22: the full socket API, a live mirror of the session, and the
 pieces a Herdr plugin written in Go needs.
 
 The wire types, copy methods, result and event decoders, and a typed wrapper for every
-one of the 103 API methods are generated from the schema the herdr binary
+one of the 102 API methods are generated from the schema the herdr binary
 prints, so the client tracks the server rather than a hand-written guess of
-it. The transport, the session mirror, the graphics frame stream, the plugin
-process environment and the manifest parser are hand-written.
+it. The transport, the session mirror, the plugin process environment and the
+manifest parser are hand-written.
 
 When herdr moves, `just herdr-check` reports the drift and `just gen`
 regenerates from the new schema, so a protocol bump arrives as a diff to
@@ -99,7 +99,7 @@ done.
 
 `WithDialer` replaces only connection establishment. Its function receives the
 address passed to `New` and returns a fresh `io.ReadWriteCloser` for each
-request, including subscription opens, graphics streams and session reconnects:
+request, including stream opens and session reconnects:
 
 ```go
 // dial has the signature herdr.DialFunc:
@@ -160,7 +160,7 @@ The codes herdr reports are available as `ErrCode*` constants, and comparing
 
 Client-side failures carry `*herdr.OpError` with the wire method, the failed
 operation and its cause. These fields are available for ordinary calls,
-generated methods, event streams and graphics streams:
+generated methods and streams:
 
 ```go
 var opErr *herdr.OpError
@@ -174,11 +174,11 @@ if errors.Is(err, context.DeadlineExceeded) {
 
 | Operation | Meaning |
 | --- | --- |
-| `OpValidate` | Local subscription or frame argument validation |
-| `OpEncode` | Request or frame-header serialization |
+| `OpValidate` | Local subscription argument validation |
+| `OpEncode` | Request serialization |
 | `OpDial` | Connection establishment, including custom dialers |
-| `OpWrite` | Request or frame transmission |
-| `OpRead` | Waiting for a response, event or frame acknowledgement |
+| `OpWrite` | Request transmission |
+| `OpRead` | Waiting for a response or event |
 | `OpDecode` | Response/event JSON decoding or result-type checking |
 | `OpClose` | An explicit stream close failed |
 
@@ -503,8 +503,8 @@ test: cancel and join them before cleanup completes.
 The `agent-board` example tests its full registered pane entrypoint this way,
 with output written to a test recorder. Those tests cover bootstrap, live
 updates, resync, cancellation and errors; they do not establish terminal
-rendering quality or real-server compatibility. Graphics streaming and a real
-Herdr harness are outside this test server's API.
+rendering quality or real-server compatibility. A real Herdr harness is
+outside this test server's API.
 
 ### Checking dispatch and manifests
 

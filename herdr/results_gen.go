@@ -175,18 +175,6 @@ func DecodeResult(raw json.RawMessage) (Result, error) {
 			return nil, err
 		}
 		return &value, nil
-	case "pane_graphics_frame_ack":
-		var value PaneGraphicsFrameAckResponse
-		if err := json.Unmarshal(raw, &value); err != nil {
-			return nil, err
-		}
-		return &value, nil
-	case "pane_graphics_info":
-		var value PaneGraphicsInfoResponse
-		if err := json.Unmarshal(raw, &value); err != nil {
-			return nil, err
-		}
-		return &value, nil
 	case "pane_info":
 		var value PaneInfoResponse
 		if err := json.Unmarshal(raw, &value); err != nil {
@@ -1094,77 +1082,6 @@ func (v PaneFocusDirectionResponse) MarshalJSON() ([]byte, error) {
 		Type string `json:"type"`
 		alias
 	}{Type: "pane_focus_direction", alias: alias(v)})
-}
-
-// PaneGraphicsFrameAckResponse is the "pane_graphics_frame_ack" result.
-type PaneGraphicsFrameAckResponse struct {
-	Revision uint64 `json:"revision"`
-	Sequence uint64 `json:"sequence"`
-}
-
-// Clone returns a deep copy of v.
-func (v PaneGraphicsFrameAckResponse) Clone() PaneGraphicsFrameAckResponse {
-	out := v
-	return out
-}
-
-// ResultType returns "pane_graphics_frame_ack".
-func (PaneGraphicsFrameAckResponse) ResultType() string { return "pane_graphics_frame_ack" }
-
-// MarshalJSON writes the object with its "type" field.
-func (v PaneGraphicsFrameAckResponse) MarshalJSON() ([]byte, error) {
-	type alias PaneGraphicsFrameAckResponse
-	return json.Marshal(struct {
-		Type string `json:"type"`
-		alias
-	}{Type: "pane_graphics_frame_ack", alias: alias(v)})
-}
-
-// PaneGraphicsInfoResponse is the "pane_graphics_info" result.
-type PaneGraphicsInfoResponse struct {
-	CellHeightPx uint32 `json:"cell_height_px"`
-	CellWidthPx  uint32 `json:"cell_width_px"`
-
-	// Accepts damage metadata while still consuming a complete canonical
-	// file.
-	FileFrameDamage         Optional[bool]     `json:"file_frame_damage,omitzero"`
-	FileFrameDirectMaxBytes Optional[uint64]   `json:"file_frame_direct_max_bytes,omitzero"`
-	FileFrameDirectory      Optional[string]   `json:"file_frame_directory,omitzero"`
-	FileFrameFormats        Optional[[]string] `json:"file_frame_formats,omitzero"`
-	FileFrameMaxBytes       Optional[uint64]   `json:"file_frame_max_bytes,omitzero"`
-	FileFrameTransport      Optional[string]   `json:"file_frame_transport,omitzero"`
-	MaxLayersPerPane        Optional[uint64]   `json:"max_layers_per_pane,omitzero"`
-
-	// True only when this pane is on the currently rendered terminal
-	// surface.
-	PaneVisible bool           `json:"pane_visible"`
-	PixelMouse  Optional[bool] `json:"pixel_mouse,omitzero"`
-}
-
-// Clone returns a deep copy of v.
-func (v PaneGraphicsInfoResponse) Clone() PaneGraphicsInfoResponse {
-	out := v
-	if value1, ok2 := v.FileFrameFormats.Get(); ok2 {
-		var cloned3 []string
-		if value1 != nil {
-			cloned3 = make([]string, len(value1))
-			copy(cloned3, value1)
-		}
-		out.FileFrameFormats = Some(cloned3)
-	}
-	return out
-}
-
-// ResultType returns "pane_graphics_info".
-func (PaneGraphicsInfoResponse) ResultType() string { return "pane_graphics_info" }
-
-// MarshalJSON writes the object with its "type" field.
-func (v PaneGraphicsInfoResponse) MarshalJSON() ([]byte, error) {
-	type alias PaneGraphicsInfoResponse
-	return json.Marshal(struct {
-		Type string `json:"type"`
-		alias
-	}{Type: "pane_graphics_info", alias: alias(v)})
 }
 
 // PaneInfoResponse is the "pane_info" result.

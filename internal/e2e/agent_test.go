@@ -81,6 +81,19 @@ func stageAgent(t *testing.T, h *harness, st *state) {
 		t.Errorf("agent.read did not return %s:\n%s", markerSendInput, read.Read.Text)
 	}
 
+	// Clearing waits until nothing later reads the marker off the screen.
+	screen, err := h.client.PaneClear(h.ctx(t), herdr.PaneTarget{PaneID: st.paneID})
+	if h.cover(t, herdr.MethodPaneClear, screen, err) {
+		after, err := h.client.PaneRead(h.ctx(t), herdr.PaneReadParams{
+			PaneID: st.paneID,
+			Source: herdr.ReadSourceVisible,
+			Format: herdr.Some(herdr.ReadFormatText),
+		})
+		if h.cover(t, herdr.MethodPaneRead, after, err) && strings.Contains(after.Read.Text, markerSendInput) {
+			t.Errorf("pane.read still returns %s after pane.clear:\n%s", markerSendInput, after.Read.Text)
+		}
+	}
+
 	explain, err := h.client.AgentExplain(h.ctx(t), herdr.AgentTarget{Target: st.paneID})
 	if h.cover(t, herdr.MethodAgentExplain, explain, err) && len(explain.Explain) == 0 {
 		t.Errorf("agent.explain returned no explanation")

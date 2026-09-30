@@ -20,7 +20,7 @@ func TestPascal(t *testing.T) {
 		{"recent_unwrapped", "RecentUnwrapped"},
 		{"top-left", "TopLeft"},
 		{"antigravity_cli", "AntigravityCLI"},
-		{"pane.graphics.set", "PaneGraphicsSet"},
+		{"pane.input.set", "PaneInputSet"},
 		{"pane.output_matched", "PaneOutputMatched"},
 		{"ok", "OK"},
 		{"pong", "Pong"},
