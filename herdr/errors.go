@@ -11,15 +11,15 @@ import (
 type Op string
 
 const (
-	// OpValidate checks local request or frame arguments before encoding.
+	// OpValidate checks local request arguments before encoding.
 	OpValidate Op = "validate"
-	// OpEncode serializes a request or graphics frame header.
+	// OpEncode serializes a request.
 	OpEncode Op = "encode"
 	// OpDial establishes a connection.
 	OpDial Op = "dial"
-	// OpWrite sends a request or graphics frame.
+	// OpWrite sends a request.
 	OpWrite Op = "write"
-	// OpRead waits for a response, event, or frame acknowledgement.
+	// OpRead waits for a response or event.
 	OpRead Op = "read"
 	// OpDecode decodes or checks a response or event payload.
 	OpDecode Op = "decode"

@@ -2,9 +2,9 @@
 // protocol, without a Herdr binary, agent process, or terminal UI.
 //
 // The server scripts protocol responses rather than emulating Herdr's business
-// rules. It supports ordinary requests and events.subscribe, not graphics
-// streaming. Tests using NewServer skip on Windows: the client uses named
-// pipes there, and this package currently supplies a Unix socket listener.
+// rules. It supports ordinary requests and events.subscribe. Tests using
+// NewServer skip on Windows: the client uses named pipes there, and this
+// package currently supplies a Unix socket listener.
 package herdrtest
 
 import (

@@ -27,7 +27,6 @@ var outOfReach = map[string]string{
 	"product_announcement.dismiss": "needs an announcement the server holds as current; a fresh server answers stale_announcement",
 	"release_notes.dismiss":        "needs release notes the server holds as current; a fresh server answers stale_release_notes",
 	"popup.close":                  "needs an open popup, which only an attached client can open; the server answers popup_not_open",
-	"pane.graphics.info":           "needs the host cell size an attached client reports; the server answers cell_size_unavailable",
 	"agent.start":                  "spawns one of the supported agent CLIs in a pane and waits for it to be detected; the suite starts no real agent",
 	"agent.prompt":                 "needs the agent process in the pane foreground; a shell pane is rejected with agent_not_ready",
 	"agent.send_keys":              "needs an agent started through agent.start; a pane-reported agent is rejected with agent_not_ready",

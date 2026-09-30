@@ -3,6 +3,8 @@
 package e2e
 
 import (
+	"net"
+	"path/filepath"
 	"testing"
 
 	"github.com/vika2603/herdr-client/herdr"
@@ -69,5 +71,19 @@ func stageServer(t *testing.T, h *harness, _ *state) {
 	cleared, err := h.client.ClientWindowTitleClear(h.ctx(t))
 	if h.cover(t, herdr.MethodClientWindowTitleClear, cleared, err) && cleared.Reason == "" {
 		t.Errorf("client.window_title.clear reported no reason")
+	}
+
+	// herdr accepts any socket file the user owns, so a bare listener stands
+	// in for the agent.
+	agent, err := net.Listen("unix", filepath.Join(h.root, "agent.sock"))
+	if err != nil {
+		t.Fatalf("listen for the SSH agent stand-in: %v", err)
+	}
+	defer func() { _ = agent.Close() }()
+	lease, err := h.client.ServerSshAgentRegister(h.ctx(t), herdr.ServerSshAgentRegisterParams{SocketPath: agent.Addr().String()})
+	if h.coverStream(t, herdr.MethodServerSshAgentRegister, lease, err) {
+		if err := lease.Close(); err != nil {
+			t.Errorf("close the server.ssh_agent.register lease: %v", err)
+		}
 	}
 }

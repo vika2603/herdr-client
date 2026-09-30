@@ -31,6 +31,7 @@ const (
 	MethodLayoutExport               = "layout.export"
 	MethodLayoutSetSplitRatio        = "layout.set_split_ratio"
 	MethodNotificationShow           = "notification.show"
+	MethodPaneClear                  = "pane.clear"
 	MethodPaneClearAgentAuthority    = "pane.clear_agent_authority"
 	MethodPaneClose                  = "pane.close"
 	MethodPaneCopyMotion             = "pane.copy_motion"
@@ -41,9 +42,6 @@ const (
 	MethodPaneFocus                  = "pane.focus"
 	MethodPaneFocusDirection         = "pane.focus_direction"
 	MethodPaneGet                    = "pane.get"
-	MethodPaneGraphicsClear          = "pane.graphics.clear"
-	MethodPaneGraphicsInfo           = "pane.graphics.info"
-	MethodPaneGraphicsSet            = "pane.graphics.set"
 	MethodPaneInputSet               = "pane.input.set"
 	MethodPaneLayout                 = "pane.layout"
 	MethodPaneLinkActivate           = "pane.link.activate"
@@ -87,6 +85,7 @@ const (
 	MethodServerLiveHandoff          = "server.live_handoff"
 	MethodServerReloadAgentManifests = "server.reload_agent_manifests"
 	MethodServerReloadConfig         = "server.reload_config"
+	MethodServerSshAgentRegister     = "server.ssh_agent.register"
 	MethodServerStop                 = "server.stop"
 	MethodSessionSnapshot            = "session.snapshot"
 	MethodTabClose                   = "tab.close"
@@ -376,8 +375,9 @@ func (c *Client) CommandInvoke(ctx context.Context, params CommandInvokeParams) 
 	return decodeResult(MethodCommandInvoke, raw)
 }
 
-// EventsSubscribe calls "events.subscribe" and keeps the connection open.
-// Read the pushed events with (*Stream).NextEvent.
+// EventsSubscribe calls "events.subscribe" and keeps the connection open
+// until the Stream is closed. Events the server pushes on it are read with
+// (*Stream).NextEvent.
 func (c *Client) EventsSubscribe(ctx context.Context, params EventsSubscribeParams) (*Stream, error) {
 	return c.OpenStream(ctx, MethodEventsSubscribe, params)
 }
@@ -514,6 +514,23 @@ func (c *Client) NotificationShow(ctx context.Context, params NotificationShowPa
 	typed, ok := result.(*NotificationShowResponse)
 	if !ok {
 		return nil, opError(MethodNotificationShow, OpDecode, &UnexpectedResultError{Method: MethodNotificationShow, Want: "notification_show", Got: result.ResultType()})
+	}
+	return typed, nil
+}
+
+// PaneClear calls "pane.clear".
+func (c *Client) PaneClear(ctx context.Context, params PaneTarget) (*OKResponse, error) {
+	raw, err := c.CallRaw(ctx, MethodPaneClear, params)
+	if err != nil {
+		return nil, err
+	}
+	result, err := decodeResult(MethodPaneClear, raw)
+	if err != nil {
+		return nil, err
+	}
+	typed, ok := result.(*OKResponse)
+	if !ok {
+		return nil, opError(MethodPaneClear, OpDecode, &UnexpectedResultError{Method: MethodPaneClear, Want: "ok", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -684,57 +701,6 @@ func (c *Client) PaneGet(ctx context.Context, params PaneTarget) (*PaneInfoRespo
 	typed, ok := result.(*PaneInfoResponse)
 	if !ok {
 		return nil, opError(MethodPaneGet, OpDecode, &UnexpectedResultError{Method: MethodPaneGet, Want: "pane_info", Got: result.ResultType()})
-	}
-	return typed, nil
-}
-
-// PaneGraphicsClear calls "pane.graphics.clear".
-func (c *Client) PaneGraphicsClear(ctx context.Context, params PaneGraphicsClearParams) (*OKResponse, error) {
-	raw, err := c.CallRaw(ctx, MethodPaneGraphicsClear, params)
-	if err != nil {
-		return nil, err
-	}
-	result, err := decodeResult(MethodPaneGraphicsClear, raw)
-	if err != nil {
-		return nil, err
-	}
-	typed, ok := result.(*OKResponse)
-	if !ok {
-		return nil, opError(MethodPaneGraphicsClear, OpDecode, &UnexpectedResultError{Method: MethodPaneGraphicsClear, Want: "ok", Got: result.ResultType()})
-	}
-	return typed, nil
-}
-
-// PaneGraphicsInfo calls "pane.graphics.info".
-func (c *Client) PaneGraphicsInfo(ctx context.Context, params PaneTarget) (*PaneGraphicsInfoResponse, error) {
-	raw, err := c.CallRaw(ctx, MethodPaneGraphicsInfo, params)
-	if err != nil {
-		return nil, err
-	}
-	result, err := decodeResult(MethodPaneGraphicsInfo, raw)
-	if err != nil {
-		return nil, err
-	}
-	typed, ok := result.(*PaneGraphicsInfoResponse)
-	if !ok {
-		return nil, opError(MethodPaneGraphicsInfo, OpDecode, &UnexpectedResultError{Method: MethodPaneGraphicsInfo, Want: "pane_graphics_info", Got: result.ResultType()})
-	}
-	return typed, nil
-}
-
-// PaneGraphicsSet calls "pane.graphics.set".
-func (c *Client) PaneGraphicsSet(ctx context.Context, params PaneGraphicsSetParams) (*OKResponse, error) {
-	raw, err := c.CallRaw(ctx, MethodPaneGraphicsSet, params)
-	if err != nil {
-		return nil, err
-	}
-	result, err := decodeResult(MethodPaneGraphicsSet, raw)
-	if err != nil {
-		return nil, err
-	}
-	typed, ok := result.(*OKResponse)
-	if !ok {
-		return nil, opError(MethodPaneGraphicsSet, OpDecode, &UnexpectedResultError{Method: MethodPaneGraphicsSet, Want: "ok", Got: result.ResultType()})
 	}
 	return typed, nil
 }
@@ -1454,6 +1420,13 @@ func (c *Client) ServerReloadConfig(ctx context.Context) (*ConfigReloadResponse,
 		return nil, opError(MethodServerReloadConfig, OpDecode, &UnexpectedResultError{Method: MethodServerReloadConfig, Want: "config_reload", Got: result.ResultType()})
 	}
 	return typed, nil
+}
+
+// ServerSshAgentRegister calls "server.ssh_agent.register" and keeps the
+// connection open until the Stream is closed. Events the server pushes on
+// it are read with (*Stream).NextEvent.
+func (c *Client) ServerSshAgentRegister(ctx context.Context, params ServerSshAgentRegisterParams) (*Stream, error) {
+	return c.OpenStream(ctx, MethodServerSshAgentRegister, params)
 }
 
 // ServerStop calls "server.stop".

@@ -152,6 +152,13 @@ func waitTransportSignal(t *testing.T, signal <-chan struct{}, what string) {
 	}
 }
 
+func testContext(t *testing.T) context.Context {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	t.Cleanup(cancel)
+	return ctx
+}
+
 func TestWithDialerGeneratedCallsUseAddressAndFreshConnections(t *testing.T) {
 	dialer := newTransportDialer(t, func(conn net.Conn) error {
 		request, _, err := readTransportRequest(conn)
@@ -284,16 +291,6 @@ func transportOpenCases() []transportOpenCase {
 			name: "event stream",
 			open: func(ctx context.Context, client *Client) (io.Closer, error) {
 				stream, err := client.OpenStream(ctx, MethodEventsSubscribe, nil)
-				if err != nil {
-					return nil, err
-				}
-				return stream, nil
-			},
-		},
-		{
-			name: "graphics stream",
-			open: func(ctx context.Context, client *Client) (io.Closer, error) {
-				stream, err := client.PaneGraphicsStream(ctx, PaneGraphicsStreamParams{PaneID: "w1:p1"})
 				if err != nil {
 					return nil, err
 				}
@@ -511,137 +508,30 @@ func TestClientClosesInjectedConnectionOnce(t *testing.T) {
 		}
 	})
 
-	for _, tc := range []struct {
-		name string
-		open func(context.Context, *Client) (io.Closer, error)
-	}{
-		{
-			name: "event stream",
-			open: func(ctx context.Context, client *Client) (io.Closer, error) {
-				return client.OpenStream(ctx, MethodEventsSubscribe, nil)
-			},
-		},
-		{
-			name: "graphics stream",
-			open: func(ctx context.Context, client *Client) (io.Closer, error) {
-				return client.PaneGraphicsStream(ctx, PaneGraphicsStreamParams{PaneID: "w1:p1"})
-			},
-		},
-	} {
-		t.Run(tc.name+" close", func(t *testing.T) {
-			conn, dial := newCountedPipe(t, func(server net.Conn) {
-				request, _, err := readTransportRequest(server)
-				if err == nil {
-					_ = writeTransportResult(server, request.ID, `{"type":"ok"}`)
-					_, _ = io.Copy(io.Discard, server)
-				}
-			})
-			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-			defer cancel()
-			stream, err := tc.open(ctx, New("unused", WithDialer(dial)))
-			if err != nil {
-				t.Fatalf("open: %v", err)
-			}
-			if err := stream.Close(); err != nil {
-				t.Fatalf("Close: %v", err)
-			}
-			if err := stream.Close(); err != nil {
-				t.Fatalf("second Close: %v", err)
-			}
-			if got := conn.closeCount(); got != 1 {
-				t.Errorf("underlying Close calls = %d, want 1", got)
+	t.Run("event stream close", func(t *testing.T) {
+		conn, dial := newCountedPipe(t, func(server net.Conn) {
+			request, _, err := readTransportRequest(server)
+			if err == nil {
+				_ = writeTransportResult(server, request.ID, `{"type":"ok"}`)
+				_, _ = io.Copy(io.Discard, server)
 			}
 		})
-	}
-}
-
-type nthShortWriteConn struct {
-	io.ReadWriteCloser
-	shortAt int
-
-	mu     sync.Mutex
-	writes int
-}
-
-func (c *nthShortWriteConn) Write(p []byte) (int, error) {
-	c.mu.Lock()
-	c.writes++
-	writeNumber := c.writes
-	c.mu.Unlock()
-	if writeNumber == c.shortAt {
-		if len(p) <= 1 {
-			return 0, nil
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		stream, err := New("unused", WithDialer(dial)).OpenStream(ctx, MethodEventsSubscribe, nil)
+		if err != nil {
+			t.Fatalf("OpenStream: %v", err)
 		}
-		return c.ReadWriteCloser.Write(p[:len(p)-1])
-	}
-	return c.ReadWriteCloser.Write(p)
-}
-
-func (c *nthShortWriteConn) writeCount() int {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	return c.writes
-}
-
-func TestGraphicsStreamShortFrameWriteClosesConnection(t *testing.T) {
-	for _, tc := range []struct {
-		name    string
-		shortAt int
-	}{
-		{name: "header", shortAt: 2},
-		{name: "body", shortAt: 3},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			clientSide, serverSide := net.Pipe()
-			short := &nthShortWriteConn{ReadWriteCloser: clientSide, shortAt: tc.shortAt}
-			conn := &countedCloseConn{ReadWriteCloser: short}
-			serverDone := make(chan struct{})
-			go func() {
-				defer close(serverDone)
-				defer func() { _ = serverSide.Close() }()
-				request, reader, err := readTransportRequest(serverSide)
-				if err != nil {
-					return
-				}
-				if err := writeTransportResult(serverSide, request.ID, `{"type":"ok"}`); err != nil {
-					return
-				}
-				_, _ = io.Copy(io.Discard, reader)
-			}()
-			t.Cleanup(func() {
-				_ = clientSide.Close()
-				_ = serverSide.Close()
-				waitTransportSignal(t, serverDone, "graphics server shutdown")
-			})
-			dial := func(context.Context, string) (io.ReadWriteCloser, error) { return conn, nil }
-			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-			defer cancel()
-			stream, err := New("unused", WithDialer(dial)).PaneGraphicsStream(
-				ctx, PaneGraphicsStreamParams{PaneID: "w1:p1"})
-			if err != nil {
-				t.Fatalf("PaneGraphicsStream: %v", err)
-			}
-
-			err = stream.SendFrame(ctx, GraphicsFrame{
-				Format: PaneGraphicsFormatRgba, ImageWidth: 1, ImageHeight: 1, Data: []byte{0, 0, 0, 0},
-			})
-			if !errors.Is(err, io.ErrShortWrite) {
-				t.Fatalf("SendFrame error = %v, want io.ErrShortWrite", err)
-			}
-			writes := short.writeCount()
-			if err := stream.SendFrame(ctx, GraphicsFrame{
-				Format: PaneGraphicsFormatRgba, ImageWidth: 1, ImageHeight: 1, Data: []byte{0, 0, 0, 0},
-			}); !errors.Is(err, ErrStreamClosed) {
-				t.Fatalf("second SendFrame error = %v, want ErrStreamClosed", err)
-			}
-			if got := short.writeCount(); got != writes {
-				t.Errorf("writes after closed stream = %d, want %d", got, writes)
-			}
-			if got := conn.closeCount(); got != 1 {
-				t.Errorf("underlying Close calls = %d, want 1", got)
-			}
-		})
-	}
+		if err := stream.Close(); err != nil {
+			t.Fatalf("Close: %v", err)
+		}
+		if err := stream.Close(); err != nil {
+			t.Fatalf("second Close: %v", err)
+		}
+		if got := conn.closeCount(); got != 1 {
+			t.Errorf("underlying Close calls = %d, want 1", got)
+		}
+	})
 }
 
 func TestSuccessfulStreamOwnsConnectionAfterOpeningContextEnds(t *testing.T) {
@@ -683,56 +573,6 @@ func TestSuccessfulStreamOwnsConnectionAfterOpeningContextEnds(t *testing.T) {
 	select {
 	case <-closed[0]:
 		t.Fatal("opening context cancellation closed the stream")
-	default:
-	}
-	if err := stream.Close(); err != nil {
-		t.Fatalf("Close: %v", err)
-	}
-	waitTransportClosed(t, closed[0])
-}
-
-func TestSuccessfulGraphicsStreamPreservesBufferedAckAfterOpeningContextEnds(t *testing.T) {
-	dialer := newTransportDialer(t, func(conn net.Conn) error {
-		request, reader, err := readTransportRequest(conn)
-		if err != nil {
-			return err
-		}
-		_, err = fmt.Fprintf(conn,
-			`{"id":%q,"result":{"type":"ok"}}`+"\n"+
-				`{"id":%q,"result":{"type":"pane_graphics_frame_ack","sequence":7,"revision":8}}`+"\n",
-			request.ID, request.ID+":file:7")
-		if err != nil {
-			return err
-		}
-		_, err = reader.ReadBytes('\n')
-		return err
-	})
-
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	stream, err := New("unused", WithDialer(dialer.dial)).PaneGraphicsStream(ctx, PaneGraphicsStreamParams{PaneID: "w1:p1"})
-	if err != nil {
-		cancel()
-		t.Fatalf("PaneGraphicsStream: %v", err)
-	}
-	cancel()
-
-	sendCtx, stop := context.WithTimeout(context.Background(), 2*time.Second)
-	defer stop()
-	ack, err := stream.SendFileFrame(sendCtx, GraphicsFileFrame{
-		Format: PaneGraphicsFormatRgba, Path: "/tmp/frame.raw", Sequence: 7, Revision: 8,
-	})
-	if err != nil {
-		_ = stream.Close()
-		t.Fatalf("SendFileFrame after opening context cancellation: %v", err)
-	}
-	if ack.Sequence != 7 || ack.Revision != 8 {
-		t.Errorf("ack = %+v, want sequence 7 revision 8", ack)
-	}
-
-	_, closed := dialer.snapshot()
-	select {
-	case <-closed[0]:
-		t.Fatal("opening context cancellation closed the graphics stream")
 	default:
 	}
 	if err := stream.Close(); err != nil {

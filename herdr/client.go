@@ -119,10 +119,10 @@ type openedConnection struct {
 	result json.RawMessage
 }
 
-// open is the shared first exchange for ordinary requests and both stream
-// protocols. The request is ready before dialing, and the opening context is
-// detached before ownership transfers. Any bytes read beyond the response
-// remain in reader for the stream to consume.
+// open is the shared first exchange for ordinary requests and streams. The
+// request is ready before dialing, and the opening context is detached before
+// ownership transfers. Any bytes read beyond the response remain in reader for
+// the stream to consume.
 func (c *Client) open(ctx context.Context, method string, params any) (*openedConnection, error) {
 	request, err := requestLine(c.requestID(), method, params)
 	if err != nil {
@@ -274,21 +274,16 @@ func watchContext(ctx context.Context, conn io.Closer) func() {
 	})
 }
 
-// writeAll writes each complete protocol segment or reports a short write.
-// A dialer may return any io.ReadWriteCloser, so a short write must not be
-// mistaken for a successfully transmitted request or frame.
-func writeAll(w io.Writer, parts ...[]byte) error {
-	for _, part := range parts {
-		if len(part) == 0 {
-			continue
-		}
-		n, err := w.Write(part)
-		if err != nil {
-			return err
-		}
-		if n != len(part) {
-			return io.ErrShortWrite
-		}
+// writeAll writes the complete request line or reports a short write. A
+// dialer may return any io.ReadWriteCloser, so a short write must not be
+// mistaken for a successfully transmitted request.
+func writeAll(w io.Writer, line []byte) error {
+	n, err := w.Write(line)
+	if err != nil {
+		return err
+	}
+	if n != len(line) {
+		return io.ErrShortWrite
 	}
 	return nil
 }

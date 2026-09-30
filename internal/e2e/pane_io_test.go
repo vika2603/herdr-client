@@ -3,7 +3,6 @@
 package e2e
 
 import (
-	"encoding/base64"
 	"strings"
 	"testing"
 	"time"
@@ -95,25 +94,6 @@ func stagePaneIO(t *testing.T, h *harness, st *state) {
 	if h.cover(t, herdr.MethodPaneCopySearch, search, err) && search.Total == 0 {
 		t.Errorf("pane.copy_search found no %s although pane.read returned it", markerSendInput)
 	}
-
-	// A one pixel RGBA layer is enough to reach the graphics store; drawing
-	// it needs an attached client, which is why pane.graphics.info stays out
-	// of reach.
-	graphics, err := h.client.PaneGraphicsSet(h.ctx(t), herdr.PaneGraphicsSetParams{
-		PaneID:      st.paneID,
-		Format:      herdr.PaneGraphicsFormatRgba,
-		ImageWidth:  1,
-		ImageHeight: 1,
-		DataBase64:  herdr.Some(base64.StdEncoding.EncodeToString([]byte{0, 0, 0, 0})),
-		LayerID:     herdr.Some("e2e"),
-	})
-	h.cover(t, herdr.MethodPaneGraphicsSet, graphics, err)
-
-	cleared, err := h.client.PaneGraphicsClear(h.ctx(t), herdr.PaneGraphicsClearParams{
-		PaneID:  st.paneID,
-		LayerID: herdr.Some("e2e"),
-	})
-	h.cover(t, herdr.MethodPaneGraphicsClear, cleared, err)
 
 	stageEditScrollback(t, h, st)
 }
