@@ -474,6 +474,26 @@ func tabIDs(session *Session) string {
 	return fmt.Sprint(ids)
 }
 
+func TestSessionResyncsAfterEventsLost(t *testing.T) {
+	server := newMirrorServer(t, testSnapshot())
+	session := openTestSession(t, server)
+	stream := server.acceptStream()
+
+	stream.push(`{"id":"1","error":{"code":"events_lost","message":"event subscription fell behind retained history"}}`)
+
+	resync, ok := nextEvent(t, session).(*ResyncEvent)
+	if !ok {
+		t.Fatal("events_lost did not end in a resync")
+	}
+	var apiErr *Error
+	if !errors.As(resync.Cause, &apiErr) || apiErr.Code != ErrCodeEventsLost {
+		t.Errorf("cause = %v, want the events_lost error", resync.Cause)
+	}
+	if got := server.snapshotCount(); got != 2 {
+		t.Errorf("snapshot calls = %d, want 2", got)
+	}
+}
+
 func TestSessionReconnectsAfterStreamDrops(t *testing.T) {
 	server := newMirrorServer(t, testSnapshot())
 	session := openTestSession(t, server)

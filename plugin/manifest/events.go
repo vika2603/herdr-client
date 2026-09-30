@@ -35,7 +35,7 @@ var schemaEventKinds = []string{
 	"layout_updated",
 }
 
-// hookEventKinds is PLUGIN_HOOK_EVENT_KINDS of herdr v0.9.0
+// hookEventKinds is PLUGIN_HOOK_EVENT_KINDS of herdr v0.9.3
 // (src/api/schema/events.rs), the events a manifest event hook may name.
 // Herdr keeps it narrower than the full EventKind enum until the semantics of
 // hooks on high-volume events are settled, and never fires a hook on one of

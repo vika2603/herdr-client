@@ -9,8 +9,9 @@ import (
 
 // ResyncEvent reports that the mirror was rebuilt from a fresh snapshot after
 // the event stream ended, which happens when the server restarts on live
-// handoff. The events of the gap are not recoverable, so state a caller
-// derived from earlier events has to be discarded.
+// handoff or ends a subscription that fell behind with events_lost. The
+// events of the gap are not recoverable, so state a caller derived from
+// earlier events has to be discarded.
 type ResyncEvent struct {
 	// Cause is the error that ended the previous stream. It is never nil: a
 	// stream that ended without one is reported as ErrStreamClosed.

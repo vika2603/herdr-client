@@ -90,7 +90,6 @@ const (
 	ErrCodeStaleReleaseNotes         = "stale_release_notes"
 	ErrCodeConnectionLocalOnly       = "connection_local_only"
 	ErrCodeCommandNotFound           = "command_not_found"
-	ErrCodeCellSizeUnavailable       = "cell_size_unavailable"
 	ErrCodeAgentNotReady             = "agent_not_ready"
 	ErrCodeUnsupportedAgentKind      = "unsupported_agent_kind"
 	ErrCodeInvalidAgentName          = "invalid_agent_name"
@@ -99,6 +98,13 @@ const (
 	ErrCodeStaleContent              = "stale_content"
 	ErrCodeStaleTarget               = "stale_target"
 	ErrCodeUnsupportedEventWaitMatch = "unsupported_event_wait_match"
+
+	// Codes read from the herdr 0.9.3 sources (src/api/server.rs and
+	// src/api/subscriptions.rs). ErrCodeEventsLost ends a subscription that
+	// fell behind; the server closes the stream after reporting it.
+	ErrCodeUnknownMethod     = "unknown_method"
+	ErrCodeEventsLost        = "events_lost"
+	ErrCodeServerUnavailable = "server_unavailable"
 )
 
 // Error is an error response from the server. Method is the method that was
