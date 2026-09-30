@@ -36,6 +36,12 @@ that carry no discriminator.
 - `events.subscribe` keeps the connection open after answering
   `{"type":"subscription_started"}` and pushes one event per line. Writing
   anything further on that connection makes the server close it.
+- A subscription that falls behind the server's retained event history
+  receives one error response line with code `events_lost` in place of an
+  event, and the server then closes the connection. herdr's message asks the
+  client to resubscribe and resync with `session.snapshot`
+  (`src/api/subscriptions.rs`, `subscription_events_after`, and
+  `stream_subscriptions` in `src/api/server.rs`, herdr 0.9.3).
 - `server.ssh_agent.register` also keeps the connection open after answering
   `{"type":"ok"}`, but pushes nothing. The registration lasts until the client
   closes the connection (`src/api/server.rs`, `handle_connection`, herdr
@@ -424,7 +430,8 @@ under one lock and returns one consistent `SessionSnapshot`, including panes
 and layouts. Focused ids are derived from the `Focused` flags; version and
 protocol come from the snapshot used to bootstrap the mirror.
 
-A server restart, which is what live handoff does, ends the stream.`Session`
+A server restart, which is what live handoff does, ends the stream, and so
+does an `events_lost` error for a subscription that fell behind. `Session`
 reconnects, bootstraps again, and reports the gap as one `*ResyncEvent` so a
 caller can drop anything it derived from the older state. Backoff is bounded
 by the context. A response that the server refuses, rather than a connection

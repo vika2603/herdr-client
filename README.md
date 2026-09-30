@@ -282,9 +282,11 @@ only when `Next` delivers an event. Run `go test ./herdr -run '^$' -bench
 `Snapshot` reads the whole mirror under one lock,
 for a caller that wants one consistent frame rather than a field at a time.
 `LayoutPanes` walks a layout tree to its pane leaves, which is how a plugin
-learns the ids `layout.apply` assigned. A server restart, which happens on live handoff,
-is handled by reconnecting and taking a fresh snapshot; the gap is reported as
-one resync event so a caller can drop anything it derived from the old state.
+learns the ids `layout.apply` assigned. A server restart, which happens on live
+handoff, and a subscription the server ends with `events_lost` because it fell
+behind are both handled by reconnecting and taking a fresh snapshot; the gap is
+reported as one resync event so a caller can drop anything it derived from the
+old state.
 
 ### Copying API data independently
 

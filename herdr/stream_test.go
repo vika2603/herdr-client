@@ -221,3 +221,21 @@ func TestStreamInvalidEventLine(t *testing.T) {
 		t.Fatalf("Next after a bad line: %v", err)
 	}
 }
+
+func TestStreamErrorResponseEndsStream(t *testing.T) {
+	server, lines := newStreamServer(t, subscriptionStarted)
+	stream := openTestStream(t, server)
+
+	lines <- `{"id":"1","error":{"code":"events_lost","message":"event subscription fell behind retained history"}}`
+	_, err := stream.Next(context.Background())
+	if !errors.Is(err, ErrStreamClosed) {
+		t.Fatalf("Next error = %v, want ErrStreamClosed", err)
+	}
+	var apiErr *Error
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("Next error = %v, want an *Error", err)
+	}
+	if apiErr.Code != ErrCodeEventsLost || apiErr.Method != "events.subscribe" {
+		t.Errorf("error = %+v, want events_lost from events.subscribe", apiErr)
+	}
+}

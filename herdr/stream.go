@@ -88,7 +88,8 @@ func (s *Stream) Ack() json.RawMessage { return s.ack }
 // Next blocks until the server pushes the next line, the stream is closed, or
 // ctx is done. Read failures and cancellation carry an OpError. errors.Is
 // still identifies ErrStreamClosed or ctx.Err(); canceling Next leaves the
-// stream usable.
+// stream usable. An error response pushed in place of an event ends the
+// stream: Next reports ErrStreamClosed, and errors.As retrieves the *Error.
 func (s *Stream) Next(ctx context.Context) (*RawEvent, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, opError(s.method, OpRead, err)
@@ -112,11 +113,20 @@ func (s *Stream) Next(ctx context.Context) (*RawEvent, error) {
 			s.setReadErr(line.err)
 			return nil, s.terminalErr(ctx)
 		}
-		event := &RawEvent{}
-		if err := json.Unmarshal(line.data, event); err != nil {
+		var pushed struct {
+			RawEvent
+			Error *wireError `json:"error"`
+		}
+		if err := json.Unmarshal(line.data, &pushed); err != nil {
 			return nil, opError(s.method, OpDecode, err)
 		}
-		return event, nil
+		if pushed.Error != nil {
+			// The server writes an error response in place of an event only
+			// to end the stream, and closes the connection after it.
+			s.setReadErr(&Error{Method: s.method, Code: pushed.Error.Code, Message: pushed.Error.Message})
+			return nil, s.terminalErr(ctx)
+		}
+		return &pushed.RawEvent, nil
 	}
 }
 
