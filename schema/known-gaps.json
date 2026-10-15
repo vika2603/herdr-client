@@ -1,5 +1,5 @@
 {
   "_comment": "Differences between the running server and the schema snapshot that are understood and accepted. herdrcheck reports these as known and fails only on drift that is not listed here. Remove an entry once the gap closes.",
-  "herdr_version": "0.9.4",
+  "herdr_version": "0.9.5",
   "server_methods_absent_from_schema": {}
 }
